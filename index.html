@@ -1,20 +1,173 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cuartel Online</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuartel Online Completo</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{font-family:Arial,sans-serif;background:#020617;color:#e2e8f0}
+.card{background:#0f172a;border:1px solid #334155;border-radius:16px;padding:16px}
+input,select,textarea{background:#1e293b!important;border:1px solid #334155!important;color:#fff!important}
+.hidden{display:none!important}.active{background:#991b1b;color:#fff!important}
+.badge{font-size:11px;padding:2px 8px;border-radius:999px}
+</style>
 </head>
-<body style="font-family:Arial;background:#0f172a;color:white;padding:20px">
-  <h1>Cuartel Online</h1>
-  <p>Versión conectada a Supabase.</p>
-  <script>
-    const SUPABASE_URL = 'https://nksnxiqteqqlngmpzeew.supabase.co';
-    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5rc254aXF0ZXFxbG5nbXB6ZWV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNDAzNjEsImV4cCI6MjA4ODcxNjM2MX0.K05-iOUESTW8gTpwkhAAsdG2f5nFXDyuogk9tdW_hPs';
-    const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-    document.body.innerHTML += '<p>Conexión fija cargada correctamente.</p>';
-  </script>
+<body>
+<div id="login" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
+  <div class="card" style="width:100%;max-width:420px">
+    <h1 style="font-size:32px;font-weight:800;margin:0 0 8px 0">CUARTEL<span style="color:#ef4444">ONLINE</span></h1>
+    <p style="color:#94a3b8;margin:0 0 16px 0">Versión completa conectada a Supabase</p>
+    <form id="loginForm" style="display:grid;gap:12px">
+      <select id="perfil">
+        <option value="administrador">Administrador</option>
+        <option value="materiales">Encargado de materiales</option>
+        <option value="automotores">Encargado de automotores</option>
+        <option value="jefatura">Jefatura</option>
+        <option value="bomberos">Bomberos</option>
+      </select>
+      <input id="email" type="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Contraseña">
+      <button style="background:#b91c1c;color:#fff;border:none;padding:12px;border-radius:12px;font-weight:700">Ingresar</button>
+    </form>
+  </div>
+</div>
+
+<div id="app" class="hidden">
+  <div style="display:flex;min-height:100vh">
+    <aside style="width:260px;background:#020617;border-right:1px solid #334155;padding:16px">
+      <div style="font-weight:800;font-size:22px;margin-bottom:8px">CUARTEL<span style="color:#ef4444">ONLINE</span></div>
+      <div id="userInfo" style="font-size:12px;color:#94a3b8;margin-bottom:16px"></div>
+      <div style="display:grid;gap:6px">
+        <button class="nav active" data-sec="dashboard">Dashboard</button>
+        <button class="nav" data-sec="moviles">Móviles</button>
+        <button class="nav" data-sec="bomberosSec">Bomberos</button>
+        <button class="nav" data-sec="inventario">Inventario</button>
+        <button class="nav" data-sec="checklist">Checklist</button>
+      </div>
+      <button id="logout" style="margin-top:20px;background:#1e293b;color:#fff;border:none;padding:10px 12px;border-radius:10px;width:100%">Cerrar sesión</button>
+    </aside>
+    <main style="flex:1;padding:20px">
+      <h2 id="title" style="margin-top:0">Dashboard</h2>
+      <div id="content"></div>
+    </main>
+  </div>
+</div>
+
+<script>
+const URL='https://nksnxiqteqqlngmpzeew.supabase.co';
+const KEY='sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
+const sb=window.supabase.createClient(URL,KEY);
+let perfilActual=null, userActual=null;
+
+function nav(sec){
+  document.querySelectorAll('.nav').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.nav[data-sec="'+sec+'"]').classList.add('active');
+  if(sec==='dashboard') return dashboard();
+  if(sec==='moviles') return moviles();
+  if(sec==='bomberosSec') return bomberos();
+  if(sec==='inventario') return inventario();
+  if(sec==='checklist') return checklist();
+}
+function authInputs(){
+  const isBomberos=document.getElementById('perfil').value==='bomberos';
+  document.getElementById('email').style.display=isBomberos?'none':'block';
+  document.getElementById('password').style.display=isBomberos?'none':'block';
+}
+document.getElementById('perfil').addEventListener('change',authInputs); authInputs();
+
+document.getElementById('loginForm').onsubmit=async(e)=>{
+  e.preventDefault();
+  perfilActual=document.getElementById('perfil').value;
+  try{
+    if(perfilActual!=='bomberos'){
+      const {data,error}=await sb.auth.signInWithPassword({email:document.getElementById('email').value,password:document.getElementById('password').value});
+      if(error) throw error;
+      userActual=data.user;
+      const {data:roles,error:re}=await sb.from('user_profiles').select('*').eq('user_id',data.user.id).eq('profile_name',perfilActual).limit(1);
+      if(re) throw re;
+      if(!roles || !roles.length) throw new Error('Ese usuario no tiene asignado el perfil seleccionado.');
+    }
+    document.getElementById('login').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    document.getElementById('userInfo').textContent=perfilActual==='bomberos'?'Bomberos · solo registro':perfilActual+' · acceso administrador';
+    nav(perfilActual==='bomberos'?'checklist':'dashboard');
+  }catch(err){ alert(err.message || 'No se pudo iniciar sesión.'); }
+};
+document.getElementById('logout').onclick=async()=>{ try{ if(userActual) await sb.auth.signOut(); }catch(e){} location.reload(); };
+document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>nav(b.dataset.sec));
+
+async function dashboard(){
+  document.getElementById('title').textContent='Dashboard';
+  const [mov,rev,inv]=await Promise.all([
+    sb.from('moviles').select('*'),
+    sb.from('revisiones').select('*'),
+    sb.from('inventario').select('*')
+  ]);
+  const m=mov.data||[], r=rev.data||[], i=inv.data||[];
+  document.getElementById('content').innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+      <div class="card"><div style="color:#94a3b8;font-size:12px">Móviles</div><div style="font-size:28px;font-weight:800">${m.length}</div></div>
+      <div class="card"><div style="color:#94a3b8;font-size:12px">En servicio</div><div style="font-size:28px;font-weight:800">${m.filter(x=>x.estado==='En servicio').length}</div></div>
+      <div class="card"><div style="color:#94a3b8;font-size:12px">Revisiones</div><div style="font-size:28px;font-weight:800">${r.length}</div></div>
+      <div class="card"><div style="color:#94a3b8;font-size:12px">Items inventario</div><div style="font-size:28px;font-weight:800">${i.length}</div></div>
+    </div>
+    <div class="card" style="margin-top:12px">Si ves datos en cero, la conexión funciona pero todavía no cargaste registros.</div>`;
+}
+async function moviles(){
+  document.getElementById('title').textContent='Móviles';
+  const {data,error}=await sb.from('moviles').select('*').order('id',{ascending:false});
+  if(error) return alert(error.message);
+  document.getElementById('content').innerHTML=`<div class="card">${(data||[]).map(x=>`<div style="padding:8px 0;border-bottom:1px solid #334155"><strong>Móvil ${x.numero}</strong> · ${x.modelo} · ${x.patente} · ${x.estado}</div>`).join('') || 'Sin móviles cargados.'}</div>`;
+}
+async function bomberos(){
+  document.getElementById('title').textContent='Bomberos';
+  const {data,error}=await sb.from('bomberos').select('*').order('id',{ascending:false});
+  if(error) return alert(error.message);
+  document.getElementById('content').innerHTML=`<div class="card">${(data||[]).map(x=>`<div style="padding:8px 0;border-bottom:1px solid #334155"><strong>${x.apellido}, ${x.nombre}</strong> · ${x.jerarquia} · Legajo ${x.legajo}</div>`).join('') || 'Sin bomberos cargados.'}</div>`;
+}
+async function inventario(){
+  document.getElementById('title').textContent='Inventario';
+  const {data,error}=await sb.from('inventario').select('*').order('id',{ascending:false});
+  if(error) return alert(error.message);
+  document.getElementById('content').innerHTML=`<div class="card">${(data||[]).map(x=>`<div style="padding:8px 0;border-bottom:1px solid #334155"><strong>Móvil ${x.movil}</strong> · ${x.compartimiento} · ${x.material} · Cantidad ${x.cantidad}</div>`).join('') || 'Sin inventario cargado.'}</div>`;
+}
+async function checklist(){
+  document.getElementById('title').textContent='Checklist diario';
+  const mov=await sb.from('moviles').select('*').order('numero');
+  const bom=await sb.from('bomberos').select('*').order('apellido');
+  const rev=await sb.from('revisiones').select('*').order('id',{ascending:false}).limit(10);
+  const movs=mov.data||[], boms=bom.data||[], revs=rev.data||[];
+  document.getElementById('content').innerHTML=`
+    <div class="card">
+      <form id="fcheck" style="display:grid;gap:12px">
+        <select name="movil">${movs.map(m=>`<option value="${m.numero}">Móvil ${m.numero}</option>`).join('')}</select>
+        <select name="bombero">${boms.map(b=>`<option value="${b.jerarquia} ${b.apellido} ${b.nombre}">${b.jerarquia} ${b.apellido} ${b.nombre}</option>`).join('')}</select>
+        <textarea name="comentarios" placeholder="Novedades o comentarios"></textarea>
+        <button style="background:#b91c1c;color:#fff;border:none;padding:12px;border-radius:12px;font-weight:700">Registrar revisión</button>
+      </form>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <strong>Últimas revisiones</strong>
+      <div style="margin-top:8px">${revs.map(r=>`<div style="padding:8px 0;border-bottom:1px solid #334155">Móvil ${r.movil} · ${r.bombero} · ${r.comentarios||'Sin novedades'}</div>`).join('') || 'Sin revisiones.'}</div>
+    </div>`;
+  document.getElementById('fcheck').onsubmit=async(e)=>{
+    e.preventDefault();
+    const fd=new FormData(e.target);
+    const {error}=await sb.from('revisiones').insert({
+      movil:fd.get('movil'),
+      bombero:fd.get('bombero'),
+      fecha_hora:new Date().toISOString(),
+      automotor_resumen:'OK',
+      equip_resumen:'OK',
+      comentarios:fd.get('comentarios')
+    });
+    if(error) return alert(error.message);
+    alert('Revisión registrada');
+    checklist();
+  };
+}
+</script>
 </body>
 </html>
