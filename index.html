@@ -165,10 +165,12 @@
     }
 
     function statusPill(status) {
-      const s = String(status || '').toLowerCase();
-      if (s.includes('servicio')) return '<span class="pill pill-ok">En servicio</span>';
-      if (s.includes('mantenimiento')) return '<span class="pill pill-warn">Mantenimiento</span>';
+      const s = String(status || '').trim().toLowerCase();
+      if (s === 'en servicio') return '<span class="pill pill-ok">En servicio</span>';
+      if (s === 'en mantenimiento') return '<span class="pill pill-warn">En mantenimiento</span>';
+      if (s === 'fuera de servicio') return '<span class="pill pill-bad">Fuera de servicio</span>';
       return `<span class="pill pill-bad">${escapeHtml(status || 'Sin estado')}</span>`;
+    }</span>`;
     }
 
     async function safeSelect(table, orderBy = 'id', ascending = false, limit = null) {
