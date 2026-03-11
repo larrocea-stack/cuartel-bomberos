@@ -4,27 +4,34 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cuartel Online</title>
-  <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-    window.__createSupabaseClient = createClient;
-  </script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: Arial, sans-serif; background: #020617; color: #e2e8f0; margin: 0; }
     .card { background: #0f172a; border: 1px solid #334155; border-radius: 16px; padding: 16px; }
     input, select, textarea { width: 100%; box-sizing: border-box; background: #1e293b; border: 1px solid #334155; color: white; border-radius: 12px; padding: 12px; }
-    textarea { min-height: 110px; resize: vertical; }
+    textarea { min-height: 100px; resize: vertical; }
     button { cursor: pointer; border: none; }
     .primary { background: #b91c1c; color: white; padding: 12px; border-radius: 12px; font-weight: 700; }
     .secondary { background: #1e293b; color: white; padding: 10px 12px; border-radius: 10px; }
+    .danger { background: #7f1d1d; color: white; padding: 10px 12px; border-radius: 10px; }
     .nav { background: #111827; color: #e2e8f0; padding: 10px 12px; border-radius: 10px; text-align: left; }
     .nav.active { background: #991b1b; color: white; }
     .hidden { display: none !important; }
     .grid { display: grid; gap: 12px; }
     .small { font-size: 12px; color: #94a3b8; }
-    .list-row { padding: 8px 0; border-bottom: 1px solid #334155; }
-    .ok { background: #052e16; border: 1px solid #166534; color: #bbf7d0; border-radius: 12px; padding: 12px; }
+    .list-row { padding: 10px 0; border-bottom: 1px solid #334155; }
     .err { background: #450a0a; border: 1px solid #7f1d1d; color: #fecaca; border-radius: 12px; padding: 12px; white-space: pre-wrap; }
+    .ok { background: #052e16; border: 1px solid #166534; color: #bbf7d0; border-radius: 12px; padding: 12px; }
+    .pill { display:inline-block; font-size:11px; padding:2px 8px; border-radius:999px; }
+    .pill-ok { background:#052e16; color:#bbf7d0; }
+    .pill-warn { background:#78350f; color:#fde68a; }
+    .pill-bad { background:#450a0a; color:#fecaca; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px; border-bottom: 1px solid #334155; text-align: left; vertical-align: top; }
+    th { color: #94a3b8; font-size: 12px; text-transform: uppercase; }
+    .toolbar { display:flex; gap:8px; flex-wrap:wrap; }
+    .mobile-map { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; }
+    .comp-box { background:#111827; border:1px solid #334155; border-radius:14px; padding:12px; }
     @media (max-width: 900px) {
       .layout { display: block !important; }
       aside { width: auto !important; border-right: none !important; border-bottom: 1px solid #334155 !important; }
@@ -35,8 +42,8 @@
   <div id="login" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
     <div class="card" style="width:100%;max-width:420px;">
       <h1 style="font-size:32px;font-weight:800;margin:0 0 8px 0;">CUARTEL<span style="color:#ef4444;">ONLINE</span></h1>
-      <p class="small" style="margin:0 0 16px 0;">Versión limpia conectada a Supabase</p>
-      <div id="bootMsg" class="small" style="margin-bottom:12px;">Inicializando...</div>
+      <p class="small" style="margin:0 0 16px 0;">Sistema con roles y control operativo</p>
+      <div id="bootMsg" class="small" style="margin-bottom:12px;">Inicializando…</div>
       <div id="bootErr" class="err hidden" style="margin-bottom:12px;"></div>
 
       <form id="loginForm" class="grid">
@@ -56,15 +63,18 @@
 
   <div id="app" class="hidden">
     <div class="layout" style="display:flex;min-height:100vh;">
-      <aside style="width:260px;background:#020617;border-right:1px solid #334155;padding:16px;box-sizing:border-box;">
+      <aside style="width:280px;background:#020617;border-right:1px solid #334155;padding:16px;box-sizing:border-box;">
         <div style="font-weight:800;font-size:22px;margin-bottom:8px;">CUARTEL<span style="color:#ef4444;">ONLINE</span></div>
         <div id="userInfo" class="small" style="margin-bottom:16px;"></div>
         <div class="grid">
           <button class="nav active" data-sec="dashboard" type="button">Dashboard</button>
           <button class="nav" data-sec="moviles" type="button">Móviles</button>
           <button class="nav" data-sec="bomberos" type="button">Bomberos</button>
-          <button class="nav" data-sec="inventario" type="button">Inventario</button>
-          <button class="nav" data-sec="checklist" type="button">Checklist</button>
+          <button class="nav" data-sec="inventario" type="button">Inventario por móvil</button>
+          <button class="nav" data-sec="plano" type="button">Plano del móvil</button>
+          <button class="nav" data-sec="checklist" type="button">Checklist / revisiones</button>
+          <button class="nav" data-sec="mantenimiento" type="button">Bitácora</button>
+          <button class="nav" data-sec="respaldo" type="button">Importar / exportar</button>
           <button class="nav" data-sec="diagnostico" type="button">Diagnóstico</button>
         </div>
         <button id="logout" class="secondary" style="margin-top:20px;width:100%;" type="button">Cerrar sesión</button>
@@ -73,18 +83,23 @@
       <main style="flex:1;padding:20px;box-sizing:border-box;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
           <h2 id="title" style="margin:0;">Dashboard</h2>
-          <button id="logoutTop" class="secondary" type="button">Salir</button>
+          <div class="toolbar">
+            <button id="logoutTop" class="secondary" type="button">Salir</button>
+          </div>
         </div>
+        <div id="flash" class="hidden" style="margin-top:12px;"></div>
         <div id="content" style="margin-top:16px;"></div>
       </main>
     </div>
   </div>
 
   <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
     const SUPABASE_URL = 'https://nksnxiqteqqlngmpzeew.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const createClient = window.__createSupabaseClient;
     const els = {
       login: document.getElementById('login'),
       app: document.getElementById('app'),
@@ -97,29 +112,37 @@
       userInfo: document.getElementById('userInfo'),
       title: document.getElementById('title'),
       content: document.getElementById('content'),
+      flash: document.getElementById('flash'),
       logout: document.getElementById('logout'),
       logoutTop: document.getElementById('logoutTop')
     };
+
+    let perfilActual = null;
+    let userActual = null;
+    let currentSection = 'dashboard';
+
+    const ADMIN_PROFILES = ['administrador', 'materiales', 'automotores', 'jefatura'];
+
+    function canAdmin() {
+      return ADMIN_PROFILES.includes(perfilActual);
+    }
+
+    function showFlash(message, type = 'ok') {
+      els.flash.className = type === 'ok' ? 'ok' : 'err';
+      els.flash.textContent = message;
+      els.flash.classList.remove('hidden');
+      setTimeout(() => els.flash.classList.add('hidden'), 3500);
+    }
 
     function showBootError(msg) {
       els.bootErr.textContent = msg;
       els.bootErr.classList.remove('hidden');
     }
 
-    if (!createClient) {
-      els.bootMsg.textContent = 'Error de carga';
-      showBootError('No se pudo cargar Supabase en el navegador.');
-      throw new Error('Supabase client no cargado');
-    }
-
-    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-    let perfilActual = null;
-    let userActual = null;
-
     function authInputs() {
       const isBomberos = els.perfil.value === 'bomberos';
-      els.email.style.display = isBomberos ? 'none' : 'block';
-      els.password.style.display = isBomberos ? 'none' : 'block';
+      els.email.classList.toggle('hidden', isBomberos);
+      els.password.classList.toggle('hidden', isBomberos);
     }
 
     function activateNav(sec) {
@@ -141,12 +164,34 @@
       return `<div class="card"><div class="small">${escapeHtml(label)}</div><div style="font-size:28px;font-weight:800;">${escapeHtml(value)}</div></div>`;
     }
 
+    function statusPill(status) {
+      const s = String(status || '').toLowerCase();
+      if (s.includes('servicio')) return '<span class="pill pill-ok">En servicio</span>';
+      if (s.includes('mantenimiento')) return '<span class="pill pill-warn">Mantenimiento</span>';
+      return `<span class="pill pill-bad">${escapeHtml(status || 'Sin estado')}</span>`;
+    }
+
     async function safeSelect(table, orderBy = 'id', ascending = false, limit = null) {
       let q = sb.from(table).select('*').order(orderBy, { ascending });
       if (limit) q = q.limit(limit);
       const { data, error } = await q;
       if (error) throw error;
       return data || [];
+    }
+
+    async function upsertRow(table, row) {
+      const { error } = await sb.from(table).upsert(row);
+      if (error) throw error;
+    }
+
+    async function insertRow(table, row) {
+      const { error } = await sb.from(table).insert(row);
+      if (error) throw error;
+    }
+
+    async function deleteRow(table, id) {
+      const { error } = await sb.from(table).delete().eq('id', id);
+      if (error) throw error;
     }
 
     async function loginAdmin(email, password, profile) {
@@ -178,10 +223,11 @@
 
     async function dashboard() {
       els.title.textContent = 'Dashboard';
-      const [mov, rev, inv] = await Promise.all([
+      const [mov, rev, inv, man] = await Promise.all([
         safeSelect('moviles'),
         safeSelect('revisiones'),
-        safeSelect('inventario')
+        safeSelect('inventario'),
+        safeSelect('mantenimientos')
       ]);
       els.content.innerHTML = `
         <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));">
@@ -189,30 +235,287 @@
           ${card('En servicio', mov.filter(x => x.estado === 'En servicio').length)}
           ${card('Revisiones', rev.length)}
           ${card('Items inventario', inv.length)}
+          ${card('Mantenimientos', man.length)}
         </div>
-        <div class="card" style="margin-top:12px;">Si ves datos en cero, la conexión funciona pero todavía no cargaste registros.</div>`;
+        <div class="grid" style="grid-template-columns:1.2fr 1fr; margin-top:12px; align-items:start;">
+          <div class="card">
+            <strong>Últimas revisiones</strong>
+            <div style="margin-top:8px;">${rev.slice(0,8).map(r => `<div class="list-row">Móvil ${escapeHtml(r.movil)} · ${escapeHtml(r.bombero)} · ${escapeHtml(r.comentarios || 'Sin novedades')}</div>`).join('') || 'Sin revisiones.'}</div>
+          </div>
+          <div class="card">
+            <strong>Estado de móviles</strong>
+            <div style="margin-top:8px;">${mov.map(m => `<div class="list-row"><strong>Móvil ${escapeHtml(m.numero)}</strong> · ${statusPill(m.estado)}</div>`).join('') || 'Sin móviles.'}</div>
+          </div>
+        </div>`;
     }
 
     async function moviles() {
       els.title.textContent = 'Móviles';
       const data = await safeSelect('moviles');
-      els.content.innerHTML = `<div class="card">${data.map(x => `<div class="list-row"><strong>Móvil ${escapeHtml(x.numero)}</strong> · ${escapeHtml(x.modelo)} · ${escapeHtml(x.patente)} · ${escapeHtml(x.estado)}</div>`).join('') || 'Sin móviles cargados.'}</div>`;
+      els.content.innerHTML = `
+        ${canAdmin() ? `
+          <div class="card" style="margin-bottom:12px;">
+            <strong>Alta / edición de móvil</strong>
+            <form id="fMovil" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;">
+              <input name="id" type="hidden">
+              <input name="numero" placeholder="Número de móvil" required>
+              <input name="patente" placeholder="Patente" required>
+              <input name="modelo" placeholder="Modelo" required>
+              <input name="tipo" placeholder="Tipo" required>
+              <input name="agua" type="number" placeholder="Capacidad de agua">
+              <select name="estado">
+                <option>En servicio</option>
+                <option>En mantenimiento</option>
+                <option>Fuera de servicio</option>
+              </select>
+              <button class="primary" type="submit">Guardar móvil</button>
+            </form>
+          </div>` : ''}
+        <div class="card">
+          <table>
+            <thead><tr><th>Móvil</th><th>Patente</th><th>Modelo</th><th>Tipo</th><th>Agua</th><th>Estado</th>${canAdmin() ? '<th>Acciones</th>' : ''}</tr></thead>
+            <tbody>
+              ${data.map(x => `<tr>
+                <td><strong>${escapeHtml(x.numero)}</strong></td>
+                <td>${escapeHtml(x.patente)}</td>
+                <td>${escapeHtml(x.modelo)}</td>
+                <td>${escapeHtml(x.tipo)}</td>
+                <td>${escapeHtml(x.agua || 0)} L</td>
+                <td>${statusPill(x.estado)}</td>
+                ${canAdmin() ? `<td>
+                  <button class="secondary edit-movil" data-id="${x.id}">Editar</button>
+                  <button class="danger del-movil" data-id="${x.id}">Borrar</button>
+                </td>` : ''}
+              </tr>`).join('') || '<tr><td colspan="7">Sin móviles cargados.</td></tr>'}
+            </tbody>
+          </table>
+        </div>`;
+
+      if (canAdmin()) {
+        const form = document.getElementById('fMovil');
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          const fd = new FormData(form);
+          const row = {
+            numero: fd.get('numero'),
+            patente: fd.get('patente'),
+            modelo: fd.get('modelo'),
+            tipo: fd.get('tipo'),
+            agua: Number(fd.get('agua') || 0),
+            estado: fd.get('estado')
+          };
+          if (fd.get('id')) row.id = Number(fd.get('id'));
+          await upsertRow('moviles', row);
+          showFlash('Móvil guardado');
+          moviles();
+        };
+
+        document.querySelectorAll('.edit-movil').forEach(btn => btn.onclick = () => {
+          const item = data.find(x => String(x.id) === btn.dataset.id);
+          form.elements.id.value = item.id;
+          form.elements.numero.value = item.numero || '';
+          form.elements.patente.value = item.patente || '';
+          form.elements.modelo.value = item.modelo || '';
+          form.elements.tipo.value = item.tipo || '';
+          form.elements.agua.value = item.agua || 0;
+          form.elements.estado.value = item.estado || 'En servicio';
+        });
+        document.querySelectorAll('.del-movil').forEach(btn => btn.onclick = async () => {
+          if (!confirm('¿Eliminar móvil?')) return;
+          await deleteRow('moviles', Number(btn.dataset.id));
+          showFlash('Móvil eliminado');
+          moviles();
+        });
+      }
     }
 
     async function bomberos() {
       els.title.textContent = 'Bomberos';
       const data = await safeSelect('bomberos');
-      els.content.innerHTML = `<div class="card">${data.map(x => `<div class="list-row"><strong>${escapeHtml(x.apellido)}, ${escapeHtml(x.nombre)}</strong> · ${escapeHtml(x.jerarquia)} · Legajo ${escapeHtml(x.legajo)}</div>`).join('') || 'Sin bomberos cargados.'}</div>`;
+      els.content.innerHTML = `
+        ${canAdmin() ? `
+          <div class="card" style="margin-bottom:12px;">
+            <strong>Alta / edición de bombero</strong>
+            <form id="fBombero" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;">
+              <input name="id" type="hidden">
+              <input name="jerarquia" placeholder="Jerarquía" required>
+              <input name="nombre" placeholder="Nombre" required>
+              <input name="apellido" placeholder="Apellido" required>
+              <input name="legajo" placeholder="Legajo" required>
+              <button class="primary" type="submit">Guardar bombero</button>
+            </form>
+          </div>` : ''}
+        <div class="card">
+          <table>
+            <thead><tr><th>Jerarquía</th><th>Apellido y nombre</th><th>Legajo</th>${canAdmin() ? '<th>Acciones</th>' : ''}</tr></thead>
+            <tbody>
+              ${data.map(x => `<tr>
+                <td>${escapeHtml(x.jerarquia)}</td>
+                <td><strong>${escapeHtml(x.apellido)}, ${escapeHtml(x.nombre)}</strong></td>
+                <td>${escapeHtml(x.legajo)}</td>
+                ${canAdmin() ? `<td><button class="secondary edit-bombero" data-id="${x.id}">Editar</button> <button class="danger del-bombero" data-id="${x.id}">Borrar</button></td>` : ''}
+              </tr>`).join('') || '<tr><td colspan="4">Sin bomberos cargados.</td></tr>'}
+            </tbody>
+          </table>
+        </div>`;
+
+      if (canAdmin()) {
+        const form = document.getElementById('fBombero');
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          const fd = new FormData(form);
+          const row = {
+            jerarquia: fd.get('jerarquia'),
+            nombre: fd.get('nombre'),
+            apellido: fd.get('apellido'),
+            legajo: fd.get('legajo')
+          };
+          if (fd.get('id')) row.id = Number(fd.get('id'));
+          await upsertRow('bomberos', row);
+          showFlash('Bombero guardado');
+          bomberos();
+        };
+
+        document.querySelectorAll('.edit-bombero').forEach(btn => btn.onclick = () => {
+          const item = data.find(x => String(x.id) === btn.dataset.id);
+          form.elements.id.value = item.id;
+          form.elements.jerarquia.value = item.jerarquia || '';
+          form.elements.nombre.value = item.nombre || '';
+          form.elements.apellido.value = item.apellido || '';
+          form.elements.legajo.value = item.legajo || '';
+        });
+        document.querySelectorAll('.del-bombero').forEach(btn => btn.onclick = async () => {
+          if (!confirm('¿Eliminar bombero?')) return;
+          await deleteRow('bomberos', Number(btn.dataset.id));
+          showFlash('Bombero eliminado');
+          bomberos();
+        });
+      }
     }
 
     async function inventario() {
-      els.title.textContent = 'Inventario';
-      const data = await safeSelect('inventario');
-      els.content.innerHTML = `<div class="card">${data.map(x => `<div class="list-row"><strong>Móvil ${escapeHtml(x.movil)}</strong> · ${escapeHtml(x.compartimiento)} · ${escapeHtml(x.material)} · Cantidad ${escapeHtml(x.cantidad)}</div>`).join('') || 'Sin inventario cargado.'}</div>`;
+      els.title.textContent = 'Inventario por móvil';
+      const [movs, comps, items] = await Promise.all([
+        safeSelect('moviles', 'numero', true),
+        safeSelect('compartimientos', 'id', false),
+        safeSelect('inventario', 'id', false)
+      ]);
+
+      els.content.innerHTML = `
+        ${canAdmin() ? `
+          <div class="card" style="margin-bottom:12px;">
+            <strong>Alta / edición de material</strong>
+            <form id="fInv" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;">
+              <input name="id" type="hidden">
+              <select name="movil">${movs.map(m => `<option value="${escapeHtml(m.numero)}">Móvil ${escapeHtml(m.numero)}</option>`).join('')}</select>
+              <select name="compartimiento" id="compSelect"></select>
+              <input name="nuevoCompartimiento" placeholder="Nuevo compartimiento (opcional)">
+              <input name="material" placeholder="Material / herramienta" required>
+              <input name="cantidad" type="number" placeholder="Cantidad" required>
+              <input name="observaciones" placeholder="Observaciones">
+              <button class="primary" type="submit">Guardar material</button>
+            </form>
+          </div>` : ''}
+        <div class="card">
+          <table>
+            <thead><tr><th>Móvil</th><th>Compartimiento</th><th>Material</th><th>Cantidad</th><th>Observaciones</th>${canAdmin() ? '<th>Acciones</th>' : ''}</tr></thead>
+            <tbody>
+              ${items.map(x => `<tr>
+                <td>Móvil ${escapeHtml(x.movil)}</td>
+                <td>${escapeHtml(x.compartimiento)}</td>
+                <td><strong>${escapeHtml(x.material)}</strong></td>
+                <td>${escapeHtml(x.cantidad)}</td>
+                <td>${escapeHtml(x.observaciones || '')}</td>
+                ${canAdmin() ? `<td><button class="secondary edit-inv" data-id="${x.id}">Editar</button> <button class="danger del-inv" data-id="${x.id}">Borrar</button></td>` : ''}
+              </tr>`).join('') || '<tr><td colspan="6">Sin inventario cargado.</td></tr>'}
+            </tbody>
+          </table>
+        </div>`;
+
+      if (canAdmin()) {
+        const form = document.getElementById('fInv');
+        const compSelect = document.getElementById('compSelect');
+        function fillCompartimientos(movil, selected = '') {
+          const list = comps.filter(c => String(c.movil) === String(movil));
+          compSelect.innerHTML = list.map(c => `<option value="${escapeHtml(c.nombre)}">${escapeHtml(c.nombre)}</option>`).join('');
+          if (selected) compSelect.value = selected;
+        }
+        fillCompartimientos(form.elements.movil.value);
+        form.elements.movil.onchange = () => fillCompartimientos(form.elements.movil.value);
+
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          const fd = new FormData(form);
+          let compartimiento = fd.get('compartimiento');
+          const nuevo = String(fd.get('nuevoCompartimiento') || '').trim();
+          const movil = fd.get('movil');
+          if (nuevo) {
+            compartimiento = nuevo;
+            const existe = comps.find(c => String(c.movil) === String(movil) && String(c.nombre).toLowerCase() === nuevo.toLowerCase());
+            if (!existe) await insertRow('compartimientos', { movil, nombre: nuevo });
+          }
+          const row = {
+            movil,
+            compartimiento,
+            material: fd.get('material'),
+            cantidad: Number(fd.get('cantidad') || 0),
+            observaciones: fd.get('observaciones')
+          };
+          if (fd.get('id')) row.id = Number(fd.get('id'));
+          await upsertRow('inventario', row);
+          showFlash('Material guardado');
+          inventario();
+        };
+
+        document.querySelectorAll('.edit-inv').forEach(btn => btn.onclick = () => {
+          const item = items.find(x => String(x.id) === btn.dataset.id);
+          form.elements.id.value = item.id;
+          form.elements.movil.value = item.movil;
+          fillCompartimientos(item.movil, item.compartimiento);
+          form.elements.material.value = item.material || '';
+          form.elements.cantidad.value = item.cantidad || 0;
+          form.elements.observaciones.value = item.observaciones || '';
+        });
+        document.querySelectorAll('.del-inv').forEach(btn => btn.onclick = async () => {
+          if (!confirm('¿Eliminar material?')) return;
+          await deleteRow('inventario', Number(btn.dataset.id));
+          showFlash('Material eliminado');
+          inventario();
+        });
+      }
+    }
+
+    async function plano() {
+      els.title.textContent = 'Plano del móvil';
+      const [movs, items] = await Promise.all([
+        safeSelect('moviles', 'numero', true),
+        safeSelect('inventario', 'id', false)
+      ]);
+      const movOptions = movs.map(m => `<option value="${escapeHtml(m.numero)}">Móvil ${escapeHtml(m.numero)}</option>`).join('');
+      els.content.innerHTML = `
+        <div class="card">
+          <label class="small">Seleccionar móvil</label>
+          <select id="mapMovil" style="margin-top:8px; max-width:240px;">${movOptions}</select>
+        </div>
+        <div id="mapWrap" class="mobile-map" style="margin-top:12px;"></div>`;
+
+      function renderMap(movil) {
+        const byComp = {};
+        items.filter(i => String(i.movil) === String(movil)).forEach(i => {
+          byComp[i.compartimiento] = byComp[i.compartimiento] || [];
+          byComp[i.compartimiento].push(i);
+        });
+        const comps = Object.keys(byComp);
+        document.getElementById('mapWrap').innerHTML = comps.map(c => `<div class="comp-box"><strong>${escapeHtml(c)}</strong><div style="margin-top:8px;">${byComp[c].map(i => `<div class="list-row">${escapeHtml(i.material)} · Cantidad ${escapeHtml(i.cantidad)}</div>`).join('')}</div></div>`).join('') || '<div class="card">Ese móvil no tiene compartimientos cargados.</div>';
+      }
+
+      const sel = document.getElementById('mapMovil');
+      sel.onchange = () => renderMap(sel.value);
+      if (sel.value) renderMap(sel.value);
     }
 
     async function checklist() {
-      els.title.textContent = 'Checklist diario';
+      els.title.textContent = 'Checklist / revisiones';
       const [movs, boms, revs] = await Promise.all([
         safeSelect('moviles', 'numero', true),
         safeSelect('bomberos', 'apellido', true),
@@ -233,7 +536,7 @@
         </div>
         <div class="card" style="margin-top:12px;">
           <strong>Últimas revisiones</strong>
-          <div style="margin-top:8px;">${revs.map(r => `<div class="list-row">Móvil ${escapeHtml(r.movil)} · ${escapeHtml(r.bombero)} · ${escapeHtml(r.comentarios || 'Sin novedades')}</div>`).join('') || 'Sin revisiones.'}</div>
+          <div style="margin-top:8px;">${revs.map(r => `<div class="list-row">Móvil ${escapeHtml(r.movil)} · ${escapeHtml(r.bombero)} · ${escapeHtml(r.comentarios || 'Sin novedades')}${canAdmin() ? ` <button class="danger del-rev" data-id="${r.id}" style="margin-left:8px;">Borrar</button>` : ''}</div>`).join('') || 'Sin revisiones.'}</div>
         </div>`;
 
       const form = document.getElementById('fcheck');
@@ -249,9 +552,141 @@
           comentarios: fd.get('comentarios')
         });
         if (error) return alert(error.message);
-        alert('Revisión registrada');
+        showFlash('Revisión registrada');
         checklist();
       };
+
+      if (canAdmin()) {
+        document.querySelectorAll('.del-rev').forEach(btn => btn.onclick = async () => {
+          if (!confirm('¿Eliminar revisión?')) return;
+          await deleteRow('revisiones', Number(btn.dataset.id));
+          showFlash('Revisión eliminada');
+          checklist();
+        });
+      }
+    }
+
+    async function mantenimiento() {
+      els.title.textContent = 'Bitácora';
+      const [movs, boms, rows] = await Promise.all([
+        safeSelect('moviles', 'numero', true),
+        safeSelect('bomberos', 'apellido', true),
+        safeSelect('mantenimientos', 'id', false)
+      ]);
+      els.content.innerHTML = `
+        ${canAdmin() ? `
+          <div class="card" style="margin-bottom:12px;">
+            <strong>Registrar mantenimiento</strong>
+            <form id="fMan" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;">
+              <input name="id" type="hidden">
+              <select name="movil">${movs.map(m => `<option value="${escapeHtml(m.numero)}">Móvil ${escapeHtml(m.numero)}</option>`).join('')}</select>
+              <select name="responsable">${boms.map(b => {
+                const nombre = `${b.jerarquia} ${b.apellido} ${b.nombre}`;
+                return `<option value="${escapeHtml(nombre)}">${escapeHtml(nombre)}</option>`;
+              }).join('')}</select>
+              <input name="tipo" placeholder="Tipo de mantenimiento" required>
+              <input name="km" type="number" placeholder="Kilometraje">
+              <input name="observaciones" placeholder="Observaciones">
+              <button class="primary" type="submit">Guardar mantenimiento</button>
+            </form>
+          </div>` : ''}
+        <div class="card">
+          <table>
+            <thead><tr><th>Fecha</th><th>Móvil</th><th>Responsable</th><th>Tipo</th><th>KM</th><th>Observaciones</th>${canAdmin() ? '<th>Acciones</th>' : ''}</tr></thead>
+            <tbody>
+              ${rows.map(r => `<tr>
+                <td>${escapeHtml(new Date(r.fecha_hora).toLocaleString('es-AR'))}</td>
+                <td>Móvil ${escapeHtml(r.movil)}</td>
+                <td>${escapeHtml(r.responsable)}</td>
+                <td>${escapeHtml(r.tipo)}</td>
+                <td>${escapeHtml(r.km || '')}</td>
+                <td>${escapeHtml(r.observaciones || '')}</td>
+                ${canAdmin() ? `<td><button class="secondary edit-man" data-id="${r.id}">Editar</button> <button class="danger del-man" data-id="${r.id}">Borrar</button></td>` : ''}
+              </tr>`).join('') || '<tr><td colspan="7">Sin mantenimientos.</td></tr>'}
+            </tbody>
+          </table>
+        </div>`;
+
+      if (canAdmin()) {
+        const form = document.getElementById('fMan');
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          const fd = new FormData(form);
+          const row = {
+            movil: fd.get('movil'),
+            responsable: fd.get('responsable'),
+            tipo: fd.get('tipo'),
+            km: Number(fd.get('km') || 0),
+            observaciones: fd.get('observaciones'),
+            fecha_hora: new Date().toISOString()
+          };
+          if (fd.get('id')) row.id = Number(fd.get('id'));
+          await upsertRow('mantenimientos', row);
+          showFlash('Mantenimiento guardado');
+          mantenimiento();
+        };
+        document.querySelectorAll('.edit-man').forEach(btn => btn.onclick = () => {
+          const item = rows.find(x => String(x.id) === btn.dataset.id);
+          form.elements.id.value = item.id;
+          form.elements.movil.value = item.movil;
+          form.elements.responsable.value = item.responsable;
+          form.elements.tipo.value = item.tipo || '';
+          form.elements.km.value = item.km || 0;
+          form.elements.observaciones.value = item.observaciones || '';
+        });
+        document.querySelectorAll('.del-man').forEach(btn => btn.onclick = async () => {
+          if (!confirm('¿Eliminar mantenimiento?')) return;
+          await deleteRow('mantenimientos', Number(btn.dataset.id));
+          showFlash('Mantenimiento eliminado');
+          mantenimiento();
+        });
+      }
+    }
+
+    async function respaldo() {
+      els.title.textContent = 'Importar / exportar';
+      els.content.innerHTML = `
+        <div class="card">
+          <div class="toolbar">
+            <button id="btnExport" class="secondary" ${canAdmin() ? '' : 'disabled'}>Exportar respaldo JSON</button>
+            <input id="fileImport" type="file" accept="application/json" ${canAdmin() ? '' : 'disabled'}>
+          </div>
+          <div class="small" style="margin-top:12px;">Solo perfiles administrador, materiales, automotores y jefatura pueden importar o exportar respaldos.</div>
+        </div>`;
+
+      const btnExport = document.getElementById('btnExport');
+      const fileImport = document.getElementById('fileImport');
+
+      if (canAdmin()) {
+        btnExport.onclick = async () => {
+          const [moviles, bomberos, compartimientos, inventario, revisiones, mantenimientos] = await Promise.all([
+            safeSelect('moviles'), safeSelect('bomberos'), safeSelect('compartimientos'), safeSelect('inventario'), safeSelect('revisiones'), safeSelect('mantenimientos')
+          ]);
+          const payload = { moviles, bomberos, compartimientos, inventario, revisiones, mantenimientos, exported_at: new Date().toISOString() };
+          const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'respaldo_cuartel.json';
+          a.click();
+          URL.revokeObjectURL(url);
+        };
+
+        fileImport.onchange = async () => {
+          const file = fileImport.files[0];
+          if (!file) return;
+          const text = await file.text();
+          const data = JSON.parse(text);
+          const tables = ['moviles', 'bomberos', 'compartimientos', 'inventario', 'revisiones', 'mantenimientos'];
+          for (const table of tables) {
+            if (Array.isArray(data[table]) && data[table].length) {
+              const { error } = await sb.from(table).upsert(data[table]);
+              if (error) throw error;
+            }
+          }
+          showFlash('Respaldo importado');
+        };
+      }
     }
 
     async function diagnostico() {
@@ -274,33 +709,33 @@
       await run('Bomberos', async () => String((await safeSelect('bomberos', 'id', false, 1)).length));
       await run('Inventario', async () => String((await safeSelect('inventario', 'id', false, 1)).length));
       await run('Revisiones', async () => String((await safeSelect('revisiones', 'id', false, 1)).length));
-
+      await run('Mantenimientos', async () => String((await safeSelect('mantenimientos', 'id', false, 1)).length));
       els.content.innerHTML = `<div class="err" style="background:#0f172a;border-color:#334155;color:#e2e8f0;">${escapeHtml(lines.join('\n'))}</div>`;
     }
 
     async function nav(sec) {
+      currentSection = sec;
       activateNav(sec);
       if (sec === 'dashboard') return dashboard();
       if (sec === 'moviles') return moviles();
       if (sec === 'bomberos') return bomberos();
       if (sec === 'inventario') return inventario();
+      if (sec === 'plano') return plano();
       if (sec === 'checklist') return checklist();
+      if (sec === 'mantenimiento') return mantenimiento();
+      if (sec === 'respaldo') return respaldo();
       if (sec === 'diagnostico') return diagnostico();
     }
 
-    authInputs();
     els.perfil.addEventListener('change', authInputs);
+    authInputs();
+
     els.logout.onclick = logout;
     els.logoutTop.onclick = logout;
     document.querySelectorAll('.nav').forEach(btn => btn.onclick = () => nav(btn.dataset.sec));
 
-    window.addEventListener('error', (event) => {
-      showBootError(event?.message || 'Script error');
-    });
-
-    window.addEventListener('unhandledrejection', (event) => {
-      showBootError(event?.reason?.message || String(event?.reason || 'Promise error'));
-    });
+    window.addEventListener('error', (event) => showBootError(event?.message || 'Script error'));
+    window.addEventListener('unhandledrejection', (event) => showBootError(event?.reason?.message || String(event?.reason || 'Promise error')));
 
     try {
       await sb.auth.getSession();
@@ -310,7 +745,7 @@
       showBootError(err?.message || String(err));
     }
 
-    els.loginForm.onsubmit = async (e) => {
+    els.loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       perfilActual = els.perfil.value;
       try {
@@ -321,12 +756,14 @@
         }
         els.login.classList.add('hidden');
         els.app.classList.remove('hidden');
-        els.userInfo.textContent = perfilActual === 'bomberos' ? 'Bomberos · solo registro' : perfilActual + ' · acceso administrador';
+        els.userInfo.textContent = perfilActual === 'bomberos'
+          ? 'Bomberos · ver dashboard, plano del móvil y registrar checklist/revisiones'
+          : perfilActual + ' · acceso administrador completo';
         await nav(perfilActual === 'bomberos' ? 'checklist' : 'dashboard');
       } catch (err) {
         alert(err?.message || 'No se pudo iniciar sesión.');
       }
-    };
+    });
 
     console.assert(typeof createClient === 'function', 'createClient debe existir');
     console.assert(typeof sb.from === 'function', 'Supabase client debe inicializarse');
