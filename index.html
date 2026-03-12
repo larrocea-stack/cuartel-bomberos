@@ -929,31 +929,65 @@
     }
 
     async function estadisticas() {
-      els.title.textContent = 'Estadísticas';
-      const [mov, rev, fallas, repuestos] = await Promise.all([safeSelect('moviles'), safeSelect('revisiones'), safeSelect('fallas'), safeSelect('repuestos')]);
-      const fallasCriticas = fallas.filter(f => String(f.tipo_falla || '').toLowerCase().includes('crit'));
-      const fueraServicio = mov.filter(m => String(m.estado || '').toLowerCase() === 'fuera de servicio');
-      const repuestosCriticos = repuestos.filter(r => Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0));
-      els.content.innerHTML = '<div class="stat-grid">' +
-        card('Total de revisiones', rev.length) +
-        card('Fallas críticas', fallasCriticas.length) +
-        card('Móviles fuera de servicio', fueraServicio.length) +
-        card('Repuestos con alerta', repuestosCriticos.length) +
-        '</div>' +
-        '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px; align-items:start;">' +
-          '<div class="card"><strong>Fallas por severidad</strong><div style="margin-top:8px;">' +
-            '<div class="list-row">Leves: ' + fallas.filter(f => String(f.tipo_falla || '').toLowerCase() === 'leve').length + '</div>' +
-            '<div class="list-row">Moderadas: ' + fallas.filter(f => String(f.tipo_falla || '').toLowerCase() === 'moderada').length + '</div>' +
-            '<div class="list-row">Críticas: ' + fallasCriticas.length + '</div>' +
-          '</div></div>' +
-          '<div class="card"><strong>Control operativo</strong><div style="margin-top:8px;">' +
-            '<div class="list-row">Móviles en servicio: ' + mov.filter(m => m.estado === 'En servicio').length + '</div>' +
-            '<div class="list-row">Móviles en mantenimiento: ' + mov.filter(m => m.estado === 'En mantenimiento').length + '</div>' +
-            '<div class="list-row">Móviles fuera de servicio: ' + fueraServicio.length + '</div>' +
-          '</div></div>' +
-        '</div>';
-    }
+  els.title.textContent = 'Estadísticas';
+  const [mov, rev, fallas, repuestos, novedades] = await Promise.all([
+    safeSelect('moviles'),
+    safeSelect('revisiones'),
+    safeSelect('fallas'),
+    safeSelect('repuestos'),
+    safeSelect('novedades_materiales')
+  ]);
 
+  const fallasCriticas = fallas.filter(f => String(f.tipo_falla || '').toLowerCase().includes('crit'));
+  const fueraServicio = mov.filter(m => String(m.estado || '').toLowerCase() === 'fuera de servicio');
+  const repuestosCriticos = repuestos.filter(r => Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0));
+
+  const faltantes = novedades.filter(n => String(n.tipo_novedad || '').toLowerCase() === 'faltante');
+  const daniados = novedades.filter(n => String(n.tipo_novedad || '').toLowerCase() === 'dañado');
+  const pendientes = novedades.filter(n => String(n.estado || '').toLowerCase() === 'pendiente');
+  const cerradas = novedades.filter(n => String(n.estado || '').toLowerCase() === 'cerrada');
+
+  els.content.innerHTML =
+    '<div class="stat-grid">' +
+      card('Total de revisiones', rev.length) +
+      card('Fallas críticas', fallasCriticas.length) +
+      card('Móviles fuera de servicio', fueraServicio.length) +
+      card('Repuestos con alerta', repuestosCriticos.length) +
+      card('Materiales faltantes', faltantes.length) +
+      card('Materiales dañados', daniados.length) +
+      card('Novedades pendientes', pendientes.length) +
+      card('Novedades cerradas', cerradas.length) +
+    '</div>' +
+    '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px; align-items:start;">' +
+      '<div class="card"><strong>Fallas por severidad</strong><div style="margin-top:8px;">' +
+        '<div class="list-row">Leves: ' + fallas.filter(f => String(f.tipo_falla || '').toLowerCase() === 'leve').length + '</div>' +
+        '<div class="list-row">Moderadas: ' + fallas.filter(f => String(f.tipo_falla || '').toLowerCase() === 'moderada').length + '</div>' +
+        '<div class="list-row">Críticas: ' + fallasCriticas.length + '</div>' +
+      '</div></div>' +
+      '<div class="card"><strong>Novedades de materiales</strong><div style="margin-top:8px;">' +
+        '<div class="list-row">Faltantes: ' + faltantes.length + '</div>' +
+        '<div class="list-row">Dañados: ' + daniados.length + '</div>' +
+        '<div class="list-row">Pendientes: ' + pendientes.length + '</div>' +
+        '<div class="list-row">Cerradas: ' + cerradas.length + '</div>' +
+      '</div></div>' +
+    '</div>' +
+    '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px; align-items:start;">' +
+      '<div class="card"><strong>Control operativo</strong><div style="margin-top:8px;">' +
+        '<div class="list-row">Móviles en servicio: ' + mov.filter(m => m.estado === 'En servicio').length + '</div>' +
+        '<div class="list-row">Móviles en mantenimiento: ' + mov.filter(m => m.estado === 'En mantenimiento').length + '</div>' +
+        '<div class="list-row">Móviles fuera de servicio: ' + fueraServicio.length + '</div>' +
+      '</div></div>' +
+      '<div class="card"><strong>Últimas novedades</strong><div style="margin-top:8px;">' +
+        (novedades.slice(0, 8).map(n =>
+          '<div class="list-row">Móvil ' + escapeHtml(n.movil) + ' · ' +
+          escapeHtml(n.compartimiento) + ' · ' +
+          escapeHtml(n.material) + ' · ' +
+          escapeHtml(n.tipo_novedad) + ' · ' +
+          escapeHtml(n.estado) + '</div>'
+        ).join('') || 'Sin novedades.') +
+      '</div></div>' +
+    '</div>';
+}
     async function diagnostico() {
       els.title.textContent = 'Diagnóstico';
       const lines = [];
