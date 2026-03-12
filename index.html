@@ -885,14 +885,32 @@
         safeSelect('novedades_materiales'),
         safeSelect('revisiones')
       ]);
-      const mov = all[0], fallas = all[1], repuestos = all[2], novedades = all[3], revisiones = all[4];
-      const enServicio = mov.filter(m => m.estado === 'En servicio').length;
-      const enMantenimiento = mov.filter(m => m.estado === 'En mantenimiento').length;
-      const fueraServicio = mov.filter(m => m.estado === 'Fuera de servicio').length;
-      const criticas = fallas.filter(f => String(f.tipo_falla || '').toLowerCase().includes('crit'));
-      const repuestosCriticos = repuestos.filter(r => Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0));
-      const pendientes = novedades.filter(n => String(n.estado || '').toLowerCase() === 'pendiente');
+      const mov = all[0];
+      const fallas = all[1];
+      const repuestos = all[2];
+      const novedades = all[3];
+      const revisiones = all[4];
+
+      const enServicio = mov.filter(function(m) { return m.estado === 'En servicio'; }).length;
+      const enMantenimiento = mov.filter(function(m) { return m.estado === 'En mantenimiento'; }).length;
+      const fueraServicio = mov.filter(function(m) { return m.estado === 'Fuera de servicio'; }).length;
+      const criticas = fallas.filter(function(f) { return String(f.tipo_falla || '').toLowerCase().indexOf('crit') >= 0; });
+      const repuestosCriticos = repuestos.filter(function(r) { return Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0); });
+      const pendientes = novedades.filter(function(n) { return String(n.estado || '').toLowerCase() === 'pendiente'; });
       const ultimaRevision = revisiones[0] ? new Date(revisiones[0].fecha_hora || Date.now()).toLocaleString('es-AR') : 'Sin registros';
+
+      const alertasHtml =
+        (criticas.slice(0,6).map(function(f) {
+          return '<div class="guardia-item"><strong>Móvil ' + escapeHtml(f.movil) + '</strong> · ' + escapeHtml(f.componente) + ' <span class="guardia-badge guardia-danger">Crítica</span></div>';
+        }).join('')) +
+        (pendientes.slice(0,6).map(function(n) {
+          return '<div class="guardia-item"><strong>Móvil ' + escapeHtml(n.movil) + '</strong> · ' + escapeHtml(n.material) + ' <span class="guardia-badge guardia-danger">' + escapeHtml(n.tipo_novedad) + '</span></div>';
+        }).join('')) +
+        (repuestosCriticos.slice(0,6).map(function(r) {
+          return '<div class="guardia-item"><strong>' + escapeHtml(r.nombre) + '</strong> · stock ' + escapeHtml(r.stock_actual) + '/' + escapeHtml(r.stock_minimo) + ' <span class="guardia-badge guardia-warn">Repuesto</span></div>';
+        }).join(''));
+
+      const totalAlertas = criticas.length + pendientes.length + repuestosCriticos.length;
 
       els.content.innerHTML = '' +
         '<div class="guardia-wrap">' +
@@ -910,15 +928,12 @@
             '<div class="guardia-card status-service"><div class="guardia-label">Móviles en servicio</div><div class="guardia-number">' + enServicio + '</div></div>' +
             '<div class="guardia-card status-maint"><div class="guardia-label">En mantenimiento</div><div class="guardia-number">' + enMantenimiento + '</div></div>' +
             '<div class="guardia-card status-out"><div class="guardia-label">Fuera de servicio</div><div class="guardia-number">' + fueraServicio + '</div></div>' +
-            '<div class="guardia-card"><div class="guardia-label">Alertas activas</div><div class="guardia-number">' + (criticas.length + pendientes.length + repuestosCriticos.length) + '</div></div>' +
+            '<div class="guardia-card"><div class="guardia-label">Alertas activas</div><div class="guardia-number">' + totalAlertas + '</div></div>' +
           '</div>' +
           '<div class="guardia-list">' +
             '<div class="guardia-card">' +
               '<div class="guardia-label">Alertas prioritarias</div>' +
-              (((criticas.slice(0,6).map(f => '<div class="guardia-item"><strong>Móvil ' + escapeHtml(f.movil) + '</strong> · ' + escapeHtml(f.componente) + ' <span class="guardia-badge guardia-danger">Crítica</span></div>').join('')) || '') +
-               ((pendientes.slice(0,6).map(n => '<div class="guardia-item"><strong>Móvil ' + escapeHtml(n.movil) + '</strong> · ' + escapeHtml(n.material) + ' <span class="guardia-badge guardia-danger">' + escapeHtml(n.tipo_novedad) + '</span></div>').join('')) || '') +
-               ((repuestosCriticos.slice(0,6).map(r => '<div class="guardia-item"><strong>' + escapeHtml(r.nombre) + '</strong> · stock ' + escapeHtml(r.stock_actual) + '/' + escapeHtml(r.stock_minimo) + ' <span class="guardia-badge guardia-warn">Repuesto</span></div>').join('')) || '') +
-               ((criticas.length + pendientes.length + repuestosCriticos.length) === 0 ? '<div class="guardia-item"><span class="guardia-badge guardia-ok">Sin alertas</span></div>' : '')) +
+              (alertasHtml || '<div class="guardia-item"><span class="guardia-badge guardia-ok">Sin alertas</span></div>') +
             '</div>' +
             '<div class="guardia-card">' +
               '<div class="guardia-label">Resumen de guardia</div>' +
