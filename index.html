@@ -80,6 +80,7 @@
           <button class="nav" data-sec="mantenimiento" type="button">Bitácora</button>
           <button class="nav" data-sec="respaldo" type="button">Importar / exportar</button>
           <button class="nav" data-sec="estadisticas" type="button">Estadísticas</button>
+          <button class="nav" data-sec="novedades" type="button">Novedades de materiales</button>
           <button class="nav" data-sec="diagnostico" type="button">Diagnóstico</button>
         </div>
         <button id="logout" class="secondary" style="margin-top:20px;width:100%;" type="button">Cerrar sesión</button>
@@ -107,10 +108,10 @@
     };
 
     const VIEW_RULES = {
-      administrador: ['dashboard','moviles','bomberos','inventario','plano','fallas','checklist','repuestos','proveedores','mantenimiento','respaldo','estadisticas','diagnostico'],
-      materiales: ['dashboard','inventario','plano','estadisticas','diagnostico'],
+      administrador: ['dashboard','moviles','bomberos','inventario','plano','fallas','checklist','repuestos','proveedores','mantenimiento','respaldo','estadisticas','novedades','diagnostico'],
+      materiales: ['dashboard','inventario','plano','estadisticas','novedades','diagnostico'],
       automotores: ['dashboard','moviles','plano','fallas','checklist','repuestos','proveedores','estadisticas','diagnostico'],
-      jefatura: ['dashboard','moviles','bomberos','inventario','plano','fallas','checklist','repuestos','proveedores','mantenimiento','estadisticas','diagnostico'],
+      jefatura: ['dashboard','moviles','bomberos','inventario','plano','fallas','checklist','repuestos','proveedores','mantenimiento','estadisticas','novedades','diagnostico'],
       bomberos: ['dashboard','plano','checklist','diagnostico']
     };
 
@@ -929,65 +930,107 @@
     }
 
     async function estadisticas() {
-  els.title.textContent = 'Estadísticas';
-  const [mov, rev, fallas, repuestos, novedades] = await Promise.all([
-    safeSelect('moviles'),
-    safeSelect('revisiones'),
-    safeSelect('fallas'),
-    safeSelect('repuestos'),
-    safeSelect('novedades_materiales')
-  ]);
+      els.title.textContent = 'Estadísticas';
+      const [mov, rev, fallas, repuestos, novedades] = await Promise.all([safeSelect('moviles'), safeSelect('revisiones'), safeSelect('fallas'), safeSelect('repuestos'), safeSelect('novedades_materiales')]);
+      const fallasCriticas = fallas.filter(f => String(f.tipo_falla || '').toLowerCase().includes('crit'));
+      const fueraServicio = mov.filter(m => String(m.estado || '').toLowerCase() === 'fuera de servicio');
+      const repuestosCriticos = repuestos.filter(r => Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0));
+      const faltantes = novedades.filter(n => String(n.tipo_novedad || '').toLowerCase() === 'faltante');
+      const daniados = novedades.filter(n => String(n.tipo_novedad || '').toLowerCase() === 'dañado');
+      const pendientes = novedades.filter(n => String(n.estado || '').toLowerCase() === 'pendiente');
+      const cerradas = novedades.filter(n => String(n.estado || '').toLowerCase() === 'cerrada');
+      els.content.innerHTML = '<div class="stat-grid">' +
+        card('Total de revisiones', rev.length) +
+        card('Fallas críticas', fallasCriticas.length) +
+        card('Móviles fuera de servicio', fueraServicio.length) +
+        card('Repuestos con alerta', repuestosCriticos.length) +
+        card('Materiales faltantes', faltantes.length) +
+        card('Materiales dañados', daniados.length) +
+        card('Novedades pendientes', pendientes.length) +
+        card('Novedades cerradas', cerradas.length) +
+      '</div>' +
+      '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px; align-items:start;">' +
+        '<div class="card"><strong>Fallas por severidad</strong><div style="margin-top:8px;">' +
+          '<div class="list-row">Leves: ' + fallas.filter(f => String(f.tipo_falla || '').toLowerCase() === 'leve').length + '</div>' +
+          '<div class="list-row">Moderadas: ' + fallas.filter(f => String(f.tipo_falla || '').toLowerCase() === 'moderada').length + '</div>' +
+          '<div class="list-row">Críticas: ' + fallasCriticas.length + '</div>' +
+        '</div></div>' +
+        '<div class="card"><strong>Novedades de materiales</strong><div style="margin-top:8px;">' +
+          '<div class="list-row">Faltantes: ' + faltantes.length + '</div>' +
+          '<div class="list-row">Dañados: ' + daniados.length + '</div>' +
+          '<div class="list-row">Pendientes: ' + pendientes.length + '</div>' +
+          '<div class="list-row">Cerradas: ' + cerradas.length + '</div>' +
+        '</div></div>' +
+      '</div>' +
+      '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px; align-items:start;">' +
+        '<div class="card"><strong>Control operativo</strong><div style="margin-top:8px;">' +
+          '<div class="list-row">Móviles en servicio: ' + mov.filter(m => m.estado === 'En servicio').length + '</div>' +
+          '<div class="list-row">Móviles en mantenimiento: ' + mov.filter(m => m.estado === 'En mantenimiento').length + '</div>' +
+          '<div class="list-row">Móviles fuera de servicio: ' + fueraServicio.length + '</div>' +
+        '</div></div>' +
+        '<div class="card"><strong>Últimas novedades</strong><div style="margin-top:8px;">' +
+          (novedades.slice(0, 8).map(n => '<div class="list-row">Móvil ' + escapeHtml(n.movil) + ' · ' + escapeHtml(n.compartimiento) + ' · ' + escapeHtml(n.material) + ' · ' + escapeHtml(n.tipo_novedad) + ' · ' + escapeHtml(n.estado) + '</div>').join('') || 'Sin novedades.') +
+        '</div></div>' +
+      '</div>';
+    }
 
-  const fallasCriticas = fallas.filter(f => String(f.tipo_falla || '').toLowerCase().includes('crit'));
-  const fueraServicio = mov.filter(m => String(m.estado || '').toLowerCase() === 'fuera de servicio');
-  const repuestosCriticos = repuestos.filter(r => Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0));
+    async function novedades() {
+      els.title.textContent = 'Novedades de materiales';
+      const rows = await safeSelect('novedades_materiales', 'id', false);
+      const abiertas = rows.filter(r => String(r.estado || '').toLowerCase() === 'pendiente');
+      const cerradas = rows.filter(r => String(r.estado || '').toLowerCase() === 'cerrada');
+      let html = '';
+      html += '<div class="stat-grid">' +
+        card('Pendientes', abiertas.length) +
+        card('Cerradas', cerradas.length) +
+        card('Faltantes', rows.filter(r => String(r.tipo_novedad || '').toLowerCase() === 'faltante').length) +
+        card('Dañados', rows.filter(r => String(r.tipo_novedad || '').toLowerCase() === 'dañado').length) +
+      '</div>';
+      html += '<div class="card" style="margin-top:12px;">' +
+        '<strong>Gestión de novedades</strong>' +
+        '<table style="margin-top:12px;"><thead><tr><th>Fecha</th><th>Móvil</th><th>Compartimiento</th><th>Material</th><th>Tipo</th><th>Detalle</th><th>Estado</th>' + ((canAdmin() || perfilActual === 'materiales') ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
+        (rows.map(r => '<tr>' +
+          '<td>' + escapeHtml(new Date(r.fecha_hora || Date.now()).toLocaleString('es-AR')) + '</td>' +
+          '<td>Móvil ' + escapeHtml(r.movil) + '</td>' +
+          '<td>' + escapeHtml(r.compartimiento) + '</td>' +
+          '<td>' + escapeHtml(r.material) + '</td>' +
+          '<td>' + escapeHtml(r.tipo_novedad) + '</td>' +
+          '<td>' + escapeHtml(r.detalle || '') + '</td>' +
+          '<td>' + (String(r.estado || '').toLowerCase() === 'cerrada' ? '<span class="pill pill-ok">Cerrada</span>' : '<span class="pill pill-bad">Pendiente</span>') + '</td>' +
+          ((canAdmin() || perfilActual === 'materiales') ? '<td>' +
+            (String(r.estado || '').toLowerCase() === 'pendiente'
+              ? '<button class="secondary cerrar-nov-tabla" data-id="' + r.id + '">Cerrar</button>'
+              : '<button class="secondary reabrir-nov-tabla" data-id="' + r.id + '">Reabrir</button>') +
+            (canAdmin() ? ' <button class="danger del-nov-tabla" data-id="' + r.id + '">Borrar</button>' : '') +
+            '</td>' : '') +
+        '</tr>').join('') || '<tr><td colspan="8">Sin novedades registradas.</td></tr>') +
+        '</tbody></table></div>';
+      els.content.innerHTML = html;
 
-  const faltantes = novedades.filter(n => String(n.tipo_novedad || '').toLowerCase() === 'faltante');
-  const daniados = novedades.filter(n => String(n.tipo_novedad || '').toLowerCase() === 'dañado');
-  const pendientes = novedades.filter(n => String(n.estado || '').toLowerCase() === 'pendiente');
-  const cerradas = novedades.filter(n => String(n.estado || '').toLowerCase() === 'cerrada');
+      if (canAdmin() || perfilActual === 'materiales') {
+        document.querySelectorAll('.cerrar-nov-tabla').forEach(btn => btn.addEventListener('click', async () => {
+          const { error } = await sb.from('novedades_materiales').update({ estado: 'cerrada' }).eq('id', Number(btn.dataset.id));
+          if (error) return alert(error.message);
+          showFlash('Novedad cerrada');
+          novedades();
+        }));
+        document.querySelectorAll('.reabrir-nov-tabla').forEach(btn => btn.addEventListener('click', async () => {
+          const { error } = await sb.from('novedades_materiales').update({ estado: 'pendiente' }).eq('id', Number(btn.dataset.id));
+          if (error) return alert(error.message);
+          showFlash('Novedad reabierta');
+          novedades();
+        }));
+      }
+      if (canAdmin()) {
+        document.querySelectorAll('.del-nov-tabla').forEach(btn => btn.addEventListener('click', async () => {
+          if (!confirm('¿Eliminar novedad?')) return;
+          await deleteRow('novedades_materiales', Number(btn.dataset.id));
+          showFlash('Novedad eliminada');
+          novedades();
+        }));
+      }
+    }
 
-  els.content.innerHTML =
-    '<div class="stat-grid">' +
-      card('Total de revisiones', rev.length) +
-      card('Fallas críticas', fallasCriticas.length) +
-      card('Móviles fuera de servicio', fueraServicio.length) +
-      card('Repuestos con alerta', repuestosCriticos.length) +
-      card('Materiales faltantes', faltantes.length) +
-      card('Materiales dañados', daniados.length) +
-      card('Novedades pendientes', pendientes.length) +
-      card('Novedades cerradas', cerradas.length) +
-    '</div>' +
-    '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px; align-items:start;">' +
-      '<div class="card"><strong>Fallas por severidad</strong><div style="margin-top:8px;">' +
-        '<div class="list-row">Leves: ' + fallas.filter(f => String(f.tipo_falla || '').toLowerCase() === 'leve').length + '</div>' +
-        '<div class="list-row">Moderadas: ' + fallas.filter(f => String(f.tipo_falla || '').toLowerCase() === 'moderada').length + '</div>' +
-        '<div class="list-row">Críticas: ' + fallasCriticas.length + '</div>' +
-      '</div></div>' +
-      '<div class="card"><strong>Novedades de materiales</strong><div style="margin-top:8px;">' +
-        '<div class="list-row">Faltantes: ' + faltantes.length + '</div>' +
-        '<div class="list-row">Dañados: ' + daniados.length + '</div>' +
-        '<div class="list-row">Pendientes: ' + pendientes.length + '</div>' +
-        '<div class="list-row">Cerradas: ' + cerradas.length + '</div>' +
-      '</div></div>' +
-    '</div>' +
-    '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px; align-items:start;">' +
-      '<div class="card"><strong>Control operativo</strong><div style="margin-top:8px;">' +
-        '<div class="list-row">Móviles en servicio: ' + mov.filter(m => m.estado === 'En servicio').length + '</div>' +
-        '<div class="list-row">Móviles en mantenimiento: ' + mov.filter(m => m.estado === 'En mantenimiento').length + '</div>' +
-        '<div class="list-row">Móviles fuera de servicio: ' + fueraServicio.length + '</div>' +
-      '</div></div>' +
-      '<div class="card"><strong>Últimas novedades</strong><div style="margin-top:8px;">' +
-        (novedades.slice(0, 8).map(n =>
-          '<div class="list-row">Móvil ' + escapeHtml(n.movil) + ' · ' +
-          escapeHtml(n.compartimiento) + ' · ' +
-          escapeHtml(n.material) + ' · ' +
-          escapeHtml(n.tipo_novedad) + ' · ' +
-          escapeHtml(n.estado) + '</div>'
-        ).join('') || 'Sin novedades.') +
-      '</div></div>' +
-    '</div>';
-}
     async function diagnostico() {
       els.title.textContent = 'Diagnóstico';
       const lines = [];
@@ -1032,6 +1075,7 @@
       if (sec === 'mantenimiento') return mantenimiento();
       if (sec === 'respaldo') return respaldo();
       if (sec === 'estadisticas') return estadisticas();
+      if (sec === 'novedades') return novedades();
       if (sec === 'diagnostico') return diagnostico();
     }
 
