@@ -34,6 +34,31 @@
     .mobile-map { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; }
     .comp-box { background:#111827; border:1px solid #334155; border-radius:14px; padding:12px; }
     .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+    .hero-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; }
+    .hero-card { background:#0b1220; border:1px solid #334155; border-radius:18px; padding:18px; }
+    .hero-number { font-size:34px; font-weight:800; line-height:1; margin-top:8px; }
+    .hero-label { font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:.06em; }
+    .status-big { border-radius:18px; padding:18px; border:1px solid #334155; }
+    .status-service { background:#052e16; border-color:#166534; }
+    .status-maint { background:#3b2a05; border-color:#92400e; }
+    .status-out { background:#450a0a; border-color:#7f1d1d; }
+    .guardia-wrap { min-height:100vh; background:#020617; color:#e2e8f0; padding:20px; }
+    .guardia-header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px; }
+    .guardia-title { font-size:34px; font-weight:800; letter-spacing:.04em; }
+    .guardia-sub { color:#94a3b8; font-size:14px; }
+    .guardia-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; }
+    .guardia-card { border-radius:22px; padding:22px; border:1px solid #334155; background:#0b1220; }
+    .guardia-number { font-size:56px; font-weight:900; line-height:1; margin-top:10px; }
+    .guardia-label { font-size:13px; color:#94a3b8; text-transform:uppercase; letter-spacing:.08em; }
+    .guardia-list { margin-top:18px; display:grid; grid-template-columns:1.1fr .9fr; gap:16px; }
+    .guardia-item { padding:12px 0; border-bottom:1px solid #334155; font-size:18px; }
+    .guardia-item:last-child { border-bottom:none; }
+    .guardia-badge { display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:700; }
+    .guardia-danger { background:#7f1d1d; color:#fecaca; }
+    .guardia-warn { background:#92400e; color:#fde68a; }
+    .guardia-ok { background:#166534; color:#bbf7d0; }
+    .guardia-footer { margin-top:16px; color:#94a3b8; font-size:13px; }
+    .alert-list .list-row:last-child { border-bottom:none; }
     @media (max-width: 900px) {
       .layout { display: block !important; }
       aside { width: auto !important; border-right: none !important; border-bottom: 1px solid #334155 !important; }
@@ -82,6 +107,7 @@
           <button class="nav" data-sec="estadisticas" type="button">Estadísticas</button>
           <button class="nav" data-sec="novedades" type="button">Novedades de materiales</button>
           <button class="nav" data-sec="diagnostico" type="button">Diagnóstico</button>
+          <button class="nav" data-sec="guardia" type="button">Modo guardia</button>
         </div>
         <button id="logout" class="secondary" style="margin-top:20px;width:100%;" type="button">Cerrar sesión</button>
       </aside>
@@ -106,11 +132,11 @@
       jefatura: 'jefatura@cuartel.com'
     };
     const VIEW_RULES = {
-      administrador: ['dashboard','moviles','bomberos','inventario','plano','fallas','checklist','repuestos','proveedores','mantenimiento','respaldo','estadisticas','novedades','diagnostico'],
-      materiales: ['dashboard','inventario','plano','estadisticas','novedades','diagnostico'],
-      automotores: ['dashboard','moviles','plano','fallas','checklist','repuestos','proveedores','estadisticas','diagnostico'],
-      jefatura: ['dashboard','moviles','bomberos','inventario','plano','fallas','checklist','repuestos','proveedores','mantenimiento','estadisticas','novedades','diagnostico'],
-      bomberos: ['dashboard','plano','checklist','diagnostico']
+      administrador: ['dashboard','moviles','bomberos','inventario','plano','fallas','checklist','repuestos','proveedores','mantenimiento','respaldo','estadisticas','novedades','diagnostico','guardia'],
+      materiales: ['dashboard','inventario','plano','estadisticas','novedades','diagnostico','guardia'],
+      automotores: ['dashboard','moviles','plano','fallas','checklist','repuestos','proveedores','estadisticas','diagnostico','guardia'],
+      jefatura: ['dashboard','moviles','bomberos','inventario','plano','fallas','checklist','repuestos','proveedores','mantenimiento','estadisticas','novedades','diagnostico','guardia'],
+      bomberos: ['dashboard','plano','checklist','diagnostico','guardia']
     };
 
     const els = {
@@ -244,23 +270,48 @@
         safeSelect('moviles'), safeSelect('inventario'), safeSelect('fallas'), safeSelect('repuestos'), safeSelect('novedades_materiales'), safeSelect('revisiones')
       ]);
       const mov = res[0], inv = res[1], fallas = res[2], repuestos = res[3], novedades = res[4], revisiones = res[5];
+      const enServicio = mov.filter(x => x.estado === 'En servicio').length;
+      const enMantenimiento = mov.filter(x => x.estado === 'En mantenimiento').length;
+      const fueraServicio = mov.filter(x => x.estado === 'Fuera de servicio').length;
+      const fallasCriticas = fallas.filter(f => String(f.tipo_falla || '').toLowerCase().includes('crit'));
       const repuestosCriticos = repuestos.filter(r => Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0));
       const alertasMateriales = novedades.filter(n => String(n.estado || '').toLowerCase() === 'pendiente');
+      const checklistPendientes = Math.max(mov.length - revisiones.length, 0);
       els.content.innerHTML =
-        '<div class="stat-grid">' +
-          card('Móviles', mov.length) +
-          card('En servicio', mov.filter(x => x.estado === 'En servicio').length) +
+        '<div class="hero-grid">' +
+          '<div class="status-big status-service"><div class="hero-label">Móviles en servicio</div><div class="hero-number">' + enServicio + '</div><div class="small">Operativos para salida</div></div>' +
+          '<div class="status-big status-maint"><div class="hero-label">En mantenimiento</div><div class="hero-number">' + enMantenimiento + '</div><div class="small">Requieren intervención</div></div>' +
+          '<div class="status-big status-out"><div class="hero-label">Fuera de servicio</div><div class="hero-number">' + fueraServicio + '</div><div class="small">No disponibles</div></div>' +
+        '</div>' +
+        '<div class="stat-grid" style="margin-top:14px;">' +
           card('Inventario por móvil', inv.length) +
-          card('Fallas', fallas.length) +
+          card('Fallas críticas', fallasCriticas.length) +
           card('Repuestos críticos', repuestosCriticos.length) +
           card('Alertas materiales', alertasMateriales.length) +
+          card('Checklist registrados', revisiones.length) +
+          card('Checklist pendientes', checklistPendientes) +
         '</div>' +
-        '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;">' +
-          '<div class="card"><strong>Alertas de materiales</strong><div style="margin-top:8px;">' +
-            (alertasMateriales.map(n => '<div class="list-row"><strong>Móvil ' + escapeHtml(n.movil) + '</strong> · ' + escapeHtml(n.compartimiento) + ' · ' + escapeHtml(n.material) + ' · ' + escapeHtml(n.tipo_novedad) + '</div>').join('') || 'Sin alertas.') +
+        '<div class="grid" style="grid-template-columns:1.1fr .9fr; margin-top:14px; align-items:start;">' +
+          '<div class="card alert-list"><strong>Centro de alertas</strong><div style="margin-top:10px;">' +
+            ((alertasMateriales.slice(0,6).map(n => '<div class="list-row"><strong>Móvil ' + escapeHtml(n.movil) + '</strong> · ' + escapeHtml(n.compartimiento) + ' · ' + escapeHtml(n.material) + ' · <span class="pill pill-bad">' + escapeHtml(n.tipo_novedad) + '</span></div>').join('')) || '<div class="list-row">Sin alertas de materiales.</div>') +
+            ((fallasCriticas.slice(0,4).map(f => '<div class="list-row"><strong>Móvil ' + escapeHtml(f.movil) + '</strong> · ' + escapeHtml(f.componente) + ' · <span class="pill pill-bad">Crítica</span></div>').join('')) || '') +
+            ((repuestosCriticos.slice(0,4).map(r => '<div class="list-row"><strong>' + escapeHtml(r.nombre) + '</strong> · stock ' + escapeHtml(r.stock_actual) + '/' + escapeHtml(r.stock_minimo) + '</div>').join('')) || '') +
           '</div></div>' +
-          '<div class="card"><strong>Últimos checklist</strong><div style="margin-top:8px;">' +
-            (revisiones.slice(0, 8).map(r => '<div class="list-row">Móvil ' + escapeHtml(r.movil) + ' · ' + escapeHtml(r.bombero) + '</div>').join('') || 'Sin checklist.') +
+          '<div class="card"><strong>Resumen operativo</strong><div style="margin-top:10px;">' +
+            '<div class="list-row">Total de móviles: <strong>' + mov.length + '</strong></div>' +
+            '<div class="list-row">Móviles operativos: <strong>' + enServicio + '</strong></div>' +
+            '<div class="list-row">Materiales observados: <strong>' + alertasMateriales.length + '</strong></div>' +
+            '<div class="list-row">Fallas registradas: <strong>' + fallas.length + '</strong></div>' +
+            '<div class="list-row">Repuestos bajo mínimo: <strong>' + repuestosCriticos.length + '</strong></div>' +
+            '<div class="list-row">Último checklist: <strong>' + (revisiones[0] ? escapeHtml(new Date(revisiones[0].fecha_hora || Date.now()).toLocaleString('es-AR')) : 'Sin datos') + '</strong></div>' +
+          '</div></div>' +
+        '</div>' +
+        '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:14px;">' +
+          '<div class="card"><strong>Últimos checklist</strong><div style="margin-top:10px;">' +
+            ((revisiones.slice(0,8).map(r => '<div class="list-row">Móvil ' + escapeHtml(r.movil) + ' · ' + escapeHtml(r.bombero) + '</div>').join('')) || 'Sin checklist.') +
+          '</div></div>' +
+          '<div class="card"><strong>Estado de la flota</strong><div style="margin-top:10px;">' +
+            ((mov.map(m => '<div class="list-row"><strong>Móvil ' + escapeHtml(m.numero) + '</strong> · ' + statusPill(m.estado) + '</div>').join('')) || 'Sin móviles cargados.') +
           '</div></div>' +
         '</div>';
     }
@@ -821,7 +872,79 @@
       await run('Repuestos', async function() { return String((await safeSelect('repuestos', 'id', false, 1)).length); });
       await run('Proveedores', async function() { return String((await safeSelect('proveedores', 'id', false, 1)).length); });
       await run('Novedades materiales', async function() { return String((await safeSelect('novedades_materiales', 'id', false, 1)).length); });
-      els.content.innerHTML = '<div class="err" style="background:#0f172a;border-color:#334155;color:#e2e8f0;">' + escapeHtml(lines.join('\n')) + '</div>';
+      els.content.innerHTML = '<div class="err" style="background:#0f172a;border-color:#334155;color:#e2e8f0;">' + escapeHtml(lines.join('
+')) + '</div>';
+    }
+
+    async function guardia() {
+      els.title.textContent = 'Modo guardia';
+      const all = await Promise.all([
+        safeSelect('moviles'), safeSelect('fallas'), safeSelect('repuestos'), safeSelect('novedades_materiales'), safeSelect('revisiones')
+      ]);
+      const mov = all[0], fallas = all[1], repuestos = all[2], novedades = all[3], revisiones = all[4];
+      const enServicio = mov.filter(m => m.estado === 'En servicio').length;
+      const enMantenimiento = mov.filter(m => m.estado === 'En mantenimiento').length;
+      const fueraServicio = mov.filter(m => m.estado === 'Fuera de servicio').length;
+      const criticas = fallas.filter(f => String(f.tipo_falla || '').toLowerCase().includes('crit'));
+      const repuestosCriticos = repuestos.filter(r => Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0));
+      const pendientes = novedades.filter(n => String(n.estado || '').toLowerCase() === 'pendiente');
+      const ultimaRevision = revisiones[0] ? new Date(revisiones[0].fecha_hora || Date.now()).toLocaleString('es-AR') : 'Sin registros';
+      els.content.innerHTML = '' +
+        '<div class="guardia-wrap">' +
+          '<div class="guardia-header">' +
+            '<div><div class="guardia-title">PANEL DE GUARDIA</div><div class="guardia-sub">Monitoreo operativo del cuartel · actualización manual con F5</div></div>' +
+            '<button id="refreshGuardia" class="primary" type="button">Actualizar</button>
+            '<button id="autoGuardia" class="secondary" type="button">Auto 60 s: ON</button>' +' +
+          '</div>' +
+          '<div class="guardia-grid">' +
+            '<div class="guardia-card status-service"><div class="guardia-label">Móviles en servicio</div><div class="guardia-number">' + enServicio + '</div></div>' +
+            '<div class="guardia-card status-maint"><div class="guardia-label">En mantenimiento</div><div class="guardia-number">' + enMantenimiento + '</div></div>' +
+            '<div class="guardia-card status-out"><div class="guardia-label">Fuera de servicio</div><div class="guardia-number">' + fueraServicio + '</div></div>' +
+            '<div class="guardia-card"><div class="guardia-label">Alertas activas</div><div class="guardia-number">' + (criticas.length + pendientes.length + repuestosCriticos.length) + '</div></div>' +
+          '</div>' +
+          '<div class="guardia-list">' +
+            '<div class="guardia-card"><div class="guardia-label">Alertas prioritarias</div>' +
+              ((criticas.slice(0,6).map(f => '<div class="guardia-item"><strong>Móvil ' + escapeHtml(f.movil) + '</strong> · ' + escapeHtml(f.componente) + ' <span class="guardia-badge guardia-danger">Crítica</span></div>').join('')) || '') +
+              ((pendientes.slice(0,6).map(n => '<div class="guardia-item"><strong>Móvil ' + escapeHtml(n.movil) + '</strong> · ' + escapeHtml(n.material) + ' <span class="guardia-badge guardia-danger">' + escapeHtml(n.tipo_novedad) + '</span></div>').join('')) || '') +
+              ((repuestosCriticos.slice(0,6).map(r => '<div class="guardia-item"><strong>' + escapeHtml(r.nombre) + '</strong> · stock ' + escapeHtml(r.stock_actual) + '/' + escapeHtml(r.stock_minimo) + ' <span class="guardia-badge guardia-warn">Repuesto</span></div>').join('')) || '') +
+              ((criticas.length + pendientes.length + repuestosCriticos.length) === 0 ? '<div class="guardia-item"><span class="guardia-badge guardia-ok">Sin alertas</span></div>' : '') +
+            '</div>' +
+            '<div class="guardia-card"><div class="guardia-label">Resumen de guardia</div>' +
+              '<div class="guardia-item">Total de móviles: <strong>' + mov.length + '</strong></div>' +
+              '<div class="guardia-item">Fallas críticas: <strong>' + criticas.length + '</strong></div>' +
+              '<div class="guardia-item">Novedades pendientes: <strong>' + pendientes.length + '</strong></div>' +
+              '<div class="guardia-item">Repuestos bajo mínimo: <strong>' + repuestosCriticos.length + '</strong></div>' +
+              '<div class="guardia-item">Última revisión: <strong>' + escapeHtml(ultimaRevision) + '</strong></div>' +
+              '<div class="guardia-footer">Ideal para TV o monitor de guardia. Podés dejar esta vista abierta permanentemente.</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      window.__guardiaAuto = window.__guardiaAuto === undefined ? true : window.__guardiaAuto;
+      if (window.__guardiaTimer) {
+        clearInterval(window.__guardiaTimer);
+        window.__guardiaTimer = null;
+      }
+      document.getElementById('refreshGuardia').addEventListener('click', function() { guardia(); });
+      const autoBtn = document.getElementById('autoGuardia');
+      autoBtn.textContent = window.__guardiaAuto ? 'Auto 60 s: ON' : 'Auto 60 s: OFF';
+      autoBtn.addEventListener('click', function() {
+        window.__guardiaAuto = !window.__guardiaAuto;
+        autoBtn.textContent = window.__guardiaAuto ? 'Auto 60 s: ON' : 'Auto 60 s: OFF';
+        if (window.__guardiaTimer) {
+          clearInterval(window.__guardiaTimer);
+          window.__guardiaTimer = null;
+        }
+        if (window.__guardiaAuto) {
+          window.__guardiaTimer = setInterval(function() {
+            if (els.title.textContent === 'Modo guardia') guardia();
+          }, 60000);
+        }
+      });
+      if (window.__guardiaAuto) {
+        window.__guardiaTimer = setInterval(function() {
+          if (els.title.textContent === 'Modo guardia') guardia();
+        }, 60000);
+      }
     }
 
     async function nav(sec) {
@@ -844,6 +967,7 @@
       if (sec === 'estadisticas') return estadisticas();
       if (sec === 'novedades') return novedades();
       if (sec === 'diagnostico') return diagnostico();
+      if (sec === 'guardia') return guardia();
     }
 
     function init() {
