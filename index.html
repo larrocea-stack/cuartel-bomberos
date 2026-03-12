@@ -74,7 +74,7 @@
           <button class="nav" data-sec="inventario" type="button">Inventario por móvil</button>
           <button class="nav" data-sec="plano" type="button">Plano del móvil</button>
           <button class="nav" data-sec="fallas" type="button">Reporte de fallas</button>
-          <button class="nav" data-sec="checklist" type="button">Checklist diario</button>
+          <button class="nav" data-sec="checklist" type="button">Checklist de materiales</button>
           <button class="nav" data-sec="repuestos" type="button">Inventario de repuestos</button>
           <button class="nav" data-sec="proveedores" type="button">Proveedores</button>
           <button class="nav" data-sec="mantenimiento" type="button">Bitácora</button>
@@ -243,29 +243,39 @@
 
     async function dashboard() {
       els.title.textContent = 'Dashboard';
-      const [mov, rev, inv, man, fallas, repuestos] = await Promise.all([
+      const [mov, rev, inv, man, fallas, repuestos, novedades] = await Promise.all([
         safeSelect('moviles'),
         safeSelect('revisiones'),
         safeSelect('inventario'),
         safeSelect('mantenimientos'),
         safeSelect('fallas'),
-        safeSelect('repuestos')
+        safeSelect('repuestos'),
+        safeSelect('novedades_materiales')
       ]);
       const repuestosCriticos = repuestos.filter(r => Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0));
+      const alertasMateriales = novedades.filter(n => String(n.estado || '').toLowerCase() === 'pendiente');
       els.content.innerHTML = '' +
         '<div class="stat-grid">' +
           card('Móviles', mov.length) +
           card('En servicio', mov.filter(x => x.estado === 'En servicio').length) +
-          card('Revisiones', rev.length) +
-          card('Fallas reportadas', fallas.length) +
           card('Inventario por móvil', inv.length) +
+          card('Fallas reportadas', fallas.length) +
           card('Repuestos críticos', repuestosCriticos.length) +
+          card('Alertas de materiales', alertasMateriales.length) +
         '</div>' +
         '<div class="grid" style="grid-template-columns:1.2fr 1fr; margin-top:12px; align-items:start;">' +
-          '<div class="card"><strong>Últimas revisiones</strong><div style="margin-top:8px;">' +
+          '<div class="card"><strong>Alertas y novedades de materiales</strong><div style="margin-top:8px;">' +
+            (alertasMateriales.map(n => '<div class="list-row"><strong>Móvil ' + escapeHtml(n.movil) + '</strong> · ' + escapeHtml(n.compartimiento) + ' · ' + escapeHtml(n.material) + ' · ' + escapeHtml(n.tipo_novedad) + ' · ' + escapeHtml(n.detalle || '') + '</div>').join('') || 'Sin alertas de materiales.') +
+          '</div></div>' +
+          '<div class="card"><strong>Estado de móviles</strong><div style="margin-top:8px;">' +
+            (mov.map(m => '<div class="list-row"><strong>Móvil ' + escapeHtml(m.numero) + '</strong> · ' + statusPill(m.estado) + '</div>').join('') || 'Sin móviles.') +
+          '</div></div>' +
+        '</div>' +
+        '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px; align-items:start;">' +
+          '<div class="card"><strong>Últimas revisiones de materiales</strong><div style="margin-top:8px;">' +
             (rev.slice(0,8).map(r => '<div class="list-row">Móvil ' + escapeHtml(r.movil) + ' · ' + escapeHtml(r.bombero) + ' · ' + escapeHtml(r.comentarios || 'Sin novedades') + '</div>').join('') || 'Sin revisiones.') +
           '</div></div>' +
-          '<div class="card"><strong>Alertas</strong><div style="margin-top:8px;">' +
+          '<div class="card"><strong>Alertas de repuestos</strong><div style="margin-top:8px;">' +
             (repuestosCriticos.map(r => '<div class="list-row">Repuesto ' + escapeHtml(r.nombre) + ' por debajo del mínimo</div>').join('') || 'Sin alertas de stock.') +
           '</div></div>' +
         '</div>';
@@ -556,59 +566,134 @@
     }
 
     async function checklist() {
-      els.title.textContent = 'Checklist diario';
-      const [movs, boms, revs] = await Promise.all([safeSelect('moviles', 'numero', true), safeSelect('bomberos', 'apellido', true), safeSelect('revisiones', 'id', false, 10)]);
-      const buildOptions = (name) => '<label><input type="radio" name="' + name + '" value="OK" checked> OK</label> <label><input type="radio" name="' + name + '" value="FALLA"> Falla</label>';
-      els.content.innerHTML = '<div class="card"><form id="fcheck" class="grid">' +
-        '<select name="movil">' + movs.map(m => '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>').join('') + '</select>' +
-        '<select name="bombero">' + boms.map(b => {
-          const nombre = ((b.jerarquia || '') + ' ' + (b.apellido || '') + ' ' + (b.nombre || '')).trim();
-          return '<option value="' + escapeHtml(nombre) + '">' + escapeHtml(nombre) + '</option>';
-        }).join('') + '</select>' +
-        '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));">' +
-          '<div class="card"><strong>Controles diarios</strong>' +
-            '<div class="list-row">Luces de emergencia<br>' + buildOptions('luces') + '</div>' +
-            '<div class="list-row">Sirena y bocina<br>' + buildOptions('sirena') + '</div>' +
-            '<div class="list-row">Nivel de aceite<br>' + buildOptions('aceite') + '</div>' +
-            '<div class="list-row">Nivel de agua<br>' + buildOptions('agua') + '</div>' +
-            '<div class="list-row">Presión de neumáticos<br>' + buildOptions('neumaticos') + '</div>' +
-            '<div class="list-row">Equipos de radio<br>' + buildOptions('radio') + '</div>' +
-            '<div class="list-row">Combustible > 3/4<br>' + buildOptions('combustible') + '</div>' +
-          '</div>' +
+      els.title.textContent = 'Checklist de materiales';
+      const [movs, boms, inventario, revisiones, novedades] = await Promise.all([
+        safeSelect('moviles', 'numero', true),
+        safeSelect('bomberos', 'apellido', true),
+        safeSelect('inventario', 'id', false),
+        safeSelect('revisiones', 'id', false, 10),
+        safeSelect('novedades_materiales', 'id', false, 10)
+      ]);
+
+      els.content.innerHTML = '' +
+        '<div class="card">' +
+          '<form id="fcheck" class="grid">' +
+            '<select name="movil" id="checkMovil">' + movs.map(m => '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>').join('') + '</select>' +
+            '<select name="bombero">' + boms.map(b => {
+              const nombre = ((b.jerarquia || '') + ' ' + (b.apellido || '') + ' ' + (b.nombre || '')).trim();
+              return '<option value="' + escapeHtml(nombre) + '">' + escapeHtml(nombre) + '</option>';
+            }).join('') + '</select>' +
+            '<div id="checkItems"></div>' +
+            '<textarea name="comentarios" placeholder="Observaciones generales del control"></textarea>' +
+            '<button class="primary" type="submit">Registrar checklist de materiales</button>' +
+          '</form>' +
         '</div>' +
-        '<textarea name="comentarios" placeholder="Novedades o comentarios"></textarea>' +
-        '<button class="primary" type="submit">Registrar revisión</button>' +
-        '</form></div>' +
-        '<div class="card" style="margin-top:12px;"><strong>Últimas revisiones</strong><div style="margin-top:8px;">' +
-        (revs.map(r => '<div class="list-row">Móvil ' + escapeHtml(r.movil) + ' · ' + escapeHtml(r.bombero) + ' · ' + escapeHtml(r.automotor_resumen || '') + ' · ' + escapeHtml(r.comentarios || 'Sin novedades') + ((canEditChecklist() && !canBombero()) ? ' <button class="danger del-rev" data-id="' + r.id + '" style="margin-left:8px;">Borrar</button>' : '') + '</div>').join('') || 'Sin revisiones.') +
-        '</div></div>';
+        '<div class="card" style="margin-top:12px;">' +
+          '<strong>Reportar material faltante o dañado</strong>' +
+          '<form id="fNovedad" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;">' +
+            '<select name="movil" id="novMovil">' + movs.map(m => '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>').join('') + '</select>' +
+            '<select name="compartimiento" id="novComp"></select>' +
+            '<select name="material" id="novMaterial"></select>' +
+            '<select name="tipo_novedad"><option>Faltante</option><option>Dañado</option></select>' +
+            '<textarea name="detalle" placeholder="Detalle de la novedad" required></textarea>' +
+            '<button class="primary" type="submit">Registrar novedad</button>' +
+          '</form>' +
+        '</div>' +
+        '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px; align-items:start;">' +
+          '<div class="card"><strong>Últimos checklist de materiales</strong><div style="margin-top:8px;">' +
+            (revisiones.map(r => '<div class="list-row">Móvil ' + escapeHtml(r.movil) + ' · ' + escapeHtml(r.bombero) + ' · ' + escapeHtml(r.comentarios || 'Sin novedades') + ((canEditChecklist() && !canBombero()) ? ' <button class="danger del-rev" data-id="' + r.id + '" style="margin-left:8px;">Borrar</button>' : '') + '</div>').join('') || 'Sin revisiones.') +
+          '</div></div>' +
+          '<div class="card"><strong>Últimas novedades de materiales</strong><div style="margin-top:8px;">' +
+            (novedades.map(n => '<div class="list-row">Móvil ' + escapeHtml(n.movil) + ' · ' + escapeHtml(n.compartimiento) + ' · ' + escapeHtml(n.material) + ' · ' + escapeHtml(n.tipo_novedad) + ' · ' + escapeHtml(n.detalle || '') + ' <span class="pill pill-bad">' + escapeHtml(n.estado || 'pendiente') + '</span>' + ((canAdmin() || perfilActual === 'materiales') ? ' <button class="secondary cerrar-nov" data-id="' + n.id + '">Cerrar</button>' : '') + '</div>').join('') || 'Sin novedades.') +
+          '</div></div>' +
+        '</div>';
+
+      const checkMovil = document.getElementById('checkMovil');
+      const novMovil = document.getElementById('novMovil');
+      const novComp = document.getElementById('novComp');
+      const novMaterial = document.getElementById('novMaterial');
+      const checkItems = document.getElementById('checkItems');
+
+      function renderChecklistItems(movil) {
+        const items = inventario.filter(i => String(i.movil) === String(movil));
+        if (!items.length) {
+          checkItems.innerHTML = '<div class="card">Ese móvil no tiene materiales cargados.</div>';
+          return;
+        }
+        checkItems.innerHTML = '<div class="card"><strong>Control por material y cantidad</strong><div style="margin-top:12px;">' + items.map((i, idx) =>
+          '<div class="list-row">' +
+            '<div><strong>' + escapeHtml(i.compartimiento) + '</strong> · ' + escapeHtml(i.material) + ' · Cantidad esperada: ' + escapeHtml(i.cantidad) + '</div>' +
+            '<div class="grid" style="grid-template-columns:1fr 140px 1fr; margin-top:8px; align-items:center;">' +
+              '<label>Cantidad verificada</label>' +
+              '<input type="number" name="cantidad_verificada_' + idx + '" min="0" value="' + escapeHtml(i.cantidad) + '">' +
+              '<input type="hidden" name="material_ref_' + idx + '" value="' + escapeHtml(JSON.stringify({compartimiento:i.compartimiento, material:i.material, cantidad:i.cantidad})) + '">' +
+            '</div>' +
+          '</div>'
+        ).join('') + '</div></div>';
+      }
+
+      function fillNovedadSelectors(movil) {
+        const items = inventario.filter(i => String(i.movil) === String(movil));
+        const comps = [...new Set(items.map(i => i.compartimiento))];
+        novComp.innerHTML = comps.map(c => '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>').join('');
+        const currentComp = novComp.value || comps[0] || '';
+        const mats = items.filter(i => i.compartimiento === currentComp);
+        novMaterial.innerHTML = mats.map(i => '<option value="' + escapeHtml(i.material) + '">' + escapeHtml(i.material) + '</option>').join('');
+      }
+
+      function refillMaterials() {
+        const items = inventario.filter(i => String(i.movil) === String(novMovil.value) && String(i.compartimiento) === String(novComp.value));
+        novMaterial.innerHTML = items.map(i => '<option value="' + escapeHtml(i.material) + '">' + escapeHtml(i.material) + '</option>').join('');
+      }
+
+      renderChecklistItems(checkMovil.value);
+      fillNovedadSelectors(novMovil.value);
+      checkMovil.addEventListener('change', () => renderChecklistItems(checkMovil.value));
+      novMovil.addEventListener('change', () => fillNovedadSelectors(novMovil.value));
+      novComp.addEventListener('change', refillMaterials);
 
       if (!canEditChecklist()) return;
       const form = document.getElementById('fcheck');
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(form);
-        const resumen = [
-          'Luces:' + fd.get('luces'),
-          'Sirena:' + fd.get('sirena'),
-          'Aceite:' + fd.get('aceite'),
-          'Agua:' + fd.get('agua'),
-          'Neumáticos:' + fd.get('neumaticos'),
-          'Radio:' + fd.get('radio'),
-          'Combustible:' + fd.get('combustible')
-        ].join(' | ');
+        const items = inventario.filter(i => String(i.movil) === String(fd.get('movil')));
+        const resumen = items.map((i, idx) => {
+          const verificada = Number(fd.get('cantidad_verificada_' + idx) || 0);
+          return i.compartimiento + ' / ' + i.material + ': esperado ' + i.cantidad + ', verificado ' + verificada;
+        }).join(' | ');
         const { error } = await sb.from('revisiones').insert({
           movil: fd.get('movil'),
           bombero: fd.get('bombero'),
           fecha_hora: new Date().toISOString(),
-          automotor_resumen: resumen,
-          equip_resumen: '',
+          automotor_resumen: '',
+          equip_resumen: resumen,
           comentarios: fd.get('comentarios')
         });
         if (error) return alert(error.message);
-        showFlash('Revisión registrada');
+        showFlash('Checklist de materiales registrado');
         checklist();
       });
+
+      const novForm = document.getElementById('fNovedad');
+      novForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(novForm);
+        const { error } = await sb.from('novedades_materiales').insert({
+          movil: fd.get('movil'),
+          compartimiento: fd.get('compartimiento'),
+          material: fd.get('material'),
+          tipo_novedad: fd.get('tipo_novedad'),
+          detalle: fd.get('detalle'),
+          estado: 'pendiente',
+          fecha_hora: new Date().toISOString(),
+          reportado_por: perfilActual === 'bomberos' ? 'Bomberos' : (fd.get('bombero') || perfilActual)
+        });
+        if (error) return alert(error.message);
+        showFlash('Novedad registrada y enviada al dashboard');
+        checklist();
+      });
+
       if (canEditChecklist() && !canBombero()) {
         document.querySelectorAll('.del-rev').forEach(btn => btn.addEventListener('click', async () => {
           if (!confirm('¿Eliminar revisión?')) return;
@@ -617,9 +702,17 @@
           checklist();
         }));
       }
+      if (canAdmin() || perfilActual === 'materiales') {
+        document.querySelectorAll('.cerrar-nov').forEach(btn => btn.addEventListener('click', async () => {
+          const { error } = await sb.from('novedades_materiales').update({ estado: 'cerrada' }).eq('id', Number(btn.dataset.id));
+          if (error) return alert(error.message);
+          showFlash('Novedad cerrada');
+          checklist();
+        }));
+      }
     }
 
-    async function repuestos() {
+    async function repuestos() {() {
       els.title.textContent = 'Inventario de repuestos';
       const rows = await safeSelect('repuestos', 'id', false);
       let html = '';
