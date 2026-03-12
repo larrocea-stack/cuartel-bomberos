@@ -75,7 +75,7 @@
           <button class="nav" data-sec="plano" type="button">Plano del móvil</button>
           <button class="nav" data-sec="fallas" type="button">Reporte de fallas</button>
           <button class="nav" data-sec="checklist" type="button">Checklist de materiales</button>
-          <button class="nav" data-sec="repuestos" type="button">Inventario de repuestos</button>
+          <button class="nav" data-sec="repuestos" type="button">Repuestos</button>
           <button class="nav" data-sec="proveedores" type="button">Proveedores</button>
           <button class="nav" data-sec="mantenimiento" type="button">Bitácora</button>
           <button class="nav" data-sec="respaldo" type="button">Importar / exportar</button>
@@ -99,14 +99,12 @@
   <script>
     const SUPABASE_URL = 'https://nksnxiqteqqlngmpzeew.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
-
     const PROFILE_EMAILS = {
       administrador: 'admin@cuartel.com',
       materiales: 'materiales@cuartel.com',
       automotores: 'automotores@cuartel.com',
       jefatura: 'jefatura@cuartel.com'
     };
-
     const VIEW_RULES = {
       administrador: ['dashboard','moviles','bomberos','inventario','plano','fallas','checklist','repuestos','proveedores','mantenimiento','respaldo','estadisticas','novedades','diagnostico'],
       materiales: ['dashboard','inventario','plano','estadisticas','novedades','diagnostico'],
@@ -136,10 +134,9 @@
     let perfilActual = null;
     let userActual = null;
 
-    function canView(section) {
-      return (VIEW_RULES[perfilActual] || []).includes(section);
-    }
+    function canView(section) { return (VIEW_RULES[perfilActual] || []).includes(section); }
     function canAdmin() { return perfilActual === 'administrador'; }
+    function canBombero() { return perfilActual === 'bomberos'; }
     function canEditMoviles() { return perfilActual === 'administrador'; }
     function canEditBomberos() { return perfilActual === 'administrador'; }
     function canEditInventarioMovil() { return perfilActual === 'administrador' || perfilActual === 'materiales'; }
@@ -149,6 +146,7 @@
     function canEditProveedores() { return perfilActual === 'administrador' || perfilActual === 'automotores'; }
     function canEditMantenimiento() { return perfilActual === 'administrador'; }
     function canBackup() { return perfilActual === 'administrador'; }
+    function canManageNovedades() { return perfilActual === 'administrador' || perfilActual === 'materiales'; }
 
     function escapeHtml(value) {
       return String(value ?? '')
@@ -197,25 +195,28 @@
       if (s === 'moderada') return '<span class="pill pill-warn">Moderada</span>';
       return '<span class="pill pill-bad">' + escapeHtml(severity || 'Crítica') + '</span>';
     }
-
     async function safeSelect(table, orderBy = 'id', ascending = false, limit = null) {
-      let q = sb.from(table).select('*').order(orderBy, { ascending });
+      let q = sb.from(table).select('*').order(orderBy, { ascending: ascending });
       if (limit) q = q.limit(limit);
-      const { data, error } = await q;
-      if (error) throw error;
-      return data || [];
+      const res = await q;
+      if (res.error) throw res.error;
+      return res.data || [];
     }
     async function upsertRow(table, row) {
-      const { error } = await sb.from(table).upsert(row);
-      if (error) throw error;
+      const res = await sb.from(table).upsert(row);
+      if (res.error) throw res.error;
     }
     async function insertRow(table, row) {
-      const { error } = await sb.from(table).insert(row);
-      if (error) throw error;
+      const res = await sb.from(table).insert(row);
+      if (res.error) throw res.error;
     }
     async function deleteRow(table, id) {
-      const { error } = await sb.from(table).delete().eq('id', id);
-      if (error) throw error;
+      const res = await sb.from(table).delete().eq('id', id);
+      if (res.error) throw res.error;
+    }
+    async function updateRows(table, values, id) {
+      const res = await sb.from(table).update(values).eq('id', id);
+      if (res.error) throw res.error;
     }
 
     async function loginAdmin(email, password, profile) {
@@ -224,17 +225,12 @@
       if (String(email || '').trim().toLowerCase() !== expected.toLowerCase()) {
         throw new Error('Para el perfil ' + profile + ' debés usar el email ' + expected);
       }
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      userActual = data.user;
-      const { data: roles, error: roleError } = await sb
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', data.user.id)
-        .eq('profile_name', profile)
-        .limit(1);
-      if (roleError) throw roleError;
-      if (!roles || !roles.length) throw new Error('Ese usuario no tiene asignado el perfil seleccionado.');
+      const authRes = await sb.auth.signInWithPassword({ email: email, password: password });
+      if (authRes.error) throw authRes.error;
+      userActual = authRes.data.user;
+      const roleRes = await sb.from('user_profiles').select('*').eq('user_id', userActual.id).eq('profile_name', profile).limit(1);
+      if (roleRes.error) throw roleRes.error;
+      if (!roleRes.data || !roleRes.data.length) throw new Error('Ese usuario no tiene asignado el perfil seleccionado.');
     }
     async function loginBomberos() { userActual = null; }
     async function logout() {
@@ -244,40 +240,27 @@
 
     async function dashboard() {
       els.title.textContent = 'Dashboard';
-      const [mov, rev, inv, man, fallas, repuestos, novedades] = await Promise.all([
-        safeSelect('moviles'),
-        safeSelect('revisiones'),
-        safeSelect('inventario'),
-        safeSelect('mantenimientos'),
-        safeSelect('fallas'),
-        safeSelect('repuestos'),
-        safeSelect('novedades_materiales')
+      const res = await Promise.all([
+        safeSelect('moviles'), safeSelect('inventario'), safeSelect('fallas'), safeSelect('repuestos'), safeSelect('novedades_materiales'), safeSelect('revisiones')
       ]);
+      const mov = res[0], inv = res[1], fallas = res[2], repuestos = res[3], novedades = res[4], revisiones = res[5];
       const repuestosCriticos = repuestos.filter(r => Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0));
       const alertasMateriales = novedades.filter(n => String(n.estado || '').toLowerCase() === 'pendiente');
-      els.content.innerHTML = '' +
+      els.content.innerHTML =
         '<div class="stat-grid">' +
           card('Móviles', mov.length) +
           card('En servicio', mov.filter(x => x.estado === 'En servicio').length) +
           card('Inventario por móvil', inv.length) +
-          card('Fallas reportadas', fallas.length) +
+          card('Fallas', fallas.length) +
           card('Repuestos críticos', repuestosCriticos.length) +
-          card('Alertas de materiales', alertasMateriales.length) +
+          card('Alertas materiales', alertasMateriales.length) +
         '</div>' +
-        '<div class="grid" style="grid-template-columns:1.2fr 1fr; margin-top:12px; align-items:start;">' +
-          '<div class="card"><strong>Alertas y novedades de materiales</strong><div style="margin-top:8px;">' +
-            (alertasMateriales.map(n => '<div class="list-row"><strong>Móvil ' + escapeHtml(n.movil) + '</strong> · ' + escapeHtml(n.compartimiento) + ' · ' + escapeHtml(n.material) + ' · ' + escapeHtml(n.tipo_novedad) + ' · ' + escapeHtml(n.detalle || '') + '</div>').join('') || 'Sin alertas de materiales.') +
+        '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;">' +
+          '<div class="card"><strong>Alertas de materiales</strong><div style="margin-top:8px;">' +
+            (alertasMateriales.map(n => '<div class="list-row"><strong>Móvil ' + escapeHtml(n.movil) + '</strong> · ' + escapeHtml(n.compartimiento) + ' · ' + escapeHtml(n.material) + ' · ' + escapeHtml(n.tipo_novedad) + '</div>').join('') || 'Sin alertas.') +
           '</div></div>' +
-          '<div class="card"><strong>Estado de móviles</strong><div style="margin-top:8px;">' +
-            (mov.map(m => '<div class="list-row"><strong>Móvil ' + escapeHtml(m.numero) + '</strong> · ' + statusPill(m.estado) + '</div>').join('') || 'Sin móviles.') +
-          '</div></div>' +
-        '</div>' +
-        '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px; align-items:start;">' +
-          '<div class="card"><strong>Últimas revisiones de materiales</strong><div style="margin-top:8px;">' +
-            (rev.slice(0,8).map(r => '<div class="list-row">Móvil ' + escapeHtml(r.movil) + ' · ' + escapeHtml(r.bombero) + ' · ' + escapeHtml(r.comentarios || 'Sin novedades') + '</div>').join('') || 'Sin revisiones.') +
-          '</div></div>' +
-          '<div class="card"><strong>Alertas de repuestos</strong><div style="margin-top:8px;">' +
-            (repuestosCriticos.map(r => '<div class="list-row">Repuesto ' + escapeHtml(r.nombre) + ' por debajo del mínimo</div>').join('') || 'Sin alertas de stock.') +
+          '<div class="card"><strong>Últimos checklist</strong><div style="margin-top:8px;">' +
+            (revisiones.slice(0, 8).map(r => '<div class="list-row">Móvil ' + escapeHtml(r.movil) + ' · ' + escapeHtml(r.bombero) + '</div>').join('') || 'Sin checklist.') +
           '</div></div>' +
         '</div>';
     }
@@ -301,37 +284,21 @@
           '</form></div>';
       }
       html += '<div class="card"><table><thead><tr><th>Móvil</th><th>Patente</th><th>Modelo</th><th>Tipo</th><th>Agua</th><th>Estado</th>' + (canEditMoviles() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
-        (data.map(x => '<tr>' +
-          '<td><strong>' + escapeHtml(x.numero) + '</strong></td>' +
-          '<td>' + escapeHtml(x.patente) + '</td>' +
-          '<td>' + escapeHtml(x.modelo) + '</td>' +
-          '<td>' + escapeHtml(x.tipo) + '</td>' +
-          '<td>' + escapeHtml(x.agua || 0) + ' L</td>' +
-          '<td>' + statusPill(x.estado) + '</td>' +
-          (canEditMoviles() ? '<td><button class="secondary edit-movil" data-id="' + x.id + '">Editar</button> <button class="danger del-movil" data-id="' + x.id + '">Borrar</button></td>' : '') +
-        '</tr>').join('') || '<tr><td colspan="7">Sin móviles cargados.</td></tr>') +
+        (data.map(x => '<tr><td><strong>' + escapeHtml(x.numero) + '</strong></td><td>' + escapeHtml(x.patente) + '</td><td>' + escapeHtml(x.modelo) + '</td><td>' + escapeHtml(x.tipo) + '</td><td>' + escapeHtml(x.agua || 0) + ' L</td><td>' + statusPill(x.estado) + '</td>' + (canEditMoviles() ? '<td><button class="secondary edit-movil" data-id="' + x.id + '">Editar</button> <button class="danger del-movil" data-id="' + x.id + '">Borrar</button></td>' : '') + '</tr>').join('') || '<tr><td colspan="7">Sin móviles cargados.</td></tr>') +
         '</tbody></table></div>';
       els.content.innerHTML = html;
-
       if (!canEditMoviles()) return;
       const form = document.getElementById('fMovil');
-      form.addEventListener('submit', async (e) => {
+      form.addEventListener('submit', async function(e) {
         e.preventDefault();
         const fd = new FormData(form);
-        const row = {
-          numero: fd.get('numero'),
-          patente: fd.get('patente'),
-          modelo: fd.get('modelo'),
-          tipo: fd.get('tipo'),
-          agua: Number(fd.get('agua') || 0),
-          estado: fd.get('estado')
-        };
+        const row = { numero: fd.get('numero'), patente: fd.get('patente'), modelo: fd.get('modelo'), tipo: fd.get('tipo'), agua: Number(fd.get('agua') || 0), estado: fd.get('estado') };
         if (fd.get('id')) row.id = Number(fd.get('id'));
         await upsertRow('moviles', row);
         showFlash('Móvil guardado');
         moviles();
       });
-      document.querySelectorAll('.edit-movil').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('.edit-movil').forEach(btn => btn.addEventListener('click', function() {
         const item = data.find(x => String(x.id) === btn.dataset.id);
         form.elements.id.value = item.id;
         form.elements.numero.value = item.numero || '';
@@ -341,7 +308,7 @@
         form.elements.agua.value = item.agua || 0;
         form.elements.estado.value = item.estado || 'En servicio';
       }));
-      document.querySelectorAll('.del-movil').forEach(btn => btn.addEventListener('click', async () => {
+      document.querySelectorAll('.del-movil').forEach(btn => btn.addEventListener('click', async function() {
         if (!confirm('¿Eliminar móvil?')) return;
         await deleteRow('moviles', Number(btn.dataset.id));
         showFlash('Móvil eliminado');
@@ -366,17 +333,11 @@
           '</form></div>';
       }
       html += '<div class="card"><table><thead><tr><th>Jerarquía</th><th>Apellido y nombre</th><th>Legajo</th>' + (canEditBomberos() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
-        (data.map(x => '<tr>' +
-          '<td>' + escapeHtml(x.jerarquia) + '</td>' +
-          '<td><strong>' + escapeHtml(x.apellido) + ', ' + escapeHtml(x.nombre) + '</strong></td>' +
-          '<td>' + escapeHtml(x.legajo) + '</td>' +
-          (canEditBomberos() ? '<td><button class="secondary edit-bombero" data-id="' + x.id + '">Editar</button> <button class="danger del-bombero" data-id="' + x.id + '">Borrar</button></td>' : '') +
-        '</tr>').join('') || '<tr><td colspan="4">Sin bomberos cargados.</td></tr>') + '</tbody></table></div>';
+        (data.map(x => '<tr><td>' + escapeHtml(x.jerarquia) + '</td><td><strong>' + escapeHtml(x.apellido) + ', ' + escapeHtml(x.nombre) + '</strong></td><td>' + escapeHtml(x.legajo) + '</td>' + (canEditBomberos() ? '<td><button class="secondary edit-bombero" data-id="' + x.id + '">Editar</button> <button class="danger del-bombero" data-id="' + x.id + '">Borrar</button></td>' : '') + '</tr>').join('') || '<tr><td colspan="4">Sin bomberos cargados.</td></tr>') + '</tbody></table></div>';
       els.content.innerHTML = html;
-
       if (!canEditBomberos()) return;
       const form = document.getElementById('fBombero');
-      form.addEventListener('submit', async (e) => {
+      form.addEventListener('submit', async function(e) {
         e.preventDefault();
         const fd = new FormData(form);
         const row = { jerarquia: fd.get('jerarquia'), nombre: fd.get('nombre'), apellido: fd.get('apellido'), legajo: fd.get('legajo') };
@@ -385,7 +346,7 @@
         showFlash('Bombero guardado');
         bomberos();
       });
-      document.querySelectorAll('.edit-bombero').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('.edit-bombero').forEach(btn => btn.addEventListener('click', function() {
         const item = data.find(x => String(x.id) === btn.dataset.id);
         form.elements.id.value = item.id;
         form.elements.jerarquia.value = item.jerarquia || '';
@@ -393,7 +354,7 @@
         form.elements.apellido.value = item.apellido || '';
         form.elements.legajo.value = item.legajo || '';
       }));
-      document.querySelectorAll('.del-bombero').forEach(btn => btn.addEventListener('click', async () => {
+      document.querySelectorAll('.del-bombero').forEach(btn => btn.addEventListener('click', async function() {
         if (!confirm('¿Eliminar bombero?')) return;
         await deleteRow('bomberos', Number(btn.dataset.id));
         showFlash('Bombero eliminado');
@@ -403,11 +364,8 @@
 
     async function inventario() {
       els.title.textContent = 'Inventario por móvil';
-      const [movs, comps, items] = await Promise.all([
-        safeSelect('moviles', 'numero', true),
-        safeSelect('compartimientos', 'id', false),
-        safeSelect('inventario', 'id', false)
-      ]);
+      const all = await Promise.all([safeSelect('moviles', 'numero', true), safeSelect('compartimientos', 'id', false), safeSelect('inventario', 'id', false)]);
+      const movs = all[0], comps = all[1], items = all[2];
       let html = '';
       if (canEditInventarioMovil()) {
         html += '<div class="card" style="margin-bottom:12px;">' +
@@ -424,28 +382,19 @@
           '</form></div>';
       }
       html += '<div class="card"><table><thead><tr><th>Móvil</th><th>Compartimiento</th><th>Material</th><th>Cantidad</th><th>Observaciones</th>' + (canEditInventarioMovil() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
-        (items.map(x => '<tr>' +
-          '<td>Móvil ' + escapeHtml(x.movil) + '</td>' +
-          '<td>' + escapeHtml(x.compartimiento) + '</td>' +
-          '<td><strong>' + escapeHtml(x.material) + '</strong></td>' +
-          '<td>' + escapeHtml(x.cantidad) + '</td>' +
-          '<td>' + escapeHtml(x.observaciones || '') + '</td>' +
-          (canEditInventarioMovil() ? '<td><button class="secondary edit-inv" data-id="' + x.id + '">Editar</button> <button class="danger del-inv" data-id="' + x.id + '">Borrar</button></td>' : '') +
-        '</tr>').join('') || '<tr><td colspan="6">Sin inventario cargado.</td></tr>') +
-        '</tbody></table></div>';
+        (items.map(x => '<tr><td>Móvil ' + escapeHtml(x.movil) + '</td><td>' + escapeHtml(x.compartimiento) + '</td><td><strong>' + escapeHtml(x.material) + '</strong></td><td>' + escapeHtml(x.cantidad) + '</td><td>' + escapeHtml(x.observaciones || '') + '</td>' + (canEditInventarioMovil() ? '<td><button class="secondary edit-inv" data-id="' + x.id + '">Editar</button> <button class="danger del-inv" data-id="' + x.id + '">Borrar</button></td>' : '') + '</tr>').join('') || '<tr><td colspan="6">Sin inventario cargado.</td></tr>') + '</tbody></table></div>';
       els.content.innerHTML = html;
-
       if (!canEditInventarioMovil()) return;
       const form = document.getElementById('fInv');
       const compSelect = document.getElementById('compSelect');
-      const fillCompartimientos = (movil, selected = '') => {
+      function fillCompartimientos(movil, selected) {
         const list = comps.filter(c => String(c.movil) === String(movil));
         compSelect.innerHTML = list.map(c => '<option value="' + escapeHtml(c.nombre) + '">' + escapeHtml(c.nombre) + '</option>').join('');
         if (selected) compSelect.value = selected;
-      };
-      fillCompartimientos(form.elements.movil.value);
-      form.elements.movil.addEventListener('change', () => fillCompartimientos(form.elements.movil.value));
-      form.addEventListener('submit', async (e) => {
+      }
+      fillCompartimientos(form.elements.movil.value, '');
+      form.elements.movil.addEventListener('change', function() { fillCompartimientos(form.elements.movil.value, ''); });
+      form.addEventListener('submit', async function(e) {
         e.preventDefault();
         const fd = new FormData(form);
         let compartimiento = fd.get('compartimiento');
@@ -454,21 +403,15 @@
         if (nuevo) {
           compartimiento = nuevo;
           const existe = comps.find(c => String(c.movil) === String(movil) && String(c.nombre).toLowerCase() === nuevo.toLowerCase());
-          if (!existe) await insertRow('compartimientos', { movil, nombre: nuevo });
+          if (!existe) await insertRow('compartimientos', { movil: movil, nombre: nuevo });
         }
-        const row = {
-          movil,
-          compartimiento,
-          material: fd.get('material'),
-          cantidad: Number(fd.get('cantidad') || 0),
-          observaciones: fd.get('observaciones')
-        };
+        const row = { movil: movil, compartimiento: compartimiento, material: fd.get('material'), cantidad: Number(fd.get('cantidad') || 0), observaciones: fd.get('observaciones') };
         if (fd.get('id')) row.id = Number(fd.get('id'));
         await upsertRow('inventario', row);
         showFlash('Material guardado');
         inventario();
       });
-      document.querySelectorAll('.edit-inv').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('.edit-inv').forEach(btn => btn.addEventListener('click', function() {
         const item = items.find(x => String(x.id) === btn.dataset.id);
         form.elements.id.value = item.id;
         form.elements.movil.value = item.movil;
@@ -477,7 +420,7 @@
         form.elements.cantidad.value = item.cantidad || 0;
         form.elements.observaciones.value = item.observaciones || '';
       }));
-      document.querySelectorAll('.del-inv').forEach(btn => btn.addEventListener('click', async () => {
+      document.querySelectorAll('.del-inv').forEach(btn => btn.addEventListener('click', async function() {
         if (!confirm('¿Eliminar material?')) return;
         await deleteRow('inventario', Number(btn.dataset.id));
         showFlash('Material eliminado');
@@ -487,27 +430,34 @@
 
     async function plano() {
       els.title.textContent = 'Plano del móvil';
-      const [movs, items] = await Promise.all([safeSelect('moviles', 'numero', true), safeSelect('inventario', 'id', false)]);
-      els.content.innerHTML = '<div class="card"><label class="small">Seleccionar móvil</label><select id="mapMovil" style="margin-top:8px; max-width:240px;">' +
-        movs.map(m => '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>').join('') +
-        '</select></div><div id="mapWrap" class="mobile-map" style="margin-top:12px;"></div>';
+      const all = await Promise.all([safeSelect('moviles', 'numero', true), safeSelect('inventario', 'id', false), safeSelect('novedades_materiales', 'id', false)]);
+      const movs = all[0], items = all[1], novedades = all[2];
+      els.content.innerHTML = '<div class="card"><label class="small">Seleccionar móvil</label><select id="mapMovil" style="margin-top:8px; max-width:240px;">' + movs.map(m => '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>').join('') + '</select></div><div id="mapWrap" class="mobile-map" style="margin-top:12px;"></div>';
       const sel = document.getElementById('mapMovil');
-      const renderMap = (movil) => {
+      function renderMap(movil) {
         const byComp = {};
         items.filter(i => String(i.movil) === String(movil)).forEach(i => {
           if (!byComp[i.compartimiento]) byComp[i.compartimiento] = [];
           byComp[i.compartimiento].push(i);
         });
         const keys = Object.keys(byComp);
-        document.getElementById('mapWrap').innerHTML = keys.map(c => '<div class="comp-box"><strong>' + escapeHtml(c) + '</strong><div style="margin-top:8px;">' + byComp[c].map(i => '<div class="list-row">' + escapeHtml(i.material) + ' · Cantidad ' + escapeHtml(i.cantidad) + '</div>').join('') + '</div></div>').join('') || '<div class="card">Ese móvil no tiene compartimientos cargados.</div>';
-      };
-      sel.addEventListener('change', () => renderMap(sel.value));
+        document.getElementById('mapWrap').innerHTML = keys.map(c => {
+          return '<div class="comp-box"><strong>' + escapeHtml(c) + '</strong><div style="margin-top:8px;">' +
+            byComp[c].map(i => {
+              const alerta = novedades.find(n => String(n.estado || '').toLowerCase() === 'pendiente' && String(n.movil) === String(movil) && String(n.compartimiento) === String(i.compartimiento) && String(n.material) === String(i.material));
+              return '<div class="list-row">' + escapeHtml(i.material) + ' · Cantidad ' + escapeHtml(i.cantidad) + (alerta ? ' <span class="pill pill-bad">ALERTA</span>' : '') + '</div>';
+            }).join('') +
+          '</div></div>';
+        }).join('') || '<div class="card">Ese móvil no tiene compartimientos cargados.</div>';
+      }
+      sel.addEventListener('change', function() { renderMap(sel.value); });
       if (sel.value) renderMap(sel.value);
     }
 
     async function fallas() {
       els.title.textContent = 'Reporte de fallas';
-      const [movs, rows] = await Promise.all([safeSelect('moviles', 'numero', true), safeSelect('fallas', 'id', false)]);
+      const all = await Promise.all([safeSelect('moviles', 'numero', true), safeSelect('fallas', 'id', false)]);
+      const movs = all[0], rows = all[1];
       let html = '';
       if (canEditFallas()) {
         html += '<div class="card" style="margin-bottom:12px;">' +
@@ -522,35 +472,20 @@
           '</form></div>';
       }
       html += '<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Gravedad</th><th>Componente</th><th>Descripción</th>' + (canEditFallas() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
-        (rows.map(r => '<tr>' +
-          '<td>' + escapeHtml(new Date(r.fecha_hora || r.created_at || Date.now()).toLocaleString('es-AR')) + '</td>' +
-          '<td>Móvil ' + escapeHtml(r.movil) + '</td>' +
-          '<td>' + severityPill(r.tipo_falla) + '</td>' +
-          '<td>' + escapeHtml(r.componente) + '</td>' +
-          '<td>' + escapeHtml(r.descripcion) + '</td>' +
-          (canEditFallas() ? '<td><button class="secondary edit-falla" data-id="' + r.id + '">Editar</button> <button class="danger del-falla" data-id="' + r.id + '">Borrar</button></td>' : '') +
-        '</tr>').join('') || '<tr><td colspan="6">Sin fallas cargadas.</td></tr>') +
-        '</tbody></table></div>';
+        (rows.map(r => '<tr><td>' + escapeHtml(new Date(r.fecha_hora || Date.now()).toLocaleString('es-AR')) + '</td><td>Móvil ' + escapeHtml(r.movil) + '</td><td>' + severityPill(r.tipo_falla) + '</td><td>' + escapeHtml(r.componente) + '</td><td>' + escapeHtml(r.descripcion) + '</td>' + (canEditFallas() ? '<td><button class="secondary edit-falla" data-id="' + r.id + '">Editar</button> <button class="danger del-falla" data-id="' + r.id + '">Borrar</button></td>' : '') + '</tr>').join('') || '<tr><td colspan="6">Sin fallas cargadas.</td></tr>') + '</tbody></table></div>';
       els.content.innerHTML = html;
-
       if (!canEditFallas()) return;
       const form = document.getElementById('fFalla');
-      form.addEventListener('submit', async (e) => {
+      form.addEventListener('submit', async function(e) {
         e.preventDefault();
         const fd = new FormData(form);
-        const row = {
-          movil: fd.get('movil'),
-          tipo_falla: fd.get('tipo_falla'),
-          componente: fd.get('componente'),
-          descripcion: fd.get('descripcion'),
-          fecha_hora: new Date().toISOString()
-        };
+        const row = { movil: fd.get('movil'), tipo_falla: fd.get('tipo_falla'), componente: fd.get('componente'), descripcion: fd.get('descripcion'), fecha_hora: new Date().toISOString() };
         if (fd.get('id')) row.id = Number(fd.get('id'));
         await upsertRow('fallas', row);
         showFlash('Falla guardada');
         fallas();
       });
-      document.querySelectorAll('.edit-falla').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('.edit-falla').forEach(btn => btn.addEventListener('click', function() {
         const item = rows.find(x => String(x.id) === btn.dataset.id);
         form.elements.id.value = item.id;
         form.elements.movil.value = item.movil;
@@ -558,7 +493,7 @@
         form.elements.componente.value = item.componente || '';
         form.elements.descripcion.value = item.descripcion || '';
       }));
-      document.querySelectorAll('.del-falla').forEach(btn => btn.addEventListener('click', async () => {
+      document.querySelectorAll('.del-falla').forEach(btn => btn.addEventListener('click', async function() {
         if (!confirm('¿Eliminar falla?')) return;
         await deleteRow('fallas', Number(btn.dataset.id));
         showFlash('Falla eliminada');
@@ -568,15 +503,9 @@
 
     async function checklist() {
       els.title.textContent = 'Checklist de materiales';
-      const [movs, boms, inventario, revisiones, novedades] = await Promise.all([
-        safeSelect('moviles', 'numero', true),
-        safeSelect('bomberos', 'apellido', true),
-        safeSelect('inventario', 'id', false),
-        safeSelect('revisiones', 'id', false, 10),
-        safeSelect('novedades_materiales', 'id', false, 10)
-      ]);
-
-      els.content.innerHTML = '' +
+      const all = await Promise.all([safeSelect('moviles', 'numero', true), safeSelect('bomberos', 'apellido', true), safeSelect('inventario', 'id', false), safeSelect('revisiones', 'id', false, 10), safeSelect('novedades_materiales', 'id', false, 10)]);
+      const movs = all[0], boms = all[1], inventario = all[2], revisiones = all[3], novedades = all[4];
+      els.content.innerHTML =
         '<div class="card">' +
           '<form id="fcheck" class="grid">' +
             '<select name="movil" id="checkMovil">' + movs.map(m => '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>').join('') + '</select>' +
@@ -600,12 +529,12 @@
             '<button class="primary" type="submit">Registrar novedad</button>' +
           '</form>' +
         '</div>' +
-        '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px; align-items:start;">' +
-          '<div class="card"><strong>Últimos checklist de materiales</strong><div style="margin-top:8px;">' +
-            (revisiones.map(r => '<div class="list-row">Móvil ' + escapeHtml(r.movil) + ' · ' + escapeHtml(r.bombero) + ' · ' + escapeHtml(r.comentarios || 'Sin novedades') + ((canEditChecklist() && !canBombero()) ? ' <button class="danger del-rev" data-id="' + r.id + '" style="margin-left:8px;">Borrar</button>' : '') + '</div>').join('') || 'Sin revisiones.') +
+        '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;">' +
+          '<div class="card"><strong>Últimos checklist</strong><div style="margin-top:8px;">' +
+            (revisiones.map(r => '<div class="list-row">Móvil ' + escapeHtml(r.movil) + ' · ' + escapeHtml(r.bombero) + ' · ' + escapeHtml(r.comentarios || 'Sin novedades') + ((canEditChecklist() && !canBombero()) ? ' <button class="danger del-rev" data-id="' + r.id + '" style="margin-left:8px;">Borrar</button>' : '') + '</div>').join('') || 'Sin checklist.') +
           '</div></div>' +
-          '<div class="card"><strong>Últimas novedades de materiales</strong><div style="margin-top:8px;">' +
-            (novedades.map(n => '<div class="list-row">Móvil ' + escapeHtml(n.movil) + ' · ' + escapeHtml(n.compartimiento) + ' · ' + escapeHtml(n.material) + ' · ' + escapeHtml(n.tipo_novedad) + ' · ' + escapeHtml(n.detalle || '') + ' <span class="pill pill-bad">' + escapeHtml(n.estado || 'pendiente') + '</span>' + ((canAdmin() || perfilActual === 'materiales') ? ' <button class="secondary cerrar-nov" data-id="' + n.id + '">Cerrar</button>' : '') + '</div>').join('') || 'Sin novedades.') +
+          '<div class="card"><strong>Últimas novedades</strong><div style="margin-top:8px;">' +
+            (novedades.map(n => '<div class="list-row">Móvil ' + escapeHtml(n.movil) + ' · ' + escapeHtml(n.compartimiento) + ' · ' + escapeHtml(n.material) + ' · ' + escapeHtml(n.tipo_novedad) + ' · ' + escapeHtml(n.detalle || '') + ' <span class="pill pill-bad">' + escapeHtml(n.estado || 'pendiente') + '</span>' + (canManageNovedades() ? ' <button class="secondary cerrar-nov" data-id="' + n.id + '">Cerrar</button>' : '') + '</div>').join('') || 'Sin novedades.') +
           '</div></div>' +
         '</div>';
 
@@ -617,153 +546,104 @@
 
       function renderChecklistItems(movil) {
         const items = inventario.filter(i => String(i.movil) === String(movil));
-        if (!items.length) {
-          checkItems.innerHTML = '<div class="card">Ese móvil no tiene materiales cargados.</div>';
-          return;
-        }
-        checkItems.innerHTML = '<div class="card"><strong>Control por material y cantidad</strong><div style="margin-top:12px;">' + items.map((i, idx) =>
-          '<div class="list-row">' +
-            '<div><strong>' + escapeHtml(i.compartimiento) + '</strong> · ' + escapeHtml(i.material) + ' · Cantidad esperada: ' + escapeHtml(i.cantidad) + '</div>' +
-            '<div class="grid" style="grid-template-columns:1fr 140px 1fr; margin-top:8px; align-items:center;">' +
-              '<label>Cantidad verificada</label>' +
-              '<input type="number" name="cantidad_verificada_' + idx + '" min="0" value="' + escapeHtml(i.cantidad) + '">' +
-              '<input type="hidden" name="material_ref_' + idx + '" value="' + escapeHtml(JSON.stringify({compartimiento:i.compartimiento, material:i.material, cantidad:i.cantidad})) + '">' +
-            '</div>' +
-          '</div>'
-        ).join('') + '</div></div>';
+        if (!items.length) { checkItems.innerHTML = '<div class="card">Ese móvil no tiene materiales cargados.</div>'; return; }
+        checkItems.innerHTML = '<div class="card"><strong>Control por material y cantidad</strong><div style="margin-top:12px;">' +
+          items.map(function(i, idx) {
+            return '<div class="list-row"><div><strong>' + escapeHtml(i.compartimiento) + '</strong> · ' + escapeHtml(i.material) + ' · Cantidad esperada: ' + escapeHtml(i.cantidad) + '</div>' +
+              '<div class="grid" style="grid-template-columns:1fr 140px; margin-top:8px; align-items:center;">' +
+                '<label>Cantidad verificada</label>' +
+                '<input type="number" name="cantidad_verificada_' + idx + '" min="0" value="' + escapeHtml(i.cantidad) + '">' +
+              '</div></div>';
+          }).join('') + '</div></div>';
       }
-
       function fillNovedadSelectors(movil) {
         const items = inventario.filter(i => String(i.movil) === String(movil));
-        const comps = [...new Set(items.map(i => i.compartimiento))];
+        const comps = Array.from(new Set(items.map(i => i.compartimiento)));
         novComp.innerHTML = comps.map(c => '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>').join('');
-        const currentComp = novComp.value || comps[0] || '';
-        const mats = items.filter(i => i.compartimiento === currentComp);
-        novMaterial.innerHTML = mats.map(i => '<option value="' + escapeHtml(i.material) + '">' + escapeHtml(i.material) + '</option>').join('');
+        refillMaterials();
       }
-
       function refillMaterials() {
         const items = inventario.filter(i => String(i.movil) === String(novMovil.value) && String(i.compartimiento) === String(novComp.value));
         novMaterial.innerHTML = items.map(i => '<option value="' + escapeHtml(i.material) + '">' + escapeHtml(i.material) + '</option>').join('');
       }
-
       renderChecklistItems(checkMovil.value);
       fillNovedadSelectors(novMovil.value);
-      checkMovil.addEventListener('change', () => renderChecklistItems(checkMovil.value));
-      novMovil.addEventListener('change', () => fillNovedadSelectors(novMovil.value));
+      checkMovil.addEventListener('change', function() { renderChecklistItems(checkMovil.value); });
+      novMovil.addEventListener('change', function() { fillNovedadSelectors(novMovil.value); });
       novComp.addEventListener('change', refillMaterials);
 
-      if (!canEditChecklist()) return;
-      const form = document.getElementById('fcheck');
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const fd = new FormData(form);
-        const items = inventario.filter(i => String(i.movil) === String(fd.get('movil')));
-        const resumen = items.map((i, idx) => {
-          const verificada = Number(fd.get('cantidad_verificada_' + idx) || 0);
-          return i.compartimiento + ' / ' + i.material + ': esperado ' + i.cantidad + ', verificado ' + verificada;
-        }).join(' | ');
-        const { error } = await sb.from('revisiones').insert({
-          movil: fd.get('movil'),
-          bombero: fd.get('bombero'),
-          fecha_hora: new Date().toISOString(),
-          automotor_resumen: '',
-          equip_resumen: resumen,
-          comentarios: fd.get('comentarios')
+      if (canEditChecklist()) {
+        document.getElementById('fcheck').addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const fd = new FormData(this);
+          const items = inventario.filter(i => String(i.movil) === String(fd.get('movil')));
+          const resumen = items.map(function(i, idx) {
+            const verificada = Number(fd.get('cantidad_verificada_' + idx) || 0);
+            return i.compartimiento + ' / ' + i.material + ': esperado ' + i.cantidad + ', verificado ' + verificada;
+          }).join(' | ');
+          const res = await sb.from('revisiones').insert({ movil: fd.get('movil'), bombero: fd.get('bombero'), fecha_hora: new Date().toISOString(), automotor_resumen: '', equip_resumen: resumen, comentarios: fd.get('comentarios') });
+          if (res.error) return alert(res.error.message);
+          showFlash('Checklist de materiales registrado');
+          checklist();
         });
-        if (error) return alert(error.message);
-        showFlash('Checklist de materiales registrado');
-        checklist();
-      });
-
-      const novForm = document.getElementById('fNovedad');
-      novForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const fd = new FormData(novForm);
-        const { error } = await sb.from('novedades_materiales').insert({
-          movil: fd.get('movil'),
-          compartimiento: fd.get('compartimiento'),
-          material: fd.get('material'),
-          tipo_novedad: fd.get('tipo_novedad'),
-          detalle: fd.get('detalle'),
-          estado: 'pendiente',
-          fecha_hora: new Date().toISOString(),
-          reportado_por: perfilActual === 'bomberos' ? 'Bomberos' : (fd.get('bombero') || perfilActual)
+        document.getElementById('fNovedad').addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const fd = new FormData(this);
+          const res = await sb.from('novedades_materiales').insert({ movil: fd.get('movil'), compartimiento: fd.get('compartimiento'), material: fd.get('material'), tipo_novedad: fd.get('tipo_novedad'), detalle: fd.get('detalle'), estado: 'pendiente', fecha_hora: new Date().toISOString(), reportado_por: canBombero() ? 'Bomberos' : perfilActual });
+          if (res.error) return alert(res.error.message);
+          showFlash('Novedad registrada y enviada al dashboard');
+          checklist();
         });
-        if (error) return alert(error.message);
-        showFlash('Novedad registrada y enviada al dashboard');
-        checklist();
-      });
-
+      }
       if (canEditChecklist() && !canBombero()) {
-        document.querySelectorAll('.del-rev').forEach(btn => btn.addEventListener('click', async () => {
+        document.querySelectorAll('.del-rev').forEach(btn => btn.addEventListener('click', async function() {
           if (!confirm('¿Eliminar revisión?')) return;
           await deleteRow('revisiones', Number(btn.dataset.id));
           showFlash('Revisión eliminada');
           checklist();
         }));
       }
-      if (canAdmin() || perfilActual === 'materiales') {
-        document.querySelectorAll('.cerrar-nov').forEach(btn => btn.addEventListener('click', async () => {
-          const { error } = await sb.from('novedades_materiales').update({ estado: 'cerrada' }).eq('id', Number(btn.dataset.id));
-          if (error) return alert(error.message);
+      if (canManageNovedades()) {
+        document.querySelectorAll('.cerrar-nov').forEach(btn => btn.addEventListener('click', async function() {
+          await updateRows('novedades_materiales', { estado: 'cerrada' }, Number(btn.dataset.id));
           showFlash('Novedad cerrada');
           checklist();
         }));
       }
     }
 
-    async function repuestos() {() {
-      els.title.textContent = 'Inventario de repuestos';
+    async function repuestos() {
+      els.title.textContent = 'Repuestos';
       const rows = await safeSelect('repuestos', 'id', false);
       let html = '';
       if (canEditRepuestos()) {
-        html += '<div class="card" style="margin-bottom:12px;">' +
-          '<strong>Alta / edición de repuesto</strong>' +
-          '<form id="fRep" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;">' +
-            '<input name="id" type="hidden">' +
-            '<input name="nombre" placeholder="Nombre de repuesto" required>' +
-            '<input name="stock_actual" type="number" placeholder="Stock actual" required>' +
-            '<input name="stock_minimo" type="number" placeholder="Stock mínimo" required>' +
-            '<button class="primary" type="submit">Guardar repuesto</button>' +
-          '</form></div>';
+        html += '<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de repuesto</strong><form id="fRep" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="nombre" placeholder="Nombre de repuesto" required><input name="stock_actual" type="number" placeholder="Stock actual" required><input name="stock_minimo" type="number" placeholder="Stock mínimo" required><button class="primary" type="submit">Guardar repuesto</button></form></div>';
       }
       html += '<div class="card"><table><thead><tr><th>Repuesto</th><th>Stock actual</th><th>Stock mínimo</th><th>Estado</th>' + (canEditRepuestos() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
         (rows.map(r => {
           const critico = Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0);
-          return '<tr>' +
-            '<td><strong>' + escapeHtml(r.nombre) + '</strong></td>' +
-            '<td>' + escapeHtml(r.stock_actual) + '</td>' +
-            '<td>' + escapeHtml(r.stock_minimo) + '</td>' +
-            '<td>' + (critico ? '<span class="pill pill-bad">Alerta de stock</span>' : '<span class="pill pill-ok">OK</span>') + '</td>' +
-            (canEditRepuestos() ? '<td><button class="secondary edit-rep" data-id="' + r.id + '">Editar</button> <button class="danger del-rep" data-id="' + r.id + '">Borrar</button></td>' : '') +
-          '</tr>';
+          return '<tr><td><strong>' + escapeHtml(r.nombre) + '</strong></td><td>' + escapeHtml(r.stock_actual) + '</td><td>' + escapeHtml(r.stock_minimo) + '</td><td>' + (critico ? '<span class="pill pill-bad">Alerta de stock</span>' : '<span class="pill pill-ok">OK</span>') + '</td>' + (canEditRepuestos() ? '<td><button class="secondary edit-rep" data-id="' + r.id + '">Editar</button> <button class="danger del-rep" data-id="' + r.id + '">Borrar</button></td>' : '') + '</tr>';
         }).join('') || '<tr><td colspan="5">Sin repuestos cargados.</td></tr>') + '</tbody></table></div>';
       els.content.innerHTML = html;
-
       if (!canEditRepuestos()) return;
       const form = document.getElementById('fRep');
-      form.addEventListener('submit', async (e) => {
+      form.addEventListener('submit', async function(e) {
         e.preventDefault();
         const fd = new FormData(form);
-        const row = {
-          nombre: fd.get('nombre'),
-          stock_actual: Number(fd.get('stock_actual') || 0),
-          stock_minimo: Number(fd.get('stock_minimo') || 0)
-        };
+        const row = { nombre: fd.get('nombre'), stock_actual: Number(fd.get('stock_actual') || 0), stock_minimo: Number(fd.get('stock_minimo') || 0) };
         if (fd.get('id')) row.id = Number(fd.get('id'));
         await upsertRow('repuestos', row);
         showFlash('Repuesto guardado');
         repuestos();
       });
-      document.querySelectorAll('.edit-rep').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('.edit-rep').forEach(btn => btn.addEventListener('click', function() {
         const item = rows.find(x => String(x.id) === btn.dataset.id);
         form.elements.id.value = item.id;
         form.elements.nombre.value = item.nombre || '';
         form.elements.stock_actual.value = item.stock_actual || 0;
         form.elements.stock_minimo.value = item.stock_minimo || 0;
       }));
-      document.querySelectorAll('.del-rep').forEach(btn => btn.addEventListener('click', async () => {
+      document.querySelectorAll('.del-rep').forEach(btn => btn.addEventListener('click', async function() {
         if (!confirm('¿Eliminar repuesto?')) return;
         await deleteRow('repuestos', Number(btn.dataset.id));
         showFlash('Repuesto eliminado');
@@ -776,44 +656,23 @@
       const rows = await safeSelect('proveedores', 'id', false);
       let html = '';
       if (canEditProveedores()) {
-        html += '<div class="card" style="margin-bottom:12px;">' +
-          '<strong>Alta / edición de proveedor</strong>' +
-          '<form id="fProv" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;">' +
-            '<input name="id" type="hidden">' +
-            '<input name="nombre" placeholder="Proveedor / empresa" required>' +
-            '<input name="contacto" placeholder="Contacto" required>' +
-            '<input name="rubro" placeholder="Rubro" required>' +
-            '<input name="descripcion" placeholder="Descripción">' +
-            '<button class="primary" type="submit">Guardar proveedor</button>' +
-          '</form></div>';
+        html += '<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de proveedor</strong><form id="fProv" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="nombre" placeholder="Proveedor / empresa" required><input name="contacto" placeholder="Contacto" required><input name="rubro" placeholder="Rubro" required><input name="descripcion" placeholder="Descripción"><button class="primary" type="submit">Guardar proveedor</button></form></div>';
       }
       html += '<div class="card"><table><thead><tr><th>Proveedor</th><th>Contacto</th><th>Rubro</th><th>Descripción</th>' + (canEditProveedores() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
-        (rows.map(r => '<tr>' +
-          '<td><strong>' + escapeHtml(r.nombre) + '</strong></td>' +
-          '<td>' + escapeHtml(r.contacto) + '</td>' +
-          '<td>' + escapeHtml(r.rubro) + '</td>' +
-          '<td>' + escapeHtml(r.descripcion || '') + '</td>' +
-          (canEditProveedores() ? '<td><button class="secondary edit-prov" data-id="' + r.id + '">Editar</button> <button class="danger del-prov" data-id="' + r.id + '">Borrar</button></td>' : '') +
-        '</tr>').join('') || '<tr><td colspan="5">Sin proveedores cargados.</td></tr>') + '</tbody></table></div>';
+        (rows.map(r => '<tr><td><strong>' + escapeHtml(r.nombre) + '</strong></td><td>' + escapeHtml(r.contacto) + '</td><td>' + escapeHtml(r.rubro) + '</td><td>' + escapeHtml(r.descripcion || '') + '</td>' + (canEditProveedores() ? '<td><button class="secondary edit-prov" data-id="' + r.id + '">Editar</button> <button class="danger del-prov" data-id="' + r.id + '">Borrar</button></td>' : '') + '</tr>').join('') || '<tr><td colspan="5">Sin proveedores cargados.</td></tr>') + '</tbody></table></div>';
       els.content.innerHTML = html;
-
       if (!canEditProveedores()) return;
       const form = document.getElementById('fProv');
-      form.addEventListener('submit', async (e) => {
+      form.addEventListener('submit', async function(e) {
         e.preventDefault();
         const fd = new FormData(form);
-        const row = {
-          nombre: fd.get('nombre'),
-          contacto: fd.get('contacto'),
-          rubro: fd.get('rubro'),
-          descripcion: fd.get('descripcion')
-        };
+        const row = { nombre: fd.get('nombre'), contacto: fd.get('contacto'), rubro: fd.get('rubro'), descripcion: fd.get('descripcion') };
         if (fd.get('id')) row.id = Number(fd.get('id'));
         await upsertRow('proveedores', row);
         showFlash('Proveedor guardado');
         proveedores();
       });
-      document.querySelectorAll('.edit-prov').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('.edit-prov').forEach(btn => btn.addEventListener('click', function() {
         const item = rows.find(x => String(x.id) === btn.dataset.id);
         form.elements.id.value = item.id;
         form.elements.nombre.value = item.nombre || '';
@@ -821,7 +680,7 @@
         form.elements.rubro.value = item.rubro || '';
         form.elements.descripcion.value = item.descripcion || '';
       }));
-      document.querySelectorAll('.del-prov').forEach(btn => btn.addEventListener('click', async () => {
+      document.querySelectorAll('.del-prov').forEach(btn => btn.addEventListener('click', async function() {
         if (!confirm('¿Eliminar proveedor?')) return;
         await deleteRow('proveedores', Number(btn.dataset.id));
         showFlash('Proveedor eliminado');
@@ -831,55 +690,27 @@
 
     async function mantenimiento() {
       els.title.textContent = 'Bitácora';
-      const [movs, boms, rows] = await Promise.all([safeSelect('moviles', 'numero', true), safeSelect('bomberos', 'apellido', true), safeSelect('mantenimientos', 'id', false)]);
+      const all = await Promise.all([safeSelect('moviles', 'numero', true), safeSelect('bomberos', 'apellido', true), safeSelect('mantenimientos', 'id', false)]);
+      const movs = all[0], boms = all[1], rows = all[2];
       let html = '';
       if (canEditMantenimiento()) {
-        html += '<div class="card" style="margin-bottom:12px;">' +
-          '<strong>Registrar mantenimiento</strong>' +
-          '<form id="fMan" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;">' +
-            '<input name="id" type="hidden">' +
-            '<select name="movil">' + movs.map(m => '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>').join('') + '</select>' +
-            '<select name="responsable">' + boms.map(b => {
-              const nombre = ((b.jerarquia || '') + ' ' + (b.apellido || '') + ' ' + (b.nombre || '')).trim();
-              return '<option value="' + escapeHtml(nombre) + '">' + escapeHtml(nombre) + '</option>';
-            }).join('') + '</select>' +
-            '<input name="tipo" placeholder="Tipo de mantenimiento" required>' +
-            '<input name="km" type="number" placeholder="Kilometraje">' +
-            '<input name="observaciones" placeholder="Observaciones">' +
-            '<button class="primary" type="submit">Guardar mantenimiento</button>' +
-          '</form></div>';
+        html += '<div class="card" style="margin-bottom:12px;"><strong>Registrar mantenimiento</strong><form id="fMan" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><select name="movil">' + movs.map(m => '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>').join('') + '</select><select name="responsable">' + boms.map(b => { const nombre = ((b.jerarquia || '') + ' ' + (b.apellido || '') + ' ' + (b.nombre || '')).trim(); return '<option value="' + escapeHtml(nombre) + '">' + escapeHtml(nombre) + '</option>'; }).join('') + '</select><input name="tipo" placeholder="Tipo de mantenimiento" required><input name="km" type="number" placeholder="Kilometraje"><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar mantenimiento</button></form></div>';
       }
       html += '<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Responsable</th><th>Tipo</th><th>KM</th><th>Observaciones</th>' + (canEditMantenimiento() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
-        (rows.map(r => '<tr>' +
-          '<td>' + escapeHtml(new Date(r.fecha_hora || Date.now()).toLocaleString('es-AR')) + '</td>' +
-          '<td>Móvil ' + escapeHtml(r.movil) + '</td>' +
-          '<td>' + escapeHtml(r.responsable) + '</td>' +
-          '<td>' + escapeHtml(r.tipo) + '</td>' +
-          '<td>' + escapeHtml(r.km || '') + '</td>' +
-          '<td>' + escapeHtml(r.observaciones || '') + '</td>' +
-          (canEditMantenimiento() ? '<td><button class="secondary edit-man" data-id="' + r.id + '">Editar</button> <button class="danger del-man" data-id="' + r.id + '">Borrar</button></td>' : '') +
-        '</tr>').join('') || '<tr><td colspan="7">Sin mantenimientos.</td></tr>') + '</tbody></table></div>';
+        (rows.map(r => '<tr><td>' + escapeHtml(new Date(r.fecha_hora || Date.now()).toLocaleString('es-AR')) + '</td><td>Móvil ' + escapeHtml(r.movil) + '</td><td>' + escapeHtml(r.responsable) + '</td><td>' + escapeHtml(r.tipo) + '</td><td>' + escapeHtml(r.km || '') + '</td><td>' + escapeHtml(r.observaciones || '') + '</td>' + (canEditMantenimiento() ? '<td><button class="secondary edit-man" data-id="' + r.id + '">Editar</button> <button class="danger del-man" data-id="' + r.id + '">Borrar</button></td>' : '') + '</tr>').join('') || '<tr><td colspan="7">Sin mantenimientos.</td></tr>') + '</tbody></table></div>';
       els.content.innerHTML = html;
-
       if (!canEditMantenimiento()) return;
       const form = document.getElementById('fMan');
-      form.addEventListener('submit', async (e) => {
+      form.addEventListener('submit', async function(e) {
         e.preventDefault();
         const fd = new FormData(form);
-        const row = {
-          movil: fd.get('movil'),
-          responsable: fd.get('responsable'),
-          tipo: fd.get('tipo'),
-          km: Number(fd.get('km') || 0),
-          observaciones: fd.get('observaciones'),
-          fecha_hora: new Date().toISOString()
-        };
+        const row = { movil: fd.get('movil'), responsable: fd.get('responsable'), tipo: fd.get('tipo'), km: Number(fd.get('km') || 0), observaciones: fd.get('observaciones'), fecha_hora: new Date().toISOString() };
         if (fd.get('id')) row.id = Number(fd.get('id'));
         await upsertRow('mantenimientos', row);
         showFlash('Mantenimiento guardado');
         mantenimiento();
       });
-      document.querySelectorAll('.edit-man').forEach(btn => btn.addEventListener('click', () => {
+      document.querySelectorAll('.edit-man').forEach(btn => btn.addEventListener('click', function() {
         const item = rows.find(x => String(x.id) === btn.dataset.id);
         form.elements.id.value = item.id;
         form.elements.movil.value = item.movil;
@@ -888,7 +719,7 @@
         form.elements.km.value = item.km || 0;
         form.elements.observaciones.value = item.observaciones || '';
       }));
-      document.querySelectorAll('.del-man').forEach(btn => btn.addEventListener('click', async () => {
+      document.querySelectorAll('.del-man').forEach(btn => btn.addEventListener('click', async function() {
         if (!confirm('¿Eliminar mantenimiento?')) return;
         await deleteRow('mantenimientos', Number(btn.dataset.id));
         showFlash('Mantenimiento eliminado');
@@ -898,31 +729,27 @@
 
     async function respaldo() {
       els.title.textContent = 'Importar / exportar';
-      els.content.innerHTML = '<div class="card"><div class="toolbar">' +
-        '<button id="btnExport" class="secondary" ' + (canBackup() ? '' : 'disabled') + '>Exportar respaldo JSON</button>' +
-        '<input id="fileImport" type="file" accept="application/json" ' + (canBackup() ? '' : 'disabled') + '>' +
-        '</div><div class="small" style="margin-top:12px;">Solo el perfil Administrador puede importar o exportar respaldos.</div></div>';
+      els.content.innerHTML = '<div class="card"><div class="toolbar"><button id="btnExport" class="secondary" ' + (canBackup() ? '' : 'disabled') + '>Exportar respaldo JSON</button><input id="fileImport" type="file" accept="application/json" ' + (canBackup() ? '' : 'disabled') + '></div><div class="small" style="margin-top:12px;">Solo el perfil Administrador puede importar o exportar respaldos.</div></div>';
       if (!canBackup()) return;
-      document.getElementById('btnExport').addEventListener('click', async () => {
-        const [moviles, bomberos, compartimientos, inventario, revisiones, mantenimientos, fallas, repuestos, proveedores] = await Promise.all([
-          safeSelect('moviles'), safeSelect('bomberos'), safeSelect('compartimientos'), safeSelect('inventario'), safeSelect('revisiones'), safeSelect('mantenimientos'), safeSelect('fallas'), safeSelect('repuestos'), safeSelect('proveedores')
-        ]);
-        const payload = { moviles, bomberos, compartimientos, inventario, revisiones, mantenimientos, fallas, repuestos, proveedores, exported_at: new Date().toISOString() };
+      document.getElementById('btnExport').addEventListener('click', async function() {
+        const all = await Promise.all([safeSelect('moviles'), safeSelect('bomberos'), safeSelect('compartimientos'), safeSelect('inventario'), safeSelect('revisiones'), safeSelect('mantenimientos'), safeSelect('fallas'), safeSelect('repuestos'), safeSelect('proveedores'), safeSelect('novedades_materiales')]);
+        const payload = { moviles: all[0], bomberos: all[1], compartimientos: all[2], inventario: all[3], revisiones: all[4], mantenimientos: all[5], fallas: all[6], repuestos: all[7], proveedores: all[8], novedades_materiales: all[9], exported_at: new Date().toISOString() };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url; a.download = 'respaldo_cuartel.json'; a.click();
         URL.revokeObjectURL(url);
       });
-      document.getElementById('fileImport').addEventListener('change', async (e) => {
+      document.getElementById('fileImport').addEventListener('change', async function(e) {
         const file = e.target.files[0];
         if (!file) return;
         const data = JSON.parse(await file.text());
-        const tables = ['moviles', 'bomberos', 'compartimientos', 'inventario', 'revisiones', 'mantenimientos', 'fallas', 'repuestos', 'proveedores'];
-        for (const table of tables) {
+        const tables = ['moviles','bomberos','compartimientos','inventario','revisiones','mantenimientos','fallas','repuestos','proveedores','novedades_materiales'];
+        for (let i = 0; i < tables.length; i++) {
+          const table = tables[i];
           if (Array.isArray(data[table]) && data[table].length) {
-            const { error } = await sb.from(table).upsert(data[table]);
-            if (error) throw error;
+            const res = await sb.from(table).upsert(data[table]);
+            if (res.error) throw res.error;
           }
         }
         showFlash('Respaldo importado');
@@ -931,7 +758,8 @@
 
     async function estadisticas() {
       els.title.textContent = 'Estadísticas';
-      const [mov, rev, fallas, repuestos, novedades] = await Promise.all([safeSelect('moviles'), safeSelect('revisiones'), safeSelect('fallas'), safeSelect('repuestos'), safeSelect('novedades_materiales')]);
+      const all = await Promise.all([safeSelect('moviles'), safeSelect('revisiones'), safeSelect('fallas'), safeSelect('repuestos'), safeSelect('novedades_materiales')]);
+      const mov = all[0], rev = all[1], fallas = all[2], repuestos = all[3], novedades = all[4];
       const fallasCriticas = fallas.filter(f => String(f.tipo_falla || '').toLowerCase().includes('crit'));
       const fueraServicio = mov.filter(m => String(m.estado || '').toLowerCase() === 'fuera de servicio');
       const repuestosCriticos = repuestos.filter(r => Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0));
@@ -939,39 +767,7 @@
       const daniados = novedades.filter(n => String(n.tipo_novedad || '').toLowerCase() === 'dañado');
       const pendientes = novedades.filter(n => String(n.estado || '').toLowerCase() === 'pendiente');
       const cerradas = novedades.filter(n => String(n.estado || '').toLowerCase() === 'cerrada');
-      els.content.innerHTML = '<div class="stat-grid">' +
-        card('Total de revisiones', rev.length) +
-        card('Fallas críticas', fallasCriticas.length) +
-        card('Móviles fuera de servicio', fueraServicio.length) +
-        card('Repuestos con alerta', repuestosCriticos.length) +
-        card('Materiales faltantes', faltantes.length) +
-        card('Materiales dañados', daniados.length) +
-        card('Novedades pendientes', pendientes.length) +
-        card('Novedades cerradas', cerradas.length) +
-      '</div>' +
-      '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px; align-items:start;">' +
-        '<div class="card"><strong>Fallas por severidad</strong><div style="margin-top:8px;">' +
-          '<div class="list-row">Leves: ' + fallas.filter(f => String(f.tipo_falla || '').toLowerCase() === 'leve').length + '</div>' +
-          '<div class="list-row">Moderadas: ' + fallas.filter(f => String(f.tipo_falla || '').toLowerCase() === 'moderada').length + '</div>' +
-          '<div class="list-row">Críticas: ' + fallasCriticas.length + '</div>' +
-        '</div></div>' +
-        '<div class="card"><strong>Novedades de materiales</strong><div style="margin-top:8px;">' +
-          '<div class="list-row">Faltantes: ' + faltantes.length + '</div>' +
-          '<div class="list-row">Dañados: ' + daniados.length + '</div>' +
-          '<div class="list-row">Pendientes: ' + pendientes.length + '</div>' +
-          '<div class="list-row">Cerradas: ' + cerradas.length + '</div>' +
-        '</div></div>' +
-      '</div>' +
-      '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px; align-items:start;">' +
-        '<div class="card"><strong>Control operativo</strong><div style="margin-top:8px;">' +
-          '<div class="list-row">Móviles en servicio: ' + mov.filter(m => m.estado === 'En servicio').length + '</div>' +
-          '<div class="list-row">Móviles en mantenimiento: ' + mov.filter(m => m.estado === 'En mantenimiento').length + '</div>' +
-          '<div class="list-row">Móviles fuera de servicio: ' + fueraServicio.length + '</div>' +
-        '</div></div>' +
-        '<div class="card"><strong>Últimas novedades</strong><div style="margin-top:8px;">' +
-          (novedades.slice(0, 8).map(n => '<div class="list-row">Móvil ' + escapeHtml(n.movil) + ' · ' + escapeHtml(n.compartimiento) + ' · ' + escapeHtml(n.material) + ' · ' + escapeHtml(n.tipo_novedad) + ' · ' + escapeHtml(n.estado) + '</div>').join('') || 'Sin novedades.') +
-        '</div></div>' +
-      '</div>';
+      els.content.innerHTML = '<div class="stat-grid">' + card('Total de checklist', rev.length) + card('Fallas críticas', fallasCriticas.length) + card('Móviles fuera de servicio', fueraServicio.length) + card('Repuestos con alerta', repuestosCriticos.length) + card('Materiales faltantes', faltantes.length) + card('Materiales dañados', daniados.length) + card('Novedades pendientes', pendientes.length) + card('Novedades cerradas', cerradas.length) + '</div>' + '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;">' + '<div class="card"><strong>Fallas por severidad</strong><div style="margin-top:8px;"><div class="list-row">Leves: ' + fallas.filter(f => String(f.tipo_falla || '').toLowerCase() === 'leve').length + '</div><div class="list-row">Moderadas: ' + fallas.filter(f => String(f.tipo_falla || '').toLowerCase() === 'moderada').length + '</div><div class="list-row">Críticas: ' + fallasCriticas.length + '</div></div></div>' + '<div class="card"><strong>Novedades de materiales</strong><div style="margin-top:8px;"><div class="list-row">Faltantes: ' + faltantes.length + '</div><div class="list-row">Dañados: ' + daniados.length + '</div><div class="list-row">Pendientes: ' + pendientes.length + '</div><div class="list-row">Cerradas: ' + cerradas.length + '</div></div></div>' + '</div>';
     }
 
     async function novedades() {
@@ -979,50 +775,20 @@
       const rows = await safeSelect('novedades_materiales', 'id', false);
       const abiertas = rows.filter(r => String(r.estado || '').toLowerCase() === 'pendiente');
       const cerradas = rows.filter(r => String(r.estado || '').toLowerCase() === 'cerrada');
-      let html = '';
-      html += '<div class="stat-grid">' +
-        card('Pendientes', abiertas.length) +
-        card('Cerradas', cerradas.length) +
-        card('Faltantes', rows.filter(r => String(r.tipo_novedad || '').toLowerCase() === 'faltante').length) +
-        card('Dañados', rows.filter(r => String(r.tipo_novedad || '').toLowerCase() === 'dañado').length) +
-      '</div>';
-      html += '<div class="card" style="margin-top:12px;">' +
-        '<strong>Gestión de novedades</strong>' +
-        '<table style="margin-top:12px;"><thead><tr><th>Fecha</th><th>Móvil</th><th>Compartimiento</th><th>Material</th><th>Tipo</th><th>Detalle</th><th>Estado</th>' + ((canAdmin() || perfilActual === 'materiales') ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
-        (rows.map(r => '<tr>' +
-          '<td>' + escapeHtml(new Date(r.fecha_hora || Date.now()).toLocaleString('es-AR')) + '</td>' +
-          '<td>Móvil ' + escapeHtml(r.movil) + '</td>' +
-          '<td>' + escapeHtml(r.compartimiento) + '</td>' +
-          '<td>' + escapeHtml(r.material) + '</td>' +
-          '<td>' + escapeHtml(r.tipo_novedad) + '</td>' +
-          '<td>' + escapeHtml(r.detalle || '') + '</td>' +
-          '<td>' + (String(r.estado || '').toLowerCase() === 'cerrada' ? '<span class="pill pill-ok">Cerrada</span>' : '<span class="pill pill-bad">Pendiente</span>') + '</td>' +
-          ((canAdmin() || perfilActual === 'materiales') ? '<td>' +
-            (String(r.estado || '').toLowerCase() === 'pendiente'
-              ? '<button class="secondary cerrar-nov-tabla" data-id="' + r.id + '">Cerrar</button>'
-              : '<button class="secondary reabrir-nov-tabla" data-id="' + r.id + '">Reabrir</button>') +
-            (canAdmin() ? ' <button class="danger del-nov-tabla" data-id="' + r.id + '">Borrar</button>' : '') +
-            '</td>' : '') +
-        '</tr>').join('') || '<tr><td colspan="8">Sin novedades registradas.</td></tr>') +
-        '</tbody></table></div>';
-      els.content.innerHTML = html;
-
-      if (canAdmin() || perfilActual === 'materiales') {
-        document.querySelectorAll('.cerrar-nov-tabla').forEach(btn => btn.addEventListener('click', async () => {
-          const { error } = await sb.from('novedades_materiales').update({ estado: 'cerrada' }).eq('id', Number(btn.dataset.id));
-          if (error) return alert(error.message);
-          showFlash('Novedad cerrada');
-          novedades();
-        }));
-        document.querySelectorAll('.reabrir-nov-tabla').forEach(btn => btn.addEventListener('click', async () => {
-          const { error } = await sb.from('novedades_materiales').update({ estado: 'pendiente' }).eq('id', Number(btn.dataset.id));
-          if (error) return alert(error.message);
-          showFlash('Novedad reabierta');
-          novedades();
-        }));
-      }
+      els.content.innerHTML = '<div class="stat-grid">' + card('Pendientes', abiertas.length) + card('Cerradas', cerradas.length) + card('Faltantes', rows.filter(r => String(r.tipo_novedad || '').toLowerCase() === 'faltante').length) + card('Dañados', rows.filter(r => String(r.tipo_novedad || '').toLowerCase() === 'dañado').length) + '</div>' + '<div class="card" style="margin-top:12px;"><strong>Gestión de novedades</strong><table style="margin-top:12px;"><thead><tr><th>Fecha</th><th>Móvil</th><th>Compartimiento</th><th>Material</th><th>Tipo</th><th>Detalle</th><th>Estado</th>' + (canManageNovedades() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' + (rows.map(r => '<tr><td>' + escapeHtml(new Date(r.fecha_hora || Date.now()).toLocaleString('es-AR')) + '</td><td>Móvil ' + escapeHtml(r.movil) + '</td><td>' + escapeHtml(r.compartimiento) + '</td><td>' + escapeHtml(r.material) + '</td><td>' + escapeHtml(r.tipo_novedad) + '</td><td>' + escapeHtml(r.detalle || '') + '</td><td>' + (String(r.estado || '').toLowerCase() === 'cerrada' ? '<span class="pill pill-ok">Cerrada</span>' : '<span class="pill pill-bad">Pendiente</span>') + '</td>' + (canManageNovedades() ? '<td>' + (String(r.estado || '').toLowerCase() === 'pendiente' ? '<button class="secondary cerrar-nov-tabla" data-id="' + r.id + '">Cerrar</button>' : '<button class="secondary reabrir-nov-tabla" data-id="' + r.id + '">Reabrir</button>') + (canAdmin() ? ' <button class="danger del-nov-tabla" data-id="' + r.id + '">Borrar</button>' : '') + '</td>' : '') + '</tr>').join('') || '<tr><td colspan="8">Sin novedades registradas.</td></tr>') + '</tbody></table></div>';
+      if (!canManageNovedades()) return;
+      document.querySelectorAll('.cerrar-nov-tabla').forEach(btn => btn.addEventListener('click', async function() {
+        await updateRows('novedades_materiales', { estado: 'cerrada' }, Number(btn.dataset.id));
+        showFlash('Novedad cerrada');
+        novedades();
+      }));
+      document.querySelectorAll('.reabrir-nov-tabla').forEach(btn => btn.addEventListener('click', async function() {
+        await updateRows('novedades_materiales', { estado: 'pendiente' }, Number(btn.dataset.id));
+        showFlash('Novedad reabierta');
+        novedades();
+      }));
       if (canAdmin()) {
-        document.querySelectorAll('.del-nov-tabla').forEach(btn => btn.addEventListener('click', async () => {
+        document.querySelectorAll('.del-nov-tabla').forEach(btn => btn.addEventListener('click', async function() {
           if (!confirm('¿Eliminar novedad?')) return;
           await deleteRow('novedades_materiales', Number(btn.dataset.id));
           showFlash('Novedad eliminada');
@@ -1042,18 +808,19 @@
           lines.push('ERROR - ' + label + ': ' + (err && err.message ? err.message : String(err)));
         }
       }
-      await run('Auth', async () => {
-        const { data, error } = await sb.auth.getSession();
-        if (error) throw error;
-        return data.session ? 'sesión activa' : 'sin sesión';
+      await run('Auth', async function() {
+        const res = await sb.auth.getSession();
+        if (res.error) throw res.error;
+        return res.data.session ? 'sesión activa' : 'sin sesión';
       });
-      await run('Moviles', async () => String((await safeSelect('moviles', 'id', false, 1)).length));
-      await run('Bomberos', async () => String((await safeSelect('bomberos', 'id', false, 1)).length));
-      await run('Inventario', async () => String((await safeSelect('inventario', 'id', false, 1)).length));
-      await run('Revisiones', async () => String((await safeSelect('revisiones', 'id', false, 1)).length));
-      await run('Fallas', async () => String((await safeSelect('fallas', 'id', false, 1)).length));
-      await run('Repuestos', async () => String((await safeSelect('repuestos', 'id', false, 1)).length));
-      await run('Proveedores', async () => String((await safeSelect('proveedores', 'id', false, 1)).length));
+      await run('Moviles', async function() { return String((await safeSelect('moviles', 'id', false, 1)).length); });
+      await run('Bomberos', async function() { return String((await safeSelect('bomberos', 'id', false, 1)).length); });
+      await run('Inventario', async function() { return String((await safeSelect('inventario', 'id', false, 1)).length); });
+      await run('Revisiones', async function() { return String((await safeSelect('revisiones', 'id', false, 1)).length); });
+      await run('Fallas', async function() { return String((await safeSelect('fallas', 'id', false, 1)).length); });
+      await run('Repuestos', async function() { return String((await safeSelect('repuestos', 'id', false, 1)).length); });
+      await run('Proveedores', async function() { return String((await safeSelect('proveedores', 'id', false, 1)).length); });
+      await run('Novedades materiales', async function() { return String((await safeSelect('novedades_materiales', 'id', false, 1)).length); });
       els.content.innerHTML = '<div class="err" style="background:#0f172a;border-color:#334155;color:#e2e8f0;">' + escapeHtml(lines.join('\n')) + '</div>';
     }
 
@@ -1081,17 +848,15 @@
 
     function init() {
       try {
-        if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-          throw new Error('No cargó la librería de Supabase.');
-        }
+        if (!window.supabase || typeof window.supabase.createClient !== 'function') throw new Error('No cargó la librería de Supabase.');
         sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         els.bootMsg.textContent = 'Sistema listo.';
         authInputs();
         els.perfil.addEventListener('change', authInputs);
         els.logout.addEventListener('click', logout);
         els.logoutTop.addEventListener('click', logout);
-        document.querySelectorAll('.nav').forEach(btn => btn.addEventListener('click', () => nav(btn.dataset.sec)));
-        els.loginForm.addEventListener('submit', async (e) => {
+        document.querySelectorAll('.nav').forEach(btn => btn.addEventListener('click', function() { nav(btn.dataset.sec); }));
+        els.loginForm.addEventListener('submit', async function(e) {
           e.preventDefault();
           perfilActual = els.perfil.value;
           try {
@@ -1102,11 +867,9 @@
             }
             els.login.classList.add('hidden');
             els.app.classList.remove('hidden');
-            els.userInfo.textContent = perfilActual === 'bomberos'
-              ? 'Bomberos · dashboard, plano del móvil y checklist'
-              : perfilActual + ' · permisos según rol';
+            els.userInfo.textContent = canBombero() ? 'Bomberos · dashboard, plano del móvil y checklist de materiales' : perfilActual + ' · permisos según rol';
             updateNavVisibility();
-            nav(perfilActual === 'bomberos' ? 'checklist' : 'dashboard');
+            nav(canBombero() ? 'checklist' : 'dashboard');
           } catch (err) {
             alert(err && err.message ? err.message : 'No se pudo iniciar sesión.');
           }
@@ -1117,8 +880,8 @@
       }
     }
 
-    window.addEventListener('error', (event) => showBootError(event && event.message ? event.message : 'Script error'));
-    window.addEventListener('unhandledrejection', (event) => showBootError(event && event.reason && event.reason.message ? event.reason.message : String(event.reason || 'Promise error')));
+    window.addEventListener('error', function(event) { showBootError(event && event.message ? event.message : 'Script error'); });
+    window.addEventListener('unhandledrejection', function(event) { showBootError(event && event.reason && event.reason.message ? event.reason.message : String((event && event.reason) || 'Promise error')); });
     init();
   </script>
 </body>
