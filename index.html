@@ -159,6 +159,8 @@
         <div id="userInfo" class="small" style="margin-bottom:16px;"></div>
         <div class="grid">
           <button class="nav active" data-sec="dashboard" type="button">Dashboard</button>
+          <button class="nav" data-sec="checklist_diario" type="button">Checklist diario</button>
+          <button class="nav" data-sec="control_materiales" type="button">Control diario materiales</button>
           <button class="nav" data-sec="inventario_general" type="button">Inventario general</button>
           <button class="nav" data-sec="asignaciones" type="button">Asignaciones</button>
           <button class="nav" data-sec="mantenimiento_stock" type="button">Control de mantenimiento</button>
@@ -191,11 +193,11 @@
       jefatura: 'jefatura@cuartel.com'
     };
     const VIEW_RULES = {
-      administrador: ['dashboard','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
-      materiales: ['dashboard','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
-      automotores: ['dashboard','inventario_general','inventario_movil','reportes_stock','plano','diagnostico'],
-      jefatura: ['dashboard','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
-      bomberos: ['dashboard','inventario_general','inventario_movil','plano','diagnostico']
+      administrador: ['dashboard','checklist_diario','control_materiales','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
+      materiales: ['dashboard','control_materiales','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
+      automotores: ['dashboard','checklist_diario','inventario_general','inventario_movil','reportes_stock','plano','diagnostico'],
+      jefatura: ['dashboard','checklist_diario','control_materiales','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
+      bomberos: ['dashboard','control_materiales','inventario_general','inventario_movil','plano','diagnostico']
     };
 
     const els = {
@@ -233,6 +235,12 @@
     }
     function canDeleteCompartments() {
       return perfilActual === 'administrador' || perfilActual === 'materiales';
+    }
+    function canDoChecklist() {
+      return perfilActual === 'administrador' || perfilActual === 'automotores' || perfilActual === 'jefatura';
+    }
+    function canDoMaterialControl() {
+      return perfilActual === 'administrador' || perfilActual === 'materiales' || perfilActual === 'bomberos' || perfilActual === 'jefatura';
     }
     function escapeHtml(value) {
       return String(value ?? '')
@@ -328,7 +336,8 @@
       };
       return [headers.join(','), ...rows.map(function (r) {
         return headers.map(function (h) { return esc(r[h]); }).join(',');
-      })].join('\n');
+      })].join('
+');
     }
 
     async function dashboard() {
@@ -338,13 +347,17 @@
         safeSelect('fallas', 'fecha_hora', false),
         safeSelect('repuestos', 'nombre', true),
         safeSelect('novedades_materiales', 'fecha_hora', false),
-        safeSelect('v_stock_general', 'nombre', true)
+        safeSelect('v_stock_general', 'nombre', true),
+        safeSelect('revisiones', 'fecha_hora', false),
+        safeSelect('controles_materiales', 'fecha_hora', false)
       ]);
       const mov = all[0];
       const fallas = all[1];
       const repuestos = all[2];
       const novedades = all[3];
       const stock = all[4];
+      const revisiones = all[5];
+      const controlesMat = all[6];
       const enServicio = mov.filter(function (x) { return x.estado === 'En servicio'; }).length;
       const enMantenimiento = mov.filter(function (x) { return x.estado === 'En mantenimiento'; }).length;
       const fueraServicio = mov.filter(function (x) { return x.estado === 'Fuera de servicio'; }).length;
@@ -352,6 +365,8 @@
       const repuestosCriticos = repuestos.filter(function (r) { return Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0); });
       const alertasMateriales = novedades.filter(function (n) { return String(n.estado || '').toLowerCase() === 'pendiente'; });
       const alertasStockGeneral = stock.filter(function (s) { return s.alerta_minimo === true; });
+      const checklistHoy = revisiones.filter(function(r){ try{return new Date(r.fecha_hora).toDateString()===new Date().toDateString();}catch(e){return false;} }).length;
+      const controlesHoy = controlesMat.filter(function(r){ try{return new Date(r.fecha_hora).toDateString()===new Date().toDateString();}catch(e){return false;} }).length;
       els.content.innerHTML =
         '<div class="hero-grid">' +
           '<div class="hero-card service"><div class="hero-label">Móviles en servicio</div><div class="hero-number">' + enServicio + '</div></div>' +
@@ -363,12 +378,152 @@
           card('Repuestos críticos', repuestosCriticos.length) +
           card('Alertas materiales', alertasMateriales.length) +
           card('Alertas stock general', alertasStockGeneral.length) +
+          card('Checklist hoy', checklistHoy) +
+          card('Controles materiales hoy', controlesHoy) +
         '</div>' +
-        '<div class="card" style="margin-top:14px;"><strong>Alertas de stock general</strong><div style="margin-top:10px;">' +
+        '<div class="card" style="margin-top:14px;"><strong>Centro de alertas</strong><div style="margin-top:10px;">' +
+          ((alertasMateriales.map(function(n){ return '<div class="list-row"><strong>Móvil '+escapeHtml(n.movil||'')+'</strong> · '+escapeHtml(n.material||'')+' · <span class="pill pill-bad">'+escapeHtml(n.tipo_novedad||'Novedad')+'</span></div>'; }).join('')) || '') +
+          ((alertasStockGeneral.map(function (s) {
           ((alertasStockGeneral.map(function (s) {
             return '<div class="list-row"><strong>' + escapeHtml(s.nombre) + '</strong> · disponible ' + escapeHtml(s.disponible_real) + ' / mínimo ' + escapeHtml(s.stock_minimo) + '</div>';
           }).join('')) || 'Sin alertas de stock general.') +
         '</div></div>';
+        }
+
+    async function checklist_diario() {
+      els.title.textContent = 'Checklist diario';
+      const moviles = await safeSelect('moviles', 'numero', true);
+      let html = '<div class="card" style="max-width:980px;"><strong>Control diario de móviles</strong><div class="small" style="margin-top:8px;">Registro operativo diario para automotores.</div>';
+      if (canDoChecklist()) {
+        html += '<form id="fChecklist" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); margin-top:14px;">' +
+          '<select name="movil">' + moviles.map(function(m){ return '<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>'; }).join('') + '</select>' +
+          '<input name="responsable" placeholder="Responsable / legajo" required>' +
+          '<select name="luces"><option value="OK">Luces emergencia OK</option><option value="FALLA">Luces emergencia FALLA</option></select>' +
+          '<select name="sirena"><option value="OK">Sirena y bocina OK</option><option value="FALLA">Sirena y bocina FALLA</option></select>' +
+          '<select name="aceite"><option value="OK">Nivel de aceite OK</option><option value="FALLA">Nivel de aceite FALLA</option></select>' +
+          '<select name="agua"><option value="OK">Nivel de agua OK</option><option value="FALLA">Nivel de agua FALLA</option></select>' +
+          '<select name="neumaticos"><option value="OK">Neumáticos OK</option><option value="FALLA">Neumáticos FALLA</option></select>' +
+          '<select name="radio"><option value="OK">Equipos de radio OK</option><option value="FALLA">Equipos de radio FALLA</option></select>' +
+          '<select name="combustible"><option value="OK">Combustible > 3/4</option><option value="FALLA">Combustible bajo</option></select>' +
+          '<textarea name="observaciones" placeholder="Observaciones"></textarea>' +
+          '<button class="primary" type="submit">Guardar checklist</button>' +
+        '</form>';
+      } else {
+        html += '<div class="err" style="margin-top:12px;">Este perfil no tiene permiso para registrar checklist diario.</div>';
+      }
+      html += '</div><div class="card" style="margin-top:12px;"><strong>Últimos checklist</strong><div id="checklistHistory"></div></div>';
+      els.content.innerHTML = html;
+      const history = await safeSelect('revisiones', 'fecha_hora', false, 20);
+      document.getElementById('checklistHistory').innerHTML = history.map(function(r){
+        return '<div class="list-row"><strong>Móvil '+escapeHtml(r.movil||'')+'</strong> · '+escapeHtml(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+' · '+escapeHtml(r.responsable||'')+'<div class="small">Luces: '+escapeHtml(r.luces||'')+' | Sirena: '+escapeHtml(r.sirena||'')+' | Aceite: '+escapeHtml(r.aceite||'')+' | Agua: '+escapeHtml(r.agua||'')+' | Neumáticos: '+escapeHtml(r.neumaticos||'')+' | Radio: '+escapeHtml(r.radio||'')+' | Combustible: '+escapeHtml(r.combustible||'')+'</div><div class="small">'+escapeHtml(r.observaciones||'')+'</div></div>';
+      }).join('') || '<div class="small">Sin checklist cargados.</div>';
+      const form = document.getElementById('fChecklist');
+      if (form) {
+        form.addEventListener('submit', async function(e){
+          e.preventDefault();
+          const fd = new FormData(form);
+          const row = {
+            movil: fd.get('movil'),
+            responsable: fd.get('responsable'),
+            luces: fd.get('luces'),
+            sirena: fd.get('sirena'),
+            aceite: fd.get('aceite'),
+            agua: fd.get('agua'),
+            neumaticos: fd.get('neumaticos'),
+            radio: fd.get('radio'),
+            combustible: fd.get('combustible'),
+            observaciones: fd.get('observaciones'),
+            fecha_hora: new Date().toISOString()
+          };
+          const res = await sb.from('revisiones').insert(row);
+          if (res.error) { alert(res.error.message); return; }
+          showFlash('Checklist diario guardado', 'ok');
+          checklist_diario();
+        });
+      }
+    }
+
+    async function control_materiales() {
+      els.title.textContent = 'Control diario materiales';
+      const all = await Promise.all([
+        safeSelect('moviles', 'numero', true),
+        safeSelect('v_stock_assignments_detail', 'movil', true),
+        safeSelect('controles_materiales', 'fecha_hora', false, 20)
+      ]);
+      const moviles = all[0];
+      const asignaciones = all[1];
+      const historial = all[2];
+      let html = '<div class="card" style="max-width:1100px;"><strong>Verificación diaria de materiales</strong><div class="small" style="margin-top:8px;">Seleccioná el móvil y verificá cantidades reales por compartimiento.</div>';
+      if (canDoMaterialControl()) {
+        html += '<div class="grid" style="grid-template-columns:240px 1fr; margin-top:14px; align-items:start;">' +
+          '<div><select id="ctrlMovil">' + moviles.map(function(m){ return '<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>'; }).join('') + '</select><input id="ctrlResponsable" placeholder="Responsable / legajo" style="margin-top:10px;"><textarea id="ctrlObs" placeholder="Observaciones generales" style="margin-top:10px;"></textarea><button id="saveMatCtrl" class="primary" type="button" style="margin-top:10px;">Guardar control</button></div>' +
+          '<div id="ctrlMaterialesWrap"></div>' +
+        '</div>';
+      } else {
+        html += '<div class="err" style="margin-top:12px;">Este perfil no tiene permiso para registrar control de materiales.</div>';
+      }
+      html += '</div><div class="card" style="margin-top:12px;"><strong>Últimos controles de materiales</strong><div>' +
+        (historial.map(function(h){ return '<div class="list-row"><strong>Móvil '+escapeHtml(h.movil||'')+'</strong> · '+escapeHtml(new Date(h.fecha_hora||Date.now()).toLocaleString('es-AR'))+' · '+escapeHtml(h.responsable||'')+'<div class="small">'+escapeHtml(h.resumen||'')+'</div></div>'; }).join('') || '<div class="small">Sin controles cargados.</div>') +
+      '</div></div>';
+      els.content.innerHTML = html;
+      if (!canDoMaterialControl()) return;
+      const sel = document.getElementById('ctrlMovil');
+      const wrap = document.getElementById('ctrlMaterialesWrap');
+      function renderMateriales(movil) {
+        const rows = asignaciones.filter(function(a){ return String(a.movil) === String(movil) && a.estado_asignacion === 'ACTIVA'; });
+        if (!rows.length) { wrap.innerHTML = '<div class="card">Ese móvil no tiene materiales asignados.</div>'; return; }
+        wrap.innerHTML = '<div class="card"><table><thead><tr><th>Compartimiento</th><th>Ítem</th><th>Asignado</th><th>Verificado</th><th>Estado</th><th>Novedad</th></tr></thead><tbody>' +
+          rows.map(function(r,idx){
+            return '<tr>'+
+              '<td>'+escapeHtml(r.compartimiento||'Sin compartimiento')+'</td>'+
+              '<td><strong>'+escapeHtml(r.nombre)+'</strong><div class="small">'+escapeHtml(r.codigo_interno||'')+'</div></td>'+
+              '<td>'+escapeHtml(r.cantidad)+'</td>'+
+              '<td><input class="mat-verif" data-idx="'+idx+'" type="number" min="0" value="'+escapeHtml(r.cantidad)+'"></td>'+
+              '<td><select class="mat-estado" data-idx="'+idx+'"><option value="OK">OK</option><option value="FALTANTE">Faltante</option><option value="DANADO">Dañado</option></select></td>'+
+              '<td><input class="mat-nov" data-idx="'+idx+'" placeholder="Detalle"></td>'+
+            '</tr>';
+          }).join('') +
+        '</tbody></table></div>';
+        wrap.dataset.rows = JSON.stringify(rows);
+      }
+      renderMateriales(sel.value);
+      sel.addEventListener('change', function(){ renderMateriales(sel.value); });
+      document.getElementById('saveMatCtrl').addEventListener('click', async function(){
+        const rows = JSON.parse(wrap.dataset.rows || '[]');
+        const responsable = document.getElementById('ctrlResponsable').value;
+        const obs = document.getElementById('ctrlObs').value;
+        if (!responsable) { alert('Completá el responsable.'); return; }
+        const resumenPartes = [];
+        for (let i = 0; i < rows.length; i++) {
+          const verif = Number(document.querySelector('.mat-verif[data-idx="'+i+'"]').value || 0);
+          const estado = document.querySelector('.mat-estado[data-idx="'+i+'"]').value;
+          const nov = document.querySelector('.mat-nov[data-idx="'+i+'"]').value;
+          const base = rows[i];
+          resumenPartes.push(base.nombre + ' [' + estado + ' ' + verif + '/' + base.cantidad + ']');
+          if (estado !== 'OK' || verif !== Number(base.cantidad)) {
+            const novedad = await sb.from('novedades_materiales').insert({
+              movil: base.movil,
+              compartimiento: base.compartimiento,
+              material: base.nombre,
+              tipo_novedad: estado === 'DANADO' ? 'Dañado' : 'Faltante',
+              detalle: nov || ('Verificado ' + verif + ' de ' + base.cantidad),
+              estado: 'pendiente',
+              fecha_hora: new Date().toISOString()
+            });
+            if (novedad.error) { alert(novedad.error.message); return; }
+          }
+        }
+        const control = await sb.from('controles_materiales').insert({
+          movil: sel.value,
+          responsable: responsable,
+          resumen: resumenPartes.join(' | '),
+          observaciones: obs,
+          fecha_hora: new Date().toISOString()
+        });
+        if (control.error) { alert(control.error.message); return; }
+        showFlash('Control diario de materiales guardado', 'ok');
+        control_materiales();
+      });
     }
 
     async function inventario_general() {
@@ -837,7 +992,8 @@
       await run('v_stock_assignments_detail', async function () { return String((await safeSelect('v_stock_assignments_detail', 'id', false, 1)).length); });
       await run('v_maintenance_control_detail', async function () { return String((await safeSelect('v_maintenance_control_detail', 'id', false, 1)).length); });
       await run('v_stock_decommissions_detail', async function () { return String((await safeSelect('v_stock_decommissions_detail', 'id', false, 1)).length); });
-      els.content.innerHTML = '<div class="err" style="background:#0f172a;border-color:#334155;color:#e2e8f0;">' + escapeHtml(lines.join('\n')) + '</div>';
+      els.content.innerHTML = '<div class="err" style="background:#0f172a;border-color:#334155;color:#e2e8f0;">' + escapeHtml(lines.join('
+')) + '</div>';
     }
 
     async function nav(section) {
@@ -847,6 +1003,8 @@
       }
       activateNav(section);
       if (section === 'dashboard') return dashboard();
+      if (section === 'checklist_diario') return checklist_diario();
+      if (section === 'control_materiales') return control_materiales();
       if (section === 'inventario_general') return inventario_general();
       if (section === 'asignaciones') return asignaciones();
       if (section === 'mantenimiento_stock') return mantenimiento_stock();
