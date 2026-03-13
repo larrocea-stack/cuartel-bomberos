@@ -6,65 +6,20 @@
   <title>Cuartel Online</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    :root {
-      --bg: #020617;
-      --panel: #0f172a;
-      --soft: #1e293b;
-      --border: #334155;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
-      --red: #b91c1c;
-      --red-dark: #7f1d1d;
-      --green: #166534;
-      --amber: #92400e;
-      --blue: #1d4ed8;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color: var(--text); }
-    .hidden { display: none !important; }
-    .layout { display: flex; min-height: 100vh; }
-    .sidebar { width: 300px; background: var(--bg); border-right: 1px solid var(--border); padding: 16px; }
-    .main { flex: 1; padding: 20px; }
-    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
-    .grid { display: grid; gap: 12px; }
-    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
-    .small { font-size: 12px; color: var(--muted); }
-    .nav { background: #111827; color: var(--text); padding: 10px 12px; border: none; border-radius: 10px; text-align: left; cursor: pointer; }
-    .nav.active { background: #991b1b; }
-    .primary, .secondary, .danger { border: none; border-radius: 10px; padding: 10px 12px; color: #fff; cursor: pointer; }
-    .primary { background: var(--red); }
-    .secondary { background: var(--soft); }
-    .danger { background: var(--red-dark); }
-    .info { background: var(--blue); }
-    input, select, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--soft); color: #fff; }
-    textarea { min-height: 90px; resize: vertical; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
-    th { font-size: 12px; color: var(--muted); text-transform: uppercase; }
-    .list-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
-    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; }
-    .pill-ok { background: #052e16; color: #bbf7d0; }
-    .pill-warn { background: #78350f; color: #fde68a; }
-    .pill-bad { background: #450a0a; color: #fecaca; }
-    .pill-info { background: #172554; color: #bfdbfe; }
-    .err, .ok { border-radius: 12px; padding: 12px; white-space: pre-wrap; }
-    .err { background: #450a0a; border: 1px solid var(--red-dark); color: #fecaca; }
-    .ok { background: #052e16; border: 1px solid var(--green); color: #bbf7d0; }
-    .hero-grid, .stat-grid, .mobile-map { display: grid; gap: 12px; }
-    .hero-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-    .stat-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-    .mobile-map { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-    .hero-card { border-radius: 18px; padding: 18px; border: 1px solid var(--border); }
-    .service { background: #052e16; border-color: var(--green); }
-    .maint { background: #3b2a05; border-color: var(--amber); }
-    .out { background: #450a0a; border-color: var(--red-dark); }
-    .hero-number { font-size: 34px; font-weight: 800; }
-    .hero-label { font-size: 12px; color: var(--muted); text-transform: uppercase; }
-    .comp-box { background: #111827; border: 1px solid var(--border); border-radius: 14px; padding: 12px; }
-    @media (max-width: 900px) {
-      .layout { display: block; }
-      .sidebar { width: auto; border-right: none; border-bottom: 1px solid var(--border); }
-    }
+    :root{--bg:#020617;--panel:#0f172a;--soft:#1e293b;--border:#334155;--text:#e2e8f0;--muted:#94a3b8;--red:#b91c1c;--red2:#7f1d1d;--green:#166534;--amber:#92400e}
+    *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+    .hidden{display:none!important}.layout{display:flex;min-height:100vh}.sidebar{width:300px;background:var(--bg);border-right:1px solid var(--border);padding:16px}.main{flex:1;padding:20px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px}.grid{display:grid;gap:12px}.small{font-size:12px;color:var(--muted)}
+    .nav{background:#111827;color:var(--text);padding:10px 12px;border:none;border-radius:10px;text-align:left;cursor:pointer}.nav.active{background:#991b1b}.nav.hidden{display:none}
+    .primary,.secondary,.danger{border:none;border-radius:10px;padding:10px 12px;color:#fff;cursor:pointer}.primary{background:var(--red)}.secondary{background:var(--soft)}.danger{background:var(--red2)}
+    input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--soft);color:#fff}textarea{min-height:90px;resize:vertical}
+    table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}th{font-size:12px;color:var(--muted);text-transform:uppercase}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px}.pill-ok{background:#052e16;color:#bbf7d0}.pill-bad{background:#450a0a;color:#fecaca}.pill-warn{background:#78350f;color:#fde68a}
+    .err,.ok{border-radius:12px;padding:12px;white-space:pre-wrap}.err{background:#450a0a;border:1px solid var(--red2);color:#fecaca}.ok{background:#052e16;border:1px solid var(--green);color:#bbf7d0}
+    .hero-grid,.stat-grid{display:grid;gap:12px}.hero-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}.stat-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+    .hero-card{border-radius:18px;padding:18px;border:1px solid var(--border)}.service{background:#052e16;border-color:var(--green)}.maint{background:#3b2a05;border-color:var(--amber)}.out{background:#450a0a;border-color:var(--red2)}
+    .hero-number{font-size:34px;font-weight:800}.hero-label{font-size:12px;color:var(--muted);text-transform:uppercase}.list-row{padding:10px 0;border-bottom:1px solid var(--border)}
+    @media (max-width:900px){.layout{display:block}.sidebar{width:auto;border-right:none;border-bottom:1px solid var(--border)}}
   </style>
 </head>
 <body>
@@ -120,887 +75,353 @@
     </div>
   </div>
 
-  <script>
-    const SUPABASE_URL = 'https://nksnxiqteqqlngmpzeew.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
-    const PROFILE_EMAILS = {
-      administrador: 'admin@cuartel.com',
-      materiales: 'materiales@cuartel.com',
-      automotores: 'automotores@cuartel.com',
-      jefatura: 'jefatura@cuartel.com'
-    };
-    const VIEW_RULES = {
-      administrador: ['dashboard','checklist_diario','control_materiales','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
-      materiales: ['dashboard','control_materiales','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
-      automotores: ['dashboard','checklist_diario','inventario_general','inventario_movil','reportes_stock','plano','diagnostico'],
-      jefatura: ['dashboard','checklist_diario','control_materiales','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
-      bomberos: ['dashboard','control_materiales','inventario_general','inventario_movil','plano','diagnostico']
-    };
+<script>
+(function(){
+  const SUPABASE_URL='https://nksnxiqteqqlngmpzeew.supabase.co';
+  const SUPABASE_KEY='sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
+  const PROFILE_EMAILS={administrador:'admin@cuartel.com',materiales:'materiales@cuartel.com',automotores:'automotores@cuartel.com',jefatura:'jefatura@cuartel.com'};
+  const VIEW_RULES={
+    administrador:['dashboard','checklist_diario','control_materiales','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
+    materiales:['dashboard','control_materiales','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
+    automotores:['dashboard','checklist_diario','inventario_general','inventario_movil','reportes_stock','plano','diagnostico'],
+    jefatura:['dashboard','checklist_diario','control_materiales','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
+    bomberos:['dashboard','control_materiales','inventario_general','inventario_movil','plano','diagnostico']
+  };
+  const els={
+    login:document.getElementById('login'),app:document.getElementById('app'),loginForm:document.getElementById('loginForm'),perfil:document.getElementById('perfil'),email:document.getElementById('email'),password:document.getElementById('password'),bootMsg:document.getElementById('bootMsg'),bootErr:document.getElementById('bootErr'),userInfo:document.getElementById('userInfo'),title:document.getElementById('title'),content:document.getElementById('content'),flash:document.getElementById('flash'),logout:document.getElementById('logout'),logoutTop:document.getElementById('logoutTop')
+  };
+  let sb=null,perfilActual=null,userActual=null;
 
-    const els = {
-      login: document.getElementById('login'),
-      app: document.getElementById('app'),
-      loginForm: document.getElementById('loginForm'),
-      perfil: document.getElementById('perfil'),
-      email: document.getElementById('email'),
-      password: document.getElementById('password'),
-      bootMsg: document.getElementById('bootMsg'),
-      bootErr: document.getElementById('bootErr'),
-      userInfo: document.getElementById('userInfo'),
-      title: document.getElementById('title'),
-      content: document.getElementById('content'),
-      flash: document.getElementById('flash'),
-      logout: document.getElementById('logout'),
-      logoutTop: document.getElementById('logoutTop')
-    };
+  function h(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+  function canView(sec){return (VIEW_RULES[perfilActual]||[]).indexOf(sec)>=0;}
+  function canEditStockGeneral(){return perfilActual==='administrador'||perfilActual==='materiales';}
+  function canManageMaintenanceStock(){return perfilActual==='administrador'||perfilActual==='materiales';}
+  function canManageDecommissions(){return perfilActual==='administrador'||perfilActual==='materiales';}
+  function canDeleteCompartments(){return perfilActual==='administrador'||perfilActual==='materiales';}
+  function canDoChecklist(){return perfilActual==='administrador'||perfilActual==='automotores'||perfilActual==='jefatura';}
+  function canDoMaterialControl(){return perfilActual==='administrador'||perfilActual==='materiales'||perfilActual==='bomberos'||perfilActual==='jefatura';}
+  function showBootError(msg){els.bootErr.textContent=msg;els.bootErr.classList.remove('hidden');}
+  function showFlash(msg,type){els.flash.className=type==='ok'?'ok':'err';els.flash.textContent=msg;els.flash.classList.remove('hidden');setTimeout(function(){els.flash.classList.add('hidden');},3200);}
+  function authInputs(){var b=els.perfil.value==='bomberos';els.email.classList.toggle('hidden',b);els.password.classList.toggle('hidden',b);}
+  function activateNav(sec){document.querySelectorAll('.nav').forEach(function(btn){btn.classList.remove('active');});var btn=document.querySelector('.nav[data-sec="'+sec+'"]');if(btn)btn.classList.add('active');}
+  function updateNavVisibility(){document.querySelectorAll('.nav').forEach(function(btn){btn.classList.toggle('hidden',!canView(btn.dataset.sec));});}
+  function card(label,value){return '<div class="card"><div class="small">'+h(label)+'</div><div style="font-size:28px;font-weight:800;">'+h(value)+'</div></div>';}
+  function csv(rows){if(!rows||!rows.length)return '';var headers=Object.keys(rows[0]);function esc(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';}return [headers.join(',')].concat(rows.map(function(r){return headers.map(function(k){return esc(r[k]);}).join(',');})).join('
+');}
+  function downloadText(filename,content,type){var blob=new Blob([content],{type:type||'text/plain;charset=utf-8'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);}
 
-    let sb = null;
-    let perfilActual = null;
-    let userActual = null;
+  async function safeSelect(table,orderBy,ascending,limit){var q=sb.from(table).select('*');if(orderBy)q=q.order(orderBy,{ascending:!!ascending});if(limit)q=q.limit(limit);var res=await q;if(res.error)throw res.error;return res.data||[];}
+  async function upsertRow(table,row){var res=await sb.from(table).upsert(row);if(res.error)throw res.error;}
+  async function updateRows(table,values,id){var res=await sb.from(table).update(values).eq('id',id);if(res.error)throw res.error;}
 
-    function canView(section) {
-      return (VIEW_RULES[perfilActual] || []).includes(section);
-    }
-    function canEditStockGeneral() {
-      return perfilActual === 'administrador' || perfilActual === 'materiales';
-    }
-    function canManageMaintenanceStock() {
-      return perfilActual === 'administrador' || perfilActual === 'materiales';
-    }
-    function canManageDecommissions() {
-      return perfilActual === 'administrador' || perfilActual === 'materiales';
-    }
-    function canDeleteCompartments() {
-      return perfilActual === 'administrador' || perfilActual === 'materiales';
-    }
-    function canDoChecklist() {
-      return perfilActual === 'administrador' || perfilActual === 'automotores' || perfilActual === 'jefatura';
-    }
-    function canDoMaterialControl() {
-      return perfilActual === 'administrador' || perfilActual === 'materiales' || perfilActual === 'bomberos' || perfilActual === 'jefatura';
-    }
-    function escapeHtml(value) {
-      return String(value == null ? '' : value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-    function showBootError(message) {
-      els.bootErr.textContent = message;
-      els.bootErr.classList.remove('hidden');
-    }
-    function showFlash(message, type) {
-      els.flash.className = type === 'ok' ? 'ok' : 'err';
-      els.flash.textContent = message;
-      els.flash.classList.remove('hidden');
-      setTimeout(function () {
-        els.flash.classList.add('hidden');
-      }, 3200);
-    }
-    function authInputs() {
-      var isBombero = els.perfil.value === 'bomberos';
-      els.email.classList.toggle('hidden', isBombero);
-      els.password.classList.toggle('hidden', isBombero);
-    }
-    function activateNav(section) {
-      document.querySelectorAll('.nav').forEach(function (btn) {
-        btn.classList.remove('active');
-      });
-      var btn = document.querySelector('.nav[data-sec="' + section + '"]');
-      if (btn) btn.classList.add('active');
-    }
-    function updateNavVisibility() {
-      document.querySelectorAll('.nav').forEach(function (btn) {
-        btn.classList.toggle('hidden', !canView(btn.dataset.sec));
-      });
-    }
-    function card(label, value) {
-      return '<div class="card"><div class="small">' + escapeHtml(label) + '</div><div style="font-size:28px;font-weight:800;">' + escapeHtml(value) + '</div></div>';
-    }
-    async function safeSelect(table, orderBy, ascending, limit) {
-      var q = sb.from(table).select('*');
-      if (orderBy) q = q.order(orderBy, { ascending: !!ascending });
-      if (limit) q = q.limit(limit);
-      var res = await q;
-      if (res.error) throw res.error;
-      return res.data || [];
-    }
-    async function upsertRow(table, row) {
-      var res = await sb.from(table).upsert(row);
-      if (res.error) throw res.error;
-    }
-    async function updateRows(table, values, id) {
-      var res = await sb.from(table).update(values).eq('id', id);
-      if (res.error) throw res.error;
-    }
-    async function loginAdmin(email, password, profile) {
-      var expected = PROFILE_EMAILS[profile];
-      if (String(email || '').trim().toLowerCase() !== expected.toLowerCase()) {
-        throw new Error('Para el perfil ' + profile + ' debés usar el email ' + expected);
-      }
-      var authRes = await sb.auth.signInWithPassword({ email: email, password: password });
-      if (authRes.error) throw authRes.error;
-      userActual = authRes.data.user;
-      var roleRes = await sb.from('user_profiles').select('*').eq('user_id', userActual.id).eq('profile_name', profile).limit(1);
-      if (roleRes.error) throw roleRes.error;
-      if (!roleRes.data || !roleRes.data.length) {
-        throw new Error('Ese usuario no tiene asignado el perfil seleccionado.');
-      }
-    }
-    async function loginBomberos() {
-      userActual = null;
-    }
-    async function logout() {
-      try {
-        if (userActual) await sb.auth.signOut();
-      } catch (e) {}
-      location.reload();
-    }
-    function downloadTextFile(filename, content, type) {
-      var blob = new Blob([content], { type: type || 'text/plain;charset=utf-8' });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-    function toCsv(rows) {
-      if (!rows || !rows.length) return '';
-      var headers = Object.keys(rows[0]);
-      function esc(v) {
-        return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-      }
-      return [headers.join(',')].concat(rows.map(function (r) {
-        return headers.map(function (h) { return esc(r[h]); }).join(',');
-      })).join('
-');
-    }
+  async function loginAdmin(email,password,profile){var expected=PROFILE_EMAILS[profile];if(String(email||'').trim().toLowerCase()!==expected.toLowerCase())throw new Error('Para el perfil '+profile+' debés usar el email '+expected);var authRes=await sb.auth.signInWithPassword({email:email,password:password});if(authRes.error)throw authRes.error;userActual=authRes.data.user;var roleRes=await sb.from('user_profiles').select('*').eq('user_id',userActual.id).eq('profile_name',profile).limit(1);if(roleRes.error)throw roleRes.error;if(!roleRes.data||!roleRes.data.length)throw new Error('Ese usuario no tiene asignado el perfil seleccionado.');}
+  async function loginBomberos(){userActual=null;}
+  async function logout(){try{if(userActual)await sb.auth.signOut();}catch(e){}location.reload();}
 
-    async function dashboard() {
-      els.title.textContent = 'Dashboard';
-      var all = await Promise.all([
-        safeSelect('moviles', 'numero', true),
-        safeSelect('fallas', 'fecha_hora', false),
-        safeSelect('repuestos', 'nombre', true),
-        safeSelect('novedades_materiales', 'fecha_hora', false),
-        safeSelect('v_stock_general', 'nombre', true),
-        safeSelect('revisiones', 'fecha_hora', false),
-        safeSelect('controles_materiales', 'fecha_hora', false)
-      ]);
-      var mov = all[0];
-      var fallas = all[1];
-      var repuestos = all[2];
-      var novedades = all[3];
-      var stock = all[4];
-      var revisiones = all[5];
-      var controlesMat = all[6];
-      var enServicio = mov.filter(function (x) { return x.estado === 'En servicio'; }).length;
-      var enMantenimiento = mov.filter(function (x) { return x.estado === 'En mantenimiento'; }).length;
-      var fueraServicio = mov.filter(function (x) { return x.estado === 'Fuera de servicio'; }).length;
-      var fallasCriticas = fallas.filter(function (f) { return String(f.tipo_falla || '').toLowerCase().indexOf('crit') >= 0; });
-      var repuestosCriticos = repuestos.filter(function (r) { return Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0); });
-      var alertasMateriales = novedades.filter(function (n) { return String(n.estado || '').toLowerCase() === 'pendiente'; });
-      var alertasStockGeneral = stock.filter(function (s) { return s.alerta_minimo === true; });
-      var hoy = new Date().toDateString();
-      var checklistHoy = revisiones.filter(function (r) { return r.fecha_hora && new Date(r.fecha_hora).toDateString() === hoy; }).length;
-      var controlesHoy = controlesMat.filter(function (r) { return r.fecha_hora && new Date(r.fecha_hora).toDateString() === hoy; }).length;
+  async function dashboard(){
+    els.title.textContent='Dashboard';
+    var all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('fallas','fecha_hora',false),safeSelect('repuestos','nombre',true),safeSelect('novedades_materiales','fecha_hora',false),safeSelect('v_stock_general','nombre',true),safeSelect('revisiones','fecha_hora',false),safeSelect('controles_materiales','fecha_hora',false)]);
+    var mov=all[0],fallas=all[1],repuestos=all[2],novedades=all[3],stock=all[4],revisiones=all[5],controles=all[6];
+    var hoy=(new Date()).toDateString();
+    var enServicio=mov.filter(function(x){return x.estado==='En servicio';}).length;
+    var enMantenimiento=mov.filter(function(x){return x.estado==='En mantenimiento';}).length;
+    var fueraServicio=mov.filter(function(x){return x.estado==='Fuera de servicio';}).length;
+    var fallasCriticas=fallas.filter(function(f){return String(f.tipo_falla||'').toLowerCase().indexOf('crit')>=0;}).length;
+    var repuestosCriticos=repuestos.filter(function(r){return Number(r.stock_actual||0)<=Number(r.stock_minimo||0);}).length;
+    var alertasMateriales=novedades.filter(function(n){return String(n.estado||'').toLowerCase()==='pendiente';});
+    var alertasStock=stock.filter(function(s){return s.alerta_minimo===true;});
+    var checklistHoy=revisiones.filter(function(r){return r.fecha_hora&&new Date(r.fecha_hora).toDateString()===hoy;}).length;
+    var controlesHoy=controles.filter(function(r){return r.fecha_hora&&new Date(r.fecha_hora).toDateString()===hoy;}).length;
+    var alertHtml='';
+    alertHtml+=alertasMateriales.map(function(n){return '<div class="list-row"><strong>Móvil '+h(n.movil||'')+'</strong> · '+h(n.material||'')+' · <span class="pill pill-bad">'+h(n.tipo_novedad||'Novedad')+'</span></div>';}).join('');
+    alertHtml+=alertasStock.map(function(s){return '<div class="list-row"><strong>'+h(s.nombre)+'</strong> · disponible '+h(s.disponible_real)+' / mínimo '+h(s.stock_minimo)+' <span class="pill pill-bad">Stock bajo</span></div>';}).join('');
+    if(!alertHtml)alertHtml='Sin alertas activas.';
+    els.content.innerHTML=''+
+      '<div class="hero-grid">'+
+        '<div class="hero-card service"><div class="hero-label">Móviles en servicio</div><div class="hero-number">'+enServicio+'</div></div>'+
+        '<div class="hero-card maint"><div class="hero-label">En mantenimiento</div><div class="hero-number">'+enMantenimiento+'</div></div>'+
+        '<div class="hero-card out"><div class="hero-label">Fuera de servicio</div><div class="hero-number">'+fueraServicio+'</div></div>'+
+      '</div>'+
+      '<div class="stat-grid" style="margin-top:14px;">'+
+        card('Fallas críticas',fallasCriticas)+
+        card('Repuestos críticos',repuestosCriticos)+
+        card('Alertas materiales',alertasMateriales.length)+
+        card('Alertas stock general',alertasStock.length)+
+        card('Checklist hoy',checklistHoy)+
+        card('Controles materiales hoy',controlesHoy)+
+      '</div>'+
+      '<div class="card" style="margin-top:14px;"><strong>Centro de alertas</strong><div style="margin-top:10px;">'+alertHtml+'</div></div>';
+  }
 
-      var centroAlertas = '';
-      centroAlertas += alertasMateriales.map(function (n) {
-        return '<div class="list-row"><strong>Móvil ' + escapeHtml(n.movil || '') + '</strong> · ' + escapeHtml(n.material || '') + ' · <span class="pill pill-bad">' + escapeHtml(n.tipo_novedad || 'Novedad') + '</span></div>';
-      }).join('');
-      centroAlertas += alertasStockGeneral.map(function (s) {
-        return '<div class="list-row"><strong>' + escapeHtml(s.nombre) + '</strong> · disponible ' + escapeHtml(s.disponible_real) + ' / mínimo ' + escapeHtml(s.stock_minimo) + ' <span class="pill pill-bad">Stock bajo</span></div>';
-      }).join('');
-      if (!centroAlertas) centroAlertas = 'Sin alertas activas.';
-
-      els.content.innerHTML = '' +
-        '<div class="hero-grid">' +
-          '<div class="hero-card service"><div class="hero-label">Móviles en servicio</div><div class="hero-number">' + enServicio + '</div></div>' +
-          '<div class="hero-card maint"><div class="hero-label">En mantenimiento</div><div class="hero-number">' + enMantenimiento + '</div></div>' +
-          '<div class="hero-card out"><div class="hero-label">Fuera de servicio</div><div class="hero-number">' + fueraServicio + '</div></div>' +
-        '</div>' +
-        '<div class="stat-grid" style="margin-top:14px;">' +
-          card('Fallas críticas', fallasCriticas.length) +
-          card('Repuestos críticos', repuestosCriticos.length) +
-          card('Alertas materiales', alertasMateriales.length) +
-          card('Alertas stock general', alertasStockGeneral.length) +
-          card('Checklist hoy', checklistHoy) +
-          card('Controles materiales hoy', controlesHoy) +
-        '</div>' +
-        '<div class="card" style="margin-top:14px;"><strong>Centro de alertas</strong><div style="margin-top:10px;">' + centroAlertas + '</div></div>';
+  async function checklist_diario(){
+    els.title.textContent='Checklist diario';
+    var moviles=await safeSelect('moviles','numero',true);
+    var history=await safeSelect('revisiones','fecha_hora',false,20);
+    var html='<div class="card" style="max-width:980px;"><strong>Control diario de móviles</strong><div class="small" style="margin-top:8px;">Registro operativo diario para automotores.</div>';
+    if(canDoChecklist()){
+      html+='<form id="fChecklist" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); margin-top:14px;">'+
+      '<select name="movil">'+moviles.map(function(m){return '<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>';}).join('')+'</select>'+
+      '<input name="responsable" placeholder="Responsable / legajo" required>'+
+      '<select name="luces"><option value="OK">Luces emergencia OK</option><option value="FALLA">Luces emergencia FALLA</option></select>'+
+      '<select name="sirena"><option value="OK">Sirena y bocina OK</option><option value="FALLA">Sirena y bocina FALLA</option></select>'+
+      '<select name="aceite"><option value="OK">Nivel de aceite OK</option><option value="FALLA">Nivel de aceite FALLA</option></select>'+
+      '<select name="agua"><option value="OK">Nivel de agua OK</option><option value="FALLA">Nivel de agua FALLA</option></select>'+
+      '<select name="neumaticos"><option value="OK">Neumáticos OK</option><option value="FALLA">Neumáticos FALLA</option></select>'+
+      '<select name="radio"><option value="OK">Equipos de radio OK</option><option value="FALLA">Equipos de radio FALLA</option></select>'+
+      '<select name="combustible"><option value="OK">Combustible > 3/4</option><option value="FALLA">Combustible bajo</option></select>'+
+      '<textarea name="observaciones" placeholder="Observaciones"></textarea>'+
+      '<button class="primary" type="submit">Guardar checklist</button>'+
+      '</form>';
+    } else {
+      html+='<div class="err" style="margin-top:12px;">Este perfil no tiene permiso para registrar checklist diario.</div>';
     }
+    html+='</div><div class="card" style="margin-top:12px;"><strong>Últimos checklist</strong><div>'+
+      (history.map(function(r){return '<div class="list-row"><strong>Móvil '+h(r.movil||'')+'</strong> · '+h(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+' · '+h(r.responsable||'')+'<div class="small">Luces: '+h(r.luces||'')+' | Sirena: '+h(r.sirena||'')+' | Aceite: '+h(r.aceite||'')+' | Agua: '+h(r.agua||'')+' | Neumáticos: '+h(r.neumaticos||'')+' | Radio: '+h(r.radio||'')+' | Combustible: '+h(r.combustible||'')+'</div><div class="small">'+h(r.observaciones||'')+'</div></div>';}).join('')||'<div class="small">Sin checklist cargados.</div>')+
+      '</div></div>';
+    els.content.innerHTML=html;
+    var form=document.getElementById('fChecklist');
+    if(form){form.addEventListener('submit',async function(e){e.preventDefault();var fd=new FormData(form);var row={movil:fd.get('movil'),responsable:fd.get('responsable'),luces:fd.get('luces'),sirena:fd.get('sirena'),aceite:fd.get('aceite'),agua:fd.get('agua'),neumaticos:fd.get('neumaticos'),radio:fd.get('radio'),combustible:fd.get('combustible'),observaciones:fd.get('observaciones'),fecha_hora:new Date().toISOString()};var res=await sb.from('revisiones').insert(row);if(res.error){alert(res.error.message);return;}showFlash('Checklist diario guardado','ok');checklist_diario();});}
+  }
 
-    async function checklist_diario() {
-      els.title.textContent = 'Checklist diario';
-      var moviles = await safeSelect('moviles', 'numero', true);
-      var history = await safeSelect('revisiones', 'fecha_hora', false, 20);
-      var html = '<div class="card" style="max-width:980px;"><strong>Control diario de móviles</strong><div class="small" style="margin-top:8px;">Registro operativo diario para automotores.</div>';
-      if (canDoChecklist()) {
-        html += '<form id="fChecklist" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); margin-top:14px;">' +
-          '<select name="movil">' + moviles.map(function (m) { return '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>'; }).join('') + '</select>' +
-          '<input name="responsable" placeholder="Responsable / legajo" required>' +
-          '<select name="luces"><option value="OK">Luces emergencia OK</option><option value="FALLA">Luces emergencia FALLA</option></select>' +
-          '<select name="sirena"><option value="OK">Sirena y bocina OK</option><option value="FALLA">Sirena y bocina FALLA</option></select>' +
-          '<select name="aceite"><option value="OK">Nivel de aceite OK</option><option value="FALLA">Nivel de aceite FALLA</option></select>' +
-          '<select name="agua"><option value="OK">Nivel de agua OK</option><option value="FALLA">Nivel de agua FALLA</option></select>' +
-          '<select name="neumaticos"><option value="OK">Neumáticos OK</option><option value="FALLA">Neumáticos FALLA</option></select>' +
-          '<select name="radio"><option value="OK">Equipos de radio OK</option><option value="FALLA">Equipos de radio FALLA</option></select>' +
-          '<select name="combustible"><option value="OK">Combustible > 3/4</option><option value="FALLA">Combustible bajo</option></select>' +
-          '<textarea name="observaciones" placeholder="Observaciones"></textarea>' +
-          '<button class="primary" type="submit">Guardar checklist</button>' +
-        '</form>';
-      } else {
-        html += '<div class="err" style="margin-top:12px;">Este perfil no tiene permiso para registrar checklist diario.</div>';
-      }
-      html += '</div>' +
-        '<div class="card" style="margin-top:12px;"><strong>Últimos checklist</strong><div id="checklistHistory">' +
-        (history.map(function (r) {
-          return '<div class="list-row"><strong>Móvil ' + escapeHtml(r.movil || '') + '</strong> · ' + escapeHtml(new Date(r.fecha_hora || Date.now()).toLocaleString('es-AR')) + ' · ' + escapeHtml(r.responsable || '') + '<div class="small">Luces: ' + escapeHtml(r.luces || '') + ' | Sirena: ' + escapeHtml(r.sirena || '') + ' | Aceite: ' + escapeHtml(r.aceite || '') + ' | Agua: ' + escapeHtml(r.agua || '') + ' | Neumáticos: ' + escapeHtml(r.neumaticos || '') + ' | Radio: ' + escapeHtml(r.radio || '') + ' | Combustible: ' + escapeHtml(r.combustible || '') + '</div><div class="small">' + escapeHtml(r.observaciones || '') + '</div></div>';
-        }).join('') || '<div class="small">Sin checklist cargados.</div>') +
-        '</div></div>';
-      els.content.innerHTML = html;
-      var form = document.getElementById('fChecklist');
-      if (form) {
-        form.addEventListener('submit', async function (e) {
-          e.preventDefault();
-          var fd = new FormData(form);
-          var row = {
-            movil: fd.get('movil'),
-            responsable: fd.get('responsable'),
-            luces: fd.get('luces'),
-            sirena: fd.get('sirena'),
-            aceite: fd.get('aceite'),
-            agua: fd.get('agua'),
-            neumaticos: fd.get('neumaticos'),
-            radio: fd.get('radio'),
-            combustible: fd.get('combustible'),
-            observaciones: fd.get('observaciones'),
-            fecha_hora: new Date().toISOString()
-          };
-          var res = await sb.from('revisiones').insert(row);
-          if (res.error) { alert(res.error.message); return; }
-          showFlash('Checklist diario guardado', 'ok');
-          checklist_diario();
-        });
-      }
+  async function control_materiales(){
+    els.title.textContent='Control diario materiales';
+    var all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('v_stock_assignments_detail','movil',true),safeSelect('controles_materiales','fecha_hora',false,20)]);
+    var moviles=all[0],asignaciones=all[1],historial=all[2];
+    var html='<div class="card" style="max-width:1100px;"><strong>Verificación diaria de materiales</strong><div class="small" style="margin-top:8px;">Seleccioná el móvil y verificá cantidades reales por compartimiento.</div>';
+    if(canDoMaterialControl()){
+      html+='<div class="grid" style="grid-template-columns:240px 1fr; margin-top:14px; align-items:start;">'+
+        '<div><select id="ctrlMovil">'+moviles.map(function(m){return '<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>';}).join('')+'</select><input id="ctrlResponsable" placeholder="Responsable / legajo" style="margin-top:10px;"><textarea id="ctrlObs" placeholder="Observaciones generales" style="margin-top:10px;"></textarea><button id="saveMatCtrl" class="primary" type="button" style="margin-top:10px;">Guardar control</button></div>'+
+        '<div id="ctrlMaterialesWrap"></div>'+
+      '</div>';
+    } else {
+      html+='<div class="err" style="margin-top:12px;">Este perfil no tiene permiso para registrar control de materiales.</div>';
     }
-
-    async function control_materiales() {
-      els.title.textContent = 'Control diario materiales';
-      var all = await Promise.all([
-        safeSelect('moviles', 'numero', true),
-        safeSelect('v_stock_assignments_detail', 'movil', true),
-        safeSelect('controles_materiales', 'fecha_hora', false, 20)
-      ]);
-      var moviles = all[0];
-      var asignaciones = all[1];
-      var historial = all[2];
-      var html = '<div class="card" style="max-width:1100px;"><strong>Verificación diaria de materiales</strong><div class="small" style="margin-top:8px;">Seleccioná el móvil y verificá cantidades reales por compartimiento.</div>';
-      if (canDoMaterialControl()) {
-        html += '<div class="grid" style="grid-template-columns:240px 1fr; margin-top:14px; align-items:start;">' +
-          '<div>' +
-          '<select id="ctrlMovil">' + moviles.map(function (m) { return '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>'; }).join('') + '</select>' +
-          '<input id="ctrlResponsable" placeholder="Responsable / legajo" style="margin-top:10px;">' +
-          '<textarea id="ctrlObs" placeholder="Observaciones generales" style="margin-top:10px;"></textarea>' +
-          '<button id="saveMatCtrl" class="primary" type="button" style="margin-top:10px;">Guardar control</button>' +
-          '</div>' +
-          '<div id="ctrlMaterialesWrap"></div>' +
-          '</div>';
-      } else {
-        html += '<div class="err" style="margin-top:12px;">Este perfil no tiene permiso para registrar control de materiales.</div>';
-      }
-      html += '</div>' +
-        '<div class="card" style="margin-top:12px;"><strong>Últimos controles de materiales</strong><div>' +
-        (historial.map(function (h) {
-          return '<div class="list-row"><strong>Móvil ' + escapeHtml(h.movil || '') + '</strong> · ' + escapeHtml(new Date(h.fecha_hora || Date.now()).toLocaleString('es-AR')) + ' · ' + escapeHtml(h.responsable || '') + '<div class="small">' + escapeHtml(h.resumen || '') + '</div></div>';
-        }).join('') || '<div class="small">Sin controles cargados.</div>') +
-        '</div></div>';
-      els.content.innerHTML = html;
-      if (!canDoMaterialControl()) return;
-      var sel = document.getElementById('ctrlMovil');
-      var wrap = document.getElementById('ctrlMaterialesWrap');
-      function renderMateriales(movil) {
-        var rows = asignaciones.filter(function (a) {
-          return String(a.movil) === String(movil) && a.estado_asignacion === 'ACTIVA';
-        });
-        if (!rows.length) {
-          wrap.innerHTML = '<div class="card">Ese móvil no tiene materiales asignados.</div>';
-          wrap.dataset.rows = '[]';
-          return;
-        }
-        wrap.innerHTML = '<div class="card"><table><thead><tr><th>Compartimiento</th><th>Ítem</th><th>Asignado</th><th>Verificado</th><th>Estado</th><th>Novedad</th></tr></thead><tbody>' +
-          rows.map(function (r, idx) {
-            return '<tr>' +
-              '<td>' + escapeHtml(r.compartimiento || 'Sin compartimiento') + '</td>' +
-              '<td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml(r.codigo_interno || '') + '</div></td>' +
-              '<td>' + escapeHtml(r.cantidad) + '</td>' +
-              '<td><input class="mat-verif" data-idx="' + idx + '" type="number" min="0" value="' + escapeHtml(r.cantidad) + '"></td>' +
-              '<td><select class="mat-estado" data-idx="' + idx + '"><option value="OK">OK</option><option value="FALTANTE">Faltante</option><option value="DANADO">Dañado</option></select></td>' +
-              '<td><input class="mat-nov" data-idx="' + idx + '" placeholder="Detalle"></td>' +
-            '</tr>';
-          }).join('') +
-          '</tbody></table><div class="small" style="margin-top:10px;">Los faltantes y dañados generan novedad automática en dashboard. No se descuenta stock en forma automática; quedan en cola de revisión.</div></div>';
-        wrap.dataset.rows = JSON.stringify(rows);
-      }
-      renderMateriales(sel.value);
-      sel.addEventListener('change', function () { renderMateriales(sel.value); });
-      document.getElementById('saveMatCtrl').addEventListener('click', async function () {
-        var rows = JSON.parse(wrap.dataset.rows || '[]');
-        var responsable = document.getElementById('ctrlResponsable').value;
-        var obs = document.getElementById('ctrlObs').value;
-        if (!responsable) {
-          alert('Completá el responsable.');
-          return;
-        }
-        var resumenPartes = [];
-        for (var i = 0; i < rows.length; i++) {
-          var verif = Number(document.querySelector('.mat-verif[data-idx="' + i + '"]').value || 0);
-          var estado = document.querySelector('.mat-estado[data-idx="' + i + '"]').value;
-          var nov = document.querySelector('.mat-nov[data-idx="' + i + '"]').value;
-          var base = rows[i];
-          resumenPartes.push(base.nombre + ' [' + estado + ' ' + verif + '/' + base.cantidad + ']');
-          if (estado !== 'OK' || verif !== Number(base.cantidad)) {
-            var tipo = estado === 'DANADO' ? 'Dañado' : 'Faltante';
-            var detalle = nov || ('Verificado ' + verif + ' de ' + base.cantidad);
-            var novedad = await sb.from('novedades_materiales').insert({
-              movil: base.movil,
-              compartimiento: base.compartimiento,
-              material: base.nombre,
-              tipo_novedad: tipo,
-              detalle: detalle,
-              estado: 'pendiente',
-              fecha_hora: new Date().toISOString()
-            });
-            if (novedad.error) { alert(novedad.error.message); return; }
-          }
-        }
-        var control = await sb.from('controles_materiales').insert({
-          movil: sel.value,
-          responsable: responsable,
-          resumen: resumenPartes.join(' | '),
-          observaciones: obs,
-          fecha_hora: new Date().toISOString()
-        });
-        if (control.error) { alert(control.error.message); return; }
-        showFlash('Control diario de materiales guardado', 'ok');
-        control_materiales();
-      });
+    html+='</div><div class="card" style="margin-top:12px;"><strong>Últimos controles de materiales</strong><div>'+
+      (historial.map(function(hh){return '<div class="list-row"><strong>Móvil '+h(hh.movil||'')+'</strong> · '+h(new Date(hh.fecha_hora||Date.now()).toLocaleString('es-AR'))+' · '+h(hh.responsable||'')+'<div class="small">'+h(hh.resumen||'')+'</div></div>';}).join('')||'<div class="small">Sin controles cargados.</div>')+
+      '</div></div>';
+    els.content.innerHTML=html;
+    if(!canDoMaterialControl())return;
+    var sel=document.getElementById('ctrlMovil');
+    var wrap=document.getElementById('ctrlMaterialesWrap');
+    function renderMateriales(movil){
+      var rows=asignaciones.filter(function(a){return String(a.movil)===String(movil)&&a.estado_asignacion==='ACTIVA';});
+      if(!rows.length){wrap.innerHTML='<div class="card">Ese móvil no tiene materiales asignados.</div>';wrap.dataset.rows='[]';return;}
+      wrap.innerHTML='<div class="card"><table><thead><tr><th>Compartimiento</th><th>Ítem</th><th>Asignado</th><th>Verificado</th><th>Estado</th><th>Novedad</th></tr></thead><tbody>'+
+        rows.map(function(r,idx){return '<tr><td>'+h(r.compartimiento||'Sin compartimiento')+'</td><td><strong>'+h(r.nombre)+'</strong><div class="small">'+h(r.codigo_interno||'')+'</div></td><td>'+h(r.cantidad)+'</td><td><input class="mat-verif" data-idx="'+idx+'" type="number" min="0" value="'+h(r.cantidad)+'"></td><td><select class="mat-estado" data-idx="'+idx+'"><option value="OK">OK</option><option value="FALTANTE">Faltante</option><option value="DANADO">Dañado</option></select></td><td><input class="mat-nov" data-idx="'+idx+'" placeholder="Detalle"></td></tr>';}).join('')+
+        '</tbody></table><div class="small" style="margin-top:10px;">Los faltantes y dañados generan novedad automática en dashboard. No se descuenta stock en forma automática; quedan en cola de revisión.</div></div>';
+      wrap.dataset.rows=JSON.stringify(rows);
     }
-
-    async function inventario_general() {
-      els.title.textContent = 'Inventario general';
-      var vista = await safeSelect('v_stock_general', 'nombre', true);
-      var maestro = await safeSelect('stock_items', 'nombre', true);
-      var html = '';
-      if (canEditStockGeneral()) {
-        html += '<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de stock maestro</strong><form id="fStockMaster" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="codigo_interno" placeholder="Código interno"><input name="nombre" placeholder="Nombre" required><input name="categoria" placeholder="Categoría"><input name="marca" placeholder="Marca"><input name="modelo" placeholder="Modelo"><input name="numero_serie" placeholder="N° serie"><input name="cantidad_total" type="number" min="0" placeholder="Cantidad total" required><input name="stock_minimo" type="number" min="0" placeholder="Stock mínimo" required><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar ítem</button></form></div>';
-      }
-      html += '<div class="card"><table><thead><tr><th>Código</th><th>Ítem</th><th>Total</th><th>Asignado</th><th>Stock central</th><th>Reparación</th><th>Baja</th><th>Mínimo</th><th>Alerta</th>' + (canEditStockGeneral() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
-        (vista.map(function (r) {
-          return '<tr>' +
-            '<td>' + escapeHtml(r.codigo_interno || '') + '</td>' +
-            '<td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml([r.categoria, r.marca, r.modelo].filter(Boolean).join(' · ')) + '</div></td>' +
-            '<td>' + escapeHtml(r.cantidad_total) + '</td>' +
-            '<td>' + escapeHtml(r.asignado_moviles) + '</td>' +
-            '<td><strong>' + escapeHtml(r.disponible_real) + '</strong></td>' +
-            '<td>' + escapeHtml(r.en_reparacion) + '</td>' +
-            '<td>' + escapeHtml(r.en_baja) + '</td>' +
-            '<td>' + escapeHtml(r.stock_minimo) + '</td>' +
-            '<td>' + (r.alerta_minimo ? '<span class="pill pill-bad">Bajo mínimo</span>' : '<span class="pill pill-ok">OK</span>') + '</td>' +
-            (canEditStockGeneral() ? '<td><button class="secondary edit-stock" data-id="' + r.id + '">Editar</button> <button class="secondary maint-stock" data-id="' + r.id + '">Reparación</button> <button class="danger baja-stock" data-id="' + r.id + '">Baja</button></td>' : '') +
-          '</tr>';
-        }).join('') || '<tr><td colspan="10">Sin stock cargado.</td></tr>') +
-        '</tbody></table></div>';
-      els.content.innerHTML = html;
-      if (!canEditStockGeneral()) return;
-      var form = document.getElementById('fStockMaster');
-      form.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        var fd = new FormData(form);
-        var row = {
-          codigo_interno: fd.get('codigo_interno'),
-          nombre: fd.get('nombre'),
-          categoria: fd.get('categoria'),
-          marca: fd.get('marca'),
-          modelo: fd.get('modelo'),
-          numero_serie: fd.get('numero_serie'),
-          cantidad_total: Number(fd.get('cantidad_total') || 0),
-          stock_minimo: Number(fd.get('stock_minimo') || 0),
-          observaciones: fd.get('observaciones')
-        };
-        if (fd.get('id')) row.id = Number(fd.get('id'));
-        await upsertRow('stock_items', row);
-        showFlash('Stock maestro guardado', 'ok');
-        inventario_general();
-      });
-      document.querySelectorAll('.edit-stock').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var item = maestro.find(function (x) { return String(x.id) === btn.dataset.id; });
-          if (!item) return;
-          form.elements.id.value = item.id;
-          form.elements.codigo_interno.value = item.codigo_interno || '';
-          form.elements.nombre.value = item.nombre || '';
-          form.elements.categoria.value = item.categoria || '';
-          form.elements.marca.value = item.marca || '';
-          form.elements.modelo.value = item.modelo || '';
-          form.elements.numero_serie.value = item.numero_serie || '';
-          form.elements.cantidad_total.value = item.cantidad_total || 0;
-          form.elements.stock_minimo.value = item.stock_minimo || 0;
-          form.elements.observaciones.value = item.observaciones || '';
-        });
-      });
-      document.querySelectorAll('.maint-stock').forEach(function (btn) {
-        btn.addEventListener('click', async function () {
-          var motivo = prompt('Motivo de reparación / mantenimiento:');
-          if (!motivo) return;
-          var cantidad = Number(prompt('Cantidad a enviar a reparación:', '1') || 0);
-          if (cantidad < 1) return;
-          var res = await sb.rpc('send_item_to_maintenance', {
-            p_stock_item_id: Number(btn.dataset.id),
-            p_cantidad: cantidad,
-            p_motivo: motivo,
-            p_usuario: perfilActual,
-            p_movil: null
-          });
-          if (res.error) { alert(res.error.message); return; }
-          showFlash('Ítem enviado a reparación', 'ok');
-          inventario_general();
-        });
-      });
-      document.querySelectorAll('.baja-stock').forEach(function (btn) {
-        btn.addEventListener('click', async function () {
-          var motivo = prompt('Motivo de baja:');
-          if (!motivo) return;
-          var cantidad = Number(prompt('Cantidad a dar de baja:', '1') || 0);
-          if (cantidad < 1) return;
-          var res = await sb.rpc('decommission_item', {
-            p_stock_item_id: Number(btn.dataset.id),
-            p_cantidad: cantidad,
-            p_motivo: motivo,
-            p_usuario: perfilActual
-          });
-          if (res.error) { alert(res.error.message); return; }
-          showFlash('Ítem dado de baja', 'ok');
-          inventario_general();
-        });
-      });
-    }
-
-    async function asignaciones() {
-      els.title.textContent = 'Asignaciones';
-      var all = await Promise.all([
-        safeSelect('v_stock_general', 'nombre', true),
-        safeSelect('v_stock_assignments_detail', 'fecha_hora', false),
-        safeSelect('moviles', 'numero', true),
-        safeSelect('stock_compartments', 'movil', true)
-      ]);
-      var stock = all[0];
-      var assigns = all[1];
-      var movs = all[2];
-      var comps = all[3];
-      var html = '';
-      if (canEditStockGeneral()) {
-        html += '<div class="card" style="margin-bottom:12px;"><strong>Asignar stock</strong><form id="fAssign" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="stock_item_id">' + stock.map(function (s) {
-          return '<option value="' + s.id + '">' + escapeHtml(s.nombre) + ' · disponible ' + escapeHtml(s.disponible_real) + '</option>';
-        }).join('') + '</select><select name="movil" id="assignMovil">' + movs.map(function (m) {
-          return '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>';
-        }).join('') + '</select><select name="compartimiento" id="assignComp"></select><input name="nuevoCompartimiento" placeholder="Nuevo compartimiento (opcional)"><input name="cantidad" type="number" min="1" placeholder="Cantidad" required><button class="primary" type="submit">Asignar</button></form></div>';
-      }
-      html += '<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Compartimiento</th><th>Ítem</th><th>Cantidad</th><th>Estado</th>' + (canEditStockGeneral() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
-        (assigns.map(function (a) {
-          return '<tr><td>' + escapeHtml(new Date(a.fecha_hora || Date.now()).toLocaleString('es-AR')) + '</td><td>Móvil ' + escapeHtml(a.movil) + '</td><td>' + escapeHtml(a.compartimiento || '') + '</td><td><strong>' + escapeHtml(a.nombre) + '</strong><div class="small">' + escapeHtml(a.codigo_interno || '') + '</div></td><td>' + escapeHtml(a.cantidad) + '</td><td>' + escapeHtml(a.estado_asignacion) + '</td>' + (canEditStockGeneral() ? '<td><button class="secondary devolver-assign" data-id="' + a.id + '">Devolver</button></td>' : '') + '</tr>';
-        }).join('') || '<tr><td colspan="7">Sin asignaciones.</td></tr>') +
-        '</tbody></table></div>';
-      els.content.innerHTML = html;
-      if (!canEditStockGeneral()) return;
-      var form = document.getElementById('fAssign');
-      var assignMovil = document.getElementById('assignMovil');
-      var assignComp = document.getElementById('assignComp');
-      function fillAssignComp(movil) {
-        var list = comps.filter(function (c) {
-          return String(c.movil) === String(movil) && c.activo !== false;
-        });
-        assignComp.innerHTML = list.map(function (c) {
-          return '<option value="' + escapeHtml(c.nombre) + '">' + escapeHtml(c.nombre) + '</option>';
-        }).join('');
-      }
-      fillAssignComp(assignMovil.value);
-      assignMovil.addEventListener('change', function () { fillAssignComp(assignMovil.value); });
-      form.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        var fd = new FormData(form);
-        var comp = fd.get('compartimiento');
-        var nuevo = String(fd.get('nuevoCompartimiento') || '').trim();
-        if (nuevo) {
-          comp = nuevo;
-          var exists = comps.find(function (c) {
-            return String(c.movil) === String(fd.get('movil')) && String(c.nombre).toLowerCase() === nuevo.toLowerCase();
-          });
-          if (!exists && canDeleteCompartments()) {
-            var r = await sb.from('stock_compartments').insert({ movil: fd.get('movil'), nombre: nuevo, activo: true });
-            if (r.error) { alert(r.error.message); return; }
-          }
-        }
-        var res = await sb.rpc('assign_item_to_mobile', {
-          p_stock_item_id: Number(fd.get('stock_item_id')),
-          p_movil: fd.get('movil'),
-          p_compartimiento: comp || '',
-          p_cantidad: Number(fd.get('cantidad') || 0),
-          p_usuario: perfilActual
-        });
-        if (res.error) { alert(res.error.message); return; }
-        showFlash('Asignación realizada', 'ok');
-        asignaciones();
-      });
-      document.querySelectorAll('.devolver-assign').forEach(function (btn) {
-        btn.addEventListener('click', async function () {
-          var id = Number(btn.dataset.id);
-          var item = assigns.find(function (a) { return a.id === id; });
-          if (!item) return;
-          await updateRows('stock_assignments', { estado_asignacion: 'DEVUELTA' }, id);
-          var r2 = await sb.from('stock_movements').insert({
-            stock_item_id: item.stock_item_id,
-            tipo_movimiento: 'devolucion',
-            cantidad: item.cantidad,
-            origen: 'MOVIL',
-            destino: 'STOCK_CENTRAL',
-            movil_origen: item.movil,
-            usuario: perfilActual
-          });
-          if (r2.error) { alert(r2.error.message); return; }
-          showFlash('Ítem devuelto a stock central', 'ok');
-          asignaciones();
-        });
-      });
-    }
-
-    async function mantenimiento_stock() {
-      els.title.textContent = 'Control de mantenimiento';
-      var rows = await safeSelect('v_maintenance_control_detail', 'fecha_ingreso', false);
-      var items = await safeSelect('stock_items', 'nombre', true);
-      var html = '';
-      if (canManageMaintenanceStock()) {
-        html += '<div class="card" style="margin-bottom:12px;"><strong>Ingreso manual a mantenimiento</strong><form id="fMaintStock" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="stock_item_id">' + items.map(function (i) {
-          return '<option value="' + i.id + '">' + escapeHtml(i.nombre) + '</option>';
-        }).join('') + '</select><input name="cantidad" type="number" min="1" placeholder="Cantidad" required><input name="motivo" placeholder="Motivo" required><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Enviar a mantenimiento</button></form></div>';
-      }
-      html += '<div class="card"><table><thead><tr><th>Fecha ingreso</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Estado</th><th>Observaciones</th>' + (canManageMaintenanceStock() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
-        (rows.map(function (r) {
-          return '<tr><td>' + escapeHtml(new Date(r.fecha_ingreso || Date.now()).toLocaleString('es-AR')) + '</td><td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml(r.codigo_interno || '') + '</div></td><td>' + escapeHtml(r.cantidad) + '</td><td>' + escapeHtml(r.motivo || '') + '</td><td>' + (String(r.estado || '').toUpperCase() === 'DISPONIBLE' ? '<span class="pill pill-ok">Disponible</span>' : '<span class="pill pill-warn">' + escapeHtml(r.estado || 'REPARACION') + '</span>') + '</td><td>' + escapeHtml(r.observaciones || '') + '</td><td>' + (canManageMaintenanceStock() && String(r.estado || '').toUpperCase() !== 'DISPONIBLE' ? '<button class="secondary return-maint" data-id="' + r.id + '">Retornar a stock</button>' : '') + '</td></tr>';
-        }).join('') || '<tr><td colspan="7">Sin registros de mantenimiento.</td></tr>') +
-        '</tbody></table></div>';
-      els.content.innerHTML = html;
-      if (!canManageMaintenanceStock()) return;
-      var form = document.getElementById('fMaintStock');
-      form.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        var fd = new FormData(form);
-        var res = await sb.from('maintenance_control').insert({
-          stock_item_id: Number(fd.get('stock_item_id')),
-          cantidad: Number(fd.get('cantidad') || 0),
-          motivo: fd.get('motivo'),
-          estado: 'REPARACION',
-          observaciones: fd.get('observaciones')
-        });
-        if (res.error) { alert(res.error.message); return; }
-        var mv = await sb.from('stock_movements').insert({
-          stock_item_id: Number(fd.get('stock_item_id')),
-          tipo_movimiento: 'reparacion',
-          cantidad: Number(fd.get('cantidad') || 0),
-          origen: 'STOCK_CENTRAL',
-          destino: 'MANTENIMIENTO',
-          motivo: fd.get('motivo'),
-          usuario: perfilActual
-        });
-        if (mv.error) { alert(mv.error.message); return; }
-        showFlash('Ítem enviado a mantenimiento', 'ok');
-        mantenimiento_stock();
-      });
-      document.querySelectorAll('.return-maint').forEach(function (btn) {
-        btn.addEventListener('click', async function () {
-          var res = await sb.rpc('return_item_from_maintenance', {
-            p_maintenance_id: Number(btn.dataset.id),
-            p_usuario: perfilActual
-          });
-          if (res.error) { alert(res.error.message); return; }
-          showFlash('Ítem retornado a stock central', 'ok');
-          mantenimiento_stock();
-        });
-      });
-    }
-
-    async function archivo_bajas() {
-      els.title.textContent = 'Archivo / bajas';
-      var rows = await safeSelect('v_stock_decommissions_detail', 'fecha_baja', false);
-      var html = '<div class="card"><table><thead><tr><th>Fecha</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Usuario</th><th>Observaciones</th><th>Revertible</th><th>Acciones</th></tr></thead><tbody>' +
-        (rows.map(function (r) {
-          return '<tr><td>' + escapeHtml(new Date(r.fecha_baja || Date.now()).toLocaleString('es-AR')) + '</td><td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml(r.codigo_interno || '') + '</div></td><td>' + escapeHtml(r.cantidad) + '</td><td>' + escapeHtml(r.motivo || '') + '</td><td>' + escapeHtml(r.usuario || '') + '</td><td>' + escapeHtml(r.observaciones || '') + '</td><td>' + (r.revertible ? '<span class="pill pill-ok">Sí</span>' : '<span class="pill pill-bad">No</span>') + '</td><td>' + (canManageDecommissions() && r.revertible ? '<button class="secondary revert-baja" data-id="' + r.id + '">Revertir</button>' : '') + '</td></tr>';
-        }).join('') || '<tr><td colspan="8">Sin bajas registradas.</td></tr>') +
-        '</tbody></table></div>';
-      els.content.innerHTML = html;
-      if (!canManageDecommissions()) return;
-      document.querySelectorAll('.revert-baja').forEach(function (btn) {
-        btn.addEventListener('click', async function () {
-          var id = Number(btn.dataset.id);
-          var item = rows.find(function (x) { return x.id === id; });
-          if (!item) return;
-          var del = await sb.from('stock_decommissions').delete().eq('id', id);
-          if (del.error) { alert(del.error.message); return; }
-          var mv = await sb.from('stock_movements').insert({
-            stock_item_id: item.stock_item_id,
-            tipo_movimiento: 'reversa_baja',
-            cantidad: item.cantidad,
-            origen: 'ARCHIVO_BAJAS',
-            destino: 'STOCK_CENTRAL',
-            motivo: 'Reversión de baja',
-            usuario: perfilActual
-          });
-          if (mv.error) { alert(mv.error.message); return; }
-          showFlash('Baja revertida, vuelve a stock central', 'ok');
-          archivo_bajas();
-        });
-      });
-    }
-
-    async function inventario_movil() {
-      els.title.textContent = 'Inventario por móvil';
-      var rows = await safeSelect('v_stock_assignments_detail', 'movil', true);
-      els.content.innerHTML = '<div class="card"><table><thead><tr><th>Móvil</th><th>Compartimiento</th><th>Ítem</th><th>Cantidad</th><th>Estado</th></tr></thead><tbody>' +
-        (rows.map(function (r) {
-          return '<tr><td>Móvil ' + escapeHtml(r.movil) + '</td><td>' + escapeHtml(r.compartimiento || '') + '</td><td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml(r.codigo_interno || '') + '</div></td><td>' + escapeHtml(r.cantidad) + '</td><td>' + escapeHtml(r.estado_asignacion) + '</td></tr>';
-        }).join('') || '<tr><td colspan="5">Sin asignaciones.</td></tr>') +
-        '</tbody></table></div>';
-    }
-
-    async function reportes_stock() {
-      els.title.textContent = 'Reportes de stock';
-      var all = await Promise.all([
-        safeSelect('v_stock_general', 'nombre', true),
-        safeSelect('v_stock_assignments_detail', 'movil', true),
-        safeSelect('v_maintenance_control_detail', 'fecha_ingreso', false),
-        safeSelect('v_stock_decommissions_detail', 'fecha_baja', false)
-      ]);
-      var stock = all[0];
-      var assignments = all[1];
-      var maint = all[2];
-      var bajas = all[3];
-      els.content.innerHTML = '<div class="card"><strong>Exportación de reportes</strong><div class="small" style="margin-top:8px;">Descargá reportes del stock maestro, stock asignado a móviles, mantenimiento y bajas.</div><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); margin-top:16px;">' +
-        '<button id="expStockCsv" class="primary" type="button">Exportar stock general CSV</button>' +
-        '<button id="expStockJson" class="secondary" type="button">Exportar stock general JSON</button>' +
-        '<button id="expAsignCsv" class="primary" type="button">Exportar stock por móvil CSV</button>' +
-        '<button id="expAsignJson" class="secondary" type="button">Exportar stock por móvil JSON</button>' +
-        '<button id="expMaintCsv" class="primary" type="button">Exportar mantenimiento CSV</button>' +
-        '<button id="expBajasCsv" class="secondary" type="button">Exportar bajas CSV</button>' +
-        '</div></div>';
-      var stockRows = stock.map(function (r) {
-        return {
-          codigo_interno: r.codigo_interno || '',
-          nombre: r.nombre,
-          categoria: r.categoria || '',
-          marca: r.marca || '',
-          modelo: r.modelo || '',
-          numero_serie: r.numero_serie || '',
-          cantidad_total: r.cantidad_total,
-          asignado_moviles: r.asignado_moviles,
-          en_reparacion: r.en_reparacion,
-          en_baja: r.en_baja,
-          disponible_real: r.disponible_real,
-          stock_minimo: r.stock_minimo,
-          alerta_minimo: r.alerta_minimo
-        };
-      });
-      var assignRows = assignments.map(function (a) {
-        return {
-          fecha_hora: a.fecha_hora,
-          movil: a.movil,
-          compartimiento: a.compartimiento || '',
-          codigo_interno: a.codigo_interno || '',
-          nombre: a.nombre || '',
-          cantidad: a.cantidad,
-          estado_asignacion: a.estado_asignacion
-        };
-      });
-      var maintRows = maint.map(function (m) {
-        return {
-          fecha_ingreso: m.fecha_ingreso,
-          codigo_interno: m.codigo_interno || '',
-          nombre: m.nombre || '',
-          cantidad: m.cantidad,
-          motivo: m.motivo || '',
-          estado: m.estado || '',
-          fecha_retorno: m.fecha_retorno || '',
-          observaciones: m.observaciones || ''
-        };
-      });
-      var bajaRows = bajas.map(function (b) {
-        return {
-          fecha_baja: b.fecha_baja,
-          codigo_interno: b.codigo_interno || '',
-          nombre: b.nombre || '',
-          cantidad: b.cantidad,
-          motivo: b.motivo || '',
-          usuario: b.usuario || '',
-          observaciones: b.observaciones || '',
-          revertible: b.revertible
-        };
-      });
-      document.getElementById('expStockCsv').addEventListener('click', function () {
-        downloadTextFile('stock_general.csv', toCsv(stockRows), 'text/csv;charset=utf-8');
-      });
-      document.getElementById('expStockJson').addEventListener('click', function () {
-        downloadTextFile('stock_general.json', JSON.stringify(stockRows, null, 2), 'application/json');
-      });
-      document.getElementById('expAsignCsv').addEventListener('click', function () {
-        downloadTextFile('stock_por_movil.csv', toCsv(assignRows), 'text/csv;charset=utf-8');
-      });
-      document.getElementById('expAsignJson').addEventListener('click', function () {
-        downloadTextFile('stock_por_movil.json', JSON.stringify(assignRows, null, 2), 'application/json');
-      });
-      document.getElementById('expMaintCsv').addEventListener('click', function () {
-        downloadTextFile('control_mantenimiento.csv', toCsv(maintRows), 'text/csv;charset=utf-8');
-      });
-      document.getElementById('expBajasCsv').addEventListener('click', function () {
-        downloadTextFile('archivo_bajas.csv', toCsv(bajaRows), 'text/csv;charset=utf-8');
-      });
-    }
-
-    async function plano() {
-      els.title.textContent = 'Plano del móvil';
-      var all = await Promise.all([
-        safeSelect('moviles', 'numero', true),
-        safeSelect('v_stock_assignments_detail', 'movil', true),
-        safeSelect('novedades_materiales', 'fecha_hora', false)
-      ]);
-      var movs = all[0];
-      var items = all[1];
-      var novedades = all[2];
-      els.content.innerHTML = '<div class="card"><label class="small">Seleccionar móvil</label><select id="mapMovil" style="margin-top:8px; max-width:240px;">' + movs.map(function (m) {
-        return '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>';
-      }).join('') + '</select></div><div id="mapWrap" class="mobile-map" style="margin-top:12px;"></div>';
-      var sel = document.getElementById('mapMovil');
-      function renderMap(movil) {
-        var byComp = {};
-        items.filter(function (i) {
-          return String(i.movil) === String(movil) && i.estado_asignacion === 'ACTIVA';
-        }).forEach(function (i) {
-          var comp = i.compartimiento || 'Sin compartimiento';
-          if (!byComp[comp]) byComp[comp] = [];
-          byComp[comp].push(i);
-        });
-        var keys = Object.keys(byComp);
-        document.getElementById('mapWrap').innerHTML = keys.map(function (c) {
-          return '<div class="comp-box"><strong>' + escapeHtml(c) + '</strong><div style="margin-top:8px;">' + byComp[c].map(function (i) {
-            var alerta = novedades.find(function (n) {
-              return String(n.estado || '').toLowerCase() === 'pendiente' && String(n.movil) === String(movil) && String(n.material) === String(i.nombre);
-            });
-            return '<div class="list-row">' + escapeHtml(i.nombre) + ' · Cantidad ' + escapeHtml(i.cantidad) + (alerta ? ' <span class="pill pill-bad">ALERTA</span>' : '') + '</div>';
-          }).join('') + '</div></div>';
-        }).join('') || '<div class="card">Ese móvil no tiene materiales asignados.</div>';
-      }
-      sel.addEventListener('change', function () {
-        renderMap(sel.value);
-      });
-      if (sel.value) renderMap(sel.value);
-    }
-
-    async function diagnostico() {
-      els.title.textContent = 'Diagnóstico';
-      var lines = [];
-      async function run(label, fn) {
-        try {
-          var result = await fn();
-          lines.push('OK - ' + label + (result ? ': ' + result : ''));
-        } catch (err) {
-          lines.push('ERROR - ' + label + ': ' + (err && err.message ? err.message : String(err)));
+    renderMateriales(sel.value);
+    sel.addEventListener('change',function(){renderMateriales(sel.value);});
+    document.getElementById('saveMatCtrl').addEventListener('click',async function(){
+      var rows=JSON.parse(wrap.dataset.rows||'[]');
+      var responsable=document.getElementById('ctrlResponsable').value;
+      var obs=document.getElementById('ctrlObs').value;
+      if(!responsable){alert('Completá el responsable.');return;}
+      var resumen=[];
+      for(var i=0;i<rows.length;i++){
+        var verif=Number(document.querySelector('.mat-verif[data-idx="'+i+'"]').value||0);
+        var estado=document.querySelector('.mat-estado[data-idx="'+i+'"]').value;
+        var nov=document.querySelector('.mat-nov[data-idx="'+i+'"]').value;
+        var base=rows[i];
+        resumen.push(base.nombre+' ['+estado+' '+verif+'/'+base.cantidad+']');
+        if(estado!=='OK'||verif!==Number(base.cantidad)){
+          var tipo=estado==='DANADO'?'Dañado':'Faltante';
+          var detalle=nov||('Verificado '+verif+' de '+base.cantidad);
+          var novedad=await sb.from('novedades_materiales').insert({movil:base.movil,compartimiento:base.compartimiento,material:base.nombre,tipo_novedad:tipo,detalle:detalle,estado:'pendiente',fecha_hora:new Date().toISOString()});
+          if(novedad.error){alert(novedad.error.message);return;}
         }
       }
-      await run('Auth', async function () {
-        var res = await sb.auth.getSession();
-        if (res.error) throw res.error;
-        return res.data.session ? 'sesión activa' : 'sin sesión';
-      });
-      await run('v_stock_general', async function () { return String((await safeSelect('v_stock_general', 'id', false, 1)).length); });
-      await run('v_stock_assignments_detail', async function () { return String((await safeSelect('v_stock_assignments_detail', 'id', false, 1)).length); });
-      await run('v_maintenance_control_detail', async function () { return String((await safeSelect('v_maintenance_control_detail', 'id', false, 1)).length); });
-      await run('v_stock_decommissions_detail', async function () { return String((await safeSelect('v_stock_decommissions_detail', 'id', false, 1)).length); });
-      await run('revisiones', async function () { return String((await safeSelect('revisiones', 'id', false, 1)).length); });
-      await run('controles_materiales', async function () { return String((await safeSelect('controles_materiales', 'id', false, 1)).length); });
-      await run('novedades_materiales', async function () { return String((await safeSelect('novedades_materiales', 'id', false, 1)).length); });
-      els.content.innerHTML = '<div class="err" style="background:#0f172a;border-color:#334155;color:#e2e8f0;">' + escapeHtml(lines.join('
-')) + '</div>';
-    }
-
-    async function nav(section) {
-      if (!canView(section)) {
-        showFlash('Ese perfil no tiene acceso a esta sección', 'err');
-        return;
-      }
-      activateNav(section);
-      if (section === 'dashboard') return dashboard();
-      if (section === 'checklist_diario') return checklist_diario();
-      if (section === 'control_materiales') return control_materiales();
-      if (section === 'inventario_general') return inventario_general();
-      if (section === 'asignaciones') return asignaciones();
-      if (section === 'mantenimiento_stock') return mantenimiento_stock();
-      if (section === 'archivo_bajas') return archivo_bajas();
-      if (section === 'inventario_movil') return inventario_movil();
-      if (section === 'reportes_stock') return reportes_stock();
-      if (section === 'plano') return plano();
-      if (section === 'diagnostico') return diagnostico();
-    }
-
-    async function init() {
-      try {
-        if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-          throw new Error('No cargó la librería de Supabase.');
-        }
-        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        els.bootMsg.textContent = 'Sistema listo.';
-        authInputs();
-        els.perfil.addEventListener('change', authInputs);
-        els.logout.addEventListener('click', logout);
-        els.logoutTop.addEventListener('click', logout);
-        document.querySelectorAll('.nav').forEach(function (btn) {
-          btn.addEventListener('click', function () {
-            nav(btn.dataset.sec);
-          });
-        });
-        els.loginForm.addEventListener('submit', async function (e) {
-          e.preventDefault();
-          perfilActual = els.perfil.value;
-          try {
-            if (perfilActual === 'bomberos') {
-              await loginBomberos();
-            } else {
-              await loginAdmin(els.email.value, els.password.value, perfilActual);
-            }
-            els.login.classList.add('hidden');
-            els.app.classList.remove('hidden');
-            els.userInfo.textContent = perfilActual + ' · permisos según rol';
-            updateNavVisibility();
-            nav('dashboard');
-          } catch (err) {
-            alert(err && err.message ? err.message : 'No se pudo iniciar sesión.');
-          }
-        });
-      } catch (err) {
-        els.bootMsg.textContent = 'Error de inicialización.';
-        showBootError(err && err.message ? err.message : String(err));
-      }
-    }
-
-    window.addEventListener('error', function (event) {
-      showBootError(event && event.message ? event.message : 'Script error');
+      var control=await sb.from('controles_materiales').insert({movil:sel.value,responsable:responsable,resumen:resumen.join(' | '),observaciones:obs,fecha_hora:new Date().toISOString()});
+      if(control.error){alert(control.error.message);return;}
+      showFlash('Control diario de materiales guardado','ok');
+      control_materiales();
     });
-    window.addEventListener('unhandledrejection', function (event) {
-      showBootError(event && event.reason && event.reason.message ? event.reason.message : String(event && event.reason ? event.reason : 'Promise error'));
-    });
+  }
 
-    init();
-  </script>
+  async function inventario_general(){
+    els.title.textContent='Inventario general';
+    var vista=await safeSelect('v_stock_general','nombre',true);
+    var maestro=await safeSelect('stock_items','nombre',true);
+    var html='';
+    if(canEditStockGeneral()){
+      html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de stock maestro</strong><form id="fStockMaster" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="codigo_interno" placeholder="Código interno"><input name="nombre" placeholder="Nombre" required><input name="categoria" placeholder="Categoría"><input name="marca" placeholder="Marca"><input name="modelo" placeholder="Modelo"><input name="numero_serie" placeholder="N° serie"><input name="cantidad_total" type="number" min="0" placeholder="Cantidad total" required><input name="stock_minimo" type="number" min="0" placeholder="Stock mínimo" required><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar ítem</button></form></div>';
+    }
+    html+='<div class="card"><table><thead><tr><th>Código</th><th>Ítem</th><th>Total</th><th>Asignado</th><th>Stock central</th><th>Reparación</th><th>Baja</th><th>Mínimo</th><th>Alerta</th>'+(canEditStockGeneral()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+
+      (vista.map(function(r){return '<tr><td>'+h(r.codigo_interno||'')+'</td><td><strong>'+h(r.nombre)+'</strong><div class="small">'+h([r.categoria,r.marca,r.modelo].filter(Boolean).join(' · '))+'</div></td><td>'+h(r.cantidad_total)+'</td><td>'+h(r.asignado_moviles)+'</td><td><strong>'+h(r.disponible_real)+'</strong></td><td>'+h(r.en_reparacion)+'</td><td>'+h(r.en_baja)+'</td><td>'+h(r.stock_minimo)+'</td><td>'+(r.alerta_minimo?'<span class="pill pill-bad">Bajo mínimo</span>':'<span class="pill pill-ok">OK</span>')+'</td>'+(canEditStockGeneral()?'<td><button class="secondary edit-stock" data-id="'+r.id+'">Editar</button> <button class="secondary maint-stock" data-id="'+r.id+'">Reparación</button> <button class="danger baja-stock" data-id="'+r.id+'">Baja</button></td>':'')+'</tr>';}).join('')||'<tr><td colspan="10">Sin stock cargado.</td></tr>')+
+      '</tbody></table></div>';
+    els.content.innerHTML=html;
+    if(!canEditStockGeneral())return;
+    var form=document.getElementById('fStockMaster');
+    form.addEventListener('submit',async function(e){e.preventDefault();var fd=new FormData(form);var row={codigo_interno:fd.get('codigo_interno'),nombre:fd.get('nombre'),categoria:fd.get('categoria'),marca:fd.get('marca'),modelo:fd.get('modelo'),numero_serie:fd.get('numero_serie'),cantidad_total:Number(fd.get('cantidad_total')||0),stock_minimo:Number(fd.get('stock_minimo')||0),observaciones:fd.get('observaciones')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('stock_items',row);showFlash('Stock maestro guardado','ok');inventario_general();});
+    document.querySelectorAll('.edit-stock').forEach(function(btn){btn.addEventListener('click',function(){var item=maestro.find(function(x){return String(x.id)===btn.dataset.id;});if(!item)return;form.elements.id.value=item.id;form.elements.codigo_interno.value=item.codigo_interno||'';form.elements.nombre.value=item.nombre||'';form.elements.categoria.value=item.categoria||'';form.elements.marca.value=item.marca||'';form.elements.modelo.value=item.modelo||'';form.elements.numero_serie.value=item.numero_serie||'';form.elements.cantidad_total.value=item.cantidad_total||0;form.elements.stock_minimo.value=item.stock_minimo||0;form.elements.observaciones.value=item.observaciones||'';});});
+    document.querySelectorAll('.maint-stock').forEach(function(btn){btn.addEventListener('click',async function(){var motivo=prompt('Motivo de reparación / mantenimiento:');if(!motivo)return;var cantidad=Number(prompt('Cantidad a enviar a reparación:','1')||0);if(cantidad<1)return;var res=await sb.rpc('send_item_to_maintenance',{p_stock_item_id:Number(btn.dataset.id),p_cantidad:cantidad,p_motivo:motivo,p_usuario:perfilActual,p_movil:null});if(res.error){alert(res.error.message);return;}showFlash('Ítem enviado a reparación','ok');inventario_general();});});
+    document.querySelectorAll('.baja-stock').forEach(function(btn){btn.addEventListener('click',async function(){var motivo=prompt('Motivo de baja:');if(!motivo)return;var cantidad=Number(prompt('Cantidad a dar de baja:','1')||0);if(cantidad<1)return;var res=await sb.rpc('decommission_item',{p_stock_item_id:Number(btn.dataset.id),p_cantidad:cantidad,p_motivo:motivo,p_usuario:perfilActual});if(res.error){alert(res.error.message);return;}showFlash('Ítem dado de baja','ok');inventario_general();});});
+  }
+
+  async function asignaciones(){
+    els.title.textContent='Asignaciones';
+    var all=await Promise.all([safeSelect('v_stock_general','nombre',true),safeSelect('v_stock_assignments_detail','fecha_hora',false),safeSelect('moviles','numero',true),safeSelect('stock_compartments','movil',true)]);
+    var stock=all[0],assigns=all[1],movs=all[2],comps=all[3];
+    var html='';
+    if(canEditStockGeneral()){
+      html+='<div class="card" style="margin-bottom:12px;"><strong>Asignar stock</strong><form id="fAssign" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="stock_item_id">'+stock.map(function(s){return '<option value="'+s.id+'">'+h(s.nombre)+' · disponible '+h(s.disponible_real)+'</option>';}).join('')+'</select><select name="movil" id="assignMovil">'+movs.map(function(m){return '<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>';}).join('')+'</select><select name="compartimiento" id="assignComp"></select><input name="nuevoCompartimiento" placeholder="Nuevo compartimiento (opcional)"><input name="cantidad" type="number" min="1" placeholder="Cantidad" required><button class="primary" type="submit">Asignar</button></form></div>';
+    }
+    html+='<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Compartimiento</th><th>Ítem</th><th>Cantidad</th><th>Estado</th>'+(canEditStockGeneral()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+
+      (assigns.map(function(a){return '<tr><td>'+h(new Date(a.fecha_hora||Date.now()).toLocaleString('es-AR'))+'</td><td>Móvil '+h(a.movil)+'</td><td>'+h(a.compartimiento||'')+'</td><td><strong>'+h(a.nombre)+'</strong><div class="small">'+h(a.codigo_interno||'')+'</div></td><td>'+h(a.cantidad)+'</td><td>'+h(a.estado_asignacion)+'</td>'+(canEditStockGeneral()?'<td><button class="secondary devolver-assign" data-id="'+a.id+'">Devolver</button></td>':'')+'</tr>';}).join('')||'<tr><td colspan="7">Sin asignaciones.</td></tr>')+
+      '</tbody></table></div>';
+    els.content.innerHTML=html;
+    if(!canEditStockGeneral())return;
+    var form=document.getElementById('fAssign');
+    var assignMovil=document.getElementById('assignMovil');
+    var assignComp=document.getElementById('assignComp');
+    function fillAssignComp(movil){var list=comps.filter(function(c){return String(c.movil)===String(movil)&&c.activo!==false;});assignComp.innerHTML=list.map(function(c){return '<option value="'+h(c.nombre)+'">'+h(c.nombre)+'</option>';}).join('');}
+    fillAssignComp(assignMovil.value);assignMovil.addEventListener('change',function(){fillAssignComp(assignMovil.value);});
+    form.addEventListener('submit',async function(e){e.preventDefault();var fd=new FormData(form);var comp=fd.get('compartimiento');var nuevo=String(fd.get('nuevoCompartimiento')||'').trim();if(nuevo){comp=nuevo;var exists=comps.find(function(c){return String(c.movil)===String(fd.get('movil'))&&String(c.nombre).toLowerCase()===nuevo.toLowerCase();});if(!exists&&canDeleteCompartments()){var ins=await sb.from('stock_compartments').insert({movil:fd.get('movil'),nombre:nuevo,activo:true});if(ins.error){alert(ins.error.message);return;}}}var res=await sb.rpc('assign_item_to_mobile',{p_stock_item_id:Number(fd.get('stock_item_id')),p_movil:fd.get('movil'),p_compartimiento:comp||'',p_cantidad:Number(fd.get('cantidad')||0),p_usuario:perfilActual});if(res.error){alert(res.error.message);return;}showFlash('Asignación realizada','ok');asignaciones();});
+    document.querySelectorAll('.devolver-assign').forEach(function(btn){btn.addEventListener('click',async function(){var id=Number(btn.dataset.id);var item=assigns.find(function(a){return a.id===id;});if(!item)return;await updateRows('stock_assignments',{estado_asignacion:'DEVUELTA'},id);var r2=await sb.from('stock_movements').insert({stock_item_id:item.stock_item_id,tipo_movimiento:'devolucion',cantidad:item.cantidad,origen:'MOVIL',destino:'STOCK_CENTRAL',movil_origen:item.movil,usuario:perfilActual});if(r2.error){alert(r2.error.message);return;}showFlash('Ítem devuelto a stock central','ok');asignaciones();});});
+  }
+
+  async function mantenimiento_stock(){
+    els.title.textContent='Control de mantenimiento';
+    var rows=await safeSelect('v_maintenance_control_detail','fecha_ingreso',false);
+    var items=await safeSelect('stock_items','nombre',true);
+    var html='';
+    if(canManageMaintenanceStock()){
+      html+='<div class="card" style="margin-bottom:12px;"><strong>Ingreso manual a mantenimiento</strong><form id="fMaintStock" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="stock_item_id">'+items.map(function(i){return '<option value="'+i.id+'">'+h(i.nombre)+'</option>';}).join('')+'</select><input name="cantidad" type="number" min="1" placeholder="Cantidad" required><input name="motivo" placeholder="Motivo" required><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Enviar a mantenimiento</button></form></div>';
+    }
+    html+='<div class="card"><table><thead><tr><th>Fecha ingreso</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Estado</th><th>Observaciones</th><th>Acciones</th></tr></thead><tbody>'+
+      (rows.map(function(r){return '<tr><td>'+h(new Date(r.fecha_ingreso||Date.now()).toLocaleString('es-AR'))+'</td><td><strong>'+h(r.nombre)+'</strong><div class="small">'+h(r.codigo_interno||'')+'</div></td><td>'+h(r.cantidad)+'</td><td>'+h(r.motivo||'')+'</td><td>'+(String(r.estado||'').toUpperCase()==='DISPONIBLE'?'<span class="pill pill-ok">Disponible</span>':'<span class="pill pill-warn">'+h(r.estado||'REPARACION')+'</span>')+'</td><td>'+h(r.observaciones||'')+'</td><td>'+(canManageMaintenanceStock()&&String(r.estado||'').toUpperCase()!=='DISPONIBLE'?'<button class="secondary return-maint" data-id="'+r.id+'">Retornar a stock</button>':'')+'</td></tr>';}).join('')||'<tr><td colspan="7">Sin registros de mantenimiento.</td></tr>')+
+      '</tbody></table></div>';
+    els.content.innerHTML=html;
+    if(!canManageMaintenanceStock())return;
+    var form=document.getElementById('fMaintStock');
+    form.addEventListener('submit',async function(e){e.preventDefault();var fd=new FormData(form);var res=await sb.from('maintenance_control').insert({stock_item_id:Number(fd.get('stock_item_id')),cantidad:Number(fd.get('cantidad')||0),motivo:fd.get('motivo'),estado:'REPARACION',observaciones:fd.get('observaciones')});if(res.error){alert(res.error.message);return;}var mv=await sb.from('stock_movements').insert({stock_item_id:Number(fd.get('stock_item_id')),tipo_movimiento:'reparacion',cantidad:Number(fd.get('cantidad')||0),origen:'STOCK_CENTRAL',destino:'MANTENIMIENTO',motivo:fd.get('motivo'),usuario:perfilActual});if(mv.error){alert(mv.error.message);return;}showFlash('Ítem enviado a mantenimiento','ok');mantenimiento_stock();});
+    document.querySelectorAll('.return-maint').forEach(function(btn){btn.addEventListener('click',async function(){var res=await sb.rpc('return_item_from_maintenance',{p_maintenance_id:Number(btn.dataset.id),p_usuario:perfilActual});if(res.error){alert(res.error.message);return;}showFlash('Ítem retornado a stock central','ok');mantenimiento_stock();});});
+  }
+
+  async function archivo_bajas(){
+    els.title.textContent='Archivo / bajas';
+    var rows=await safeSelect('v_stock_decommissions_detail','fecha_baja',false);
+    var html='<div class="card"><table><thead><tr><th>Fecha</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Usuario</th><th>Observaciones</th><th>Revertible</th><th>Acciones</th></tr></thead><tbody>'+
+      (rows.map(function(r){return '<tr><td>'+h(new Date(r.fecha_baja||Date.now()).toLocaleString('es-AR'))+'</td><td><strong>'+h(r.nombre)+'</strong><div class="small">'+h(r.codigo_interno||'')+'</div></td><td>'+h(r.cantidad)+'</td><td>'+h(r.motivo||'')+'</td><td>'+h(r.usuario||'')+'</td><td>'+h(r.observaciones||'')+'</td><td>'+(r.revertible?'<span class="pill pill-ok">Sí</span>':'<span class="pill pill-bad">No</span>')+'</td><td>'+(canManageDecommissions()&&r.revertible?'<button class="secondary revert-baja" data-id="'+r.id+'">Revertir</button>':'')+'</td></tr>';}).join('')||'<tr><td colspan="8">Sin bajas registradas.</td></tr>')+
+      '</tbody></table></div>';
+    els.content.innerHTML=html;
+    if(!canManageDecommissions())return;
+    document.querySelectorAll('.revert-baja').forEach(function(btn){btn.addEventListener('click',async function(){var id=Number(btn.dataset.id);var item=rows.find(function(x){return x.id===id;});if(!item)return;var del=await sb.from('stock_decommissions').delete().eq('id',id);if(del.error){alert(del.error.message);return;}var mv=await sb.from('stock_movements').insert({stock_item_id:item.stock_item_id,tipo_movimiento:'reversa_baja',cantidad:item.cantidad,origen:'ARCHIVO_BAJAS',destino:'STOCK_CENTRAL',motivo:'Reversión de baja',usuario:perfilActual});if(mv.error){alert(mv.error.message);return;}showFlash('Baja revertida, vuelve a stock central','ok');archivo_bajas();});});
+  }
+
+  async function inventario_movil(){
+    els.title.textContent='Inventario por móvil';
+    var rows=await safeSelect('v_stock_assignments_detail','movil',true);
+    els.content.innerHTML='<div class="card"><table><thead><tr><th>Móvil</th><th>Compartimiento</th><th>Ítem</th><th>Cantidad</th><th>Estado</th></tr></thead><tbody>'+
+      (rows.map(function(r){return '<tr><td>Móvil '+h(r.movil)+'</td><td>'+h(r.compartimiento||'')+'</td><td><strong>'+h(r.nombre)+'</strong><div class="small">'+h(r.codigo_interno||'')+'</div></td><td>'+h(r.cantidad)+'</td><td>'+h(r.estado_asignacion)+'</td></tr>';}).join('')||'<tr><td colspan="5">Sin asignaciones.</td></tr>')+
+      '</tbody></table></div>';
+  }
+
+  async function reportes_stock(){
+    els.title.textContent='Reportes de stock';
+    var all=await Promise.all([safeSelect('v_stock_general','nombre',true),safeSelect('v_stock_assignments_detail','movil',true),safeSelect('v_maintenance_control_detail','fecha_ingreso',false),safeSelect('v_stock_decommissions_detail','fecha_baja',false)]);
+    var stock=all[0],assignments=all[1],maint=all[2],bajas=all[3];
+    els.content.innerHTML='<div class="card"><strong>Exportación de reportes</strong><div class="small" style="margin-top:8px;">Descargá reportes del stock maestro, stock asignado a móviles, mantenimiento y bajas.</div><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); margin-top:16px;">'+
+      '<button id="expStockCsv" class="primary" type="button">Exportar stock general CSV</button>'+
+      '<button id="expStockJson" class="secondary" type="button">Exportar stock general JSON</button>'+
+      '<button id="expAsignCsv" class="primary" type="button">Exportar stock por móvil CSV</button>'+
+      '<button id="expAsignJson" class="secondary" type="button">Exportar stock por móvil JSON</button>'+
+      '<button id="expMaintCsv" class="primary" type="button">Exportar mantenimiento CSV</button>'+
+      '<button id="expBajasCsv" class="secondary" type="button">Exportar bajas CSV</button>'+
+      '</div></div>';
+    var stockRows=stock.map(function(r){return {codigo_interno:r.codigo_interno||'',nombre:r.nombre,categoria:r.categoria||'',marca:r.marca||'',modelo:r.modelo||'',numero_serie:r.numero_serie||'',cantidad_total:r.cantidad_total,asignado_moviles:r.asignado_moviles,en_reparacion:r.en_reparacion,en_baja:r.en_baja,disponible_real:r.disponible_real,stock_minimo:r.stock_minimo,alerta_minimo:r.alerta_minimo};});
+    var assignRows=assignments.map(function(a){return {fecha_hora:a.fecha_hora,movil:a.movil,compartimiento:a.compartimiento||'',codigo_interno:a.codigo_interno||'',nombre:a.nombre||'',cantidad:a.cantidad,estado_asignacion:a.estado_asignacion};});
+    var maintRows=maint.map(function(m){return {fecha_ingreso:m.fecha_ingreso,codigo_interno:m.codigo_interno||'',nombre:m.nombre||'',cantidad:m.cantidad,motivo:m.motivo||'',estado:m.estado||'',fecha_retorno:m.fecha_retorno||'',observaciones:m.observaciones||''};});
+    var bajaRows=bajas.map(function(b){return {fecha_baja:b.fecha_baja,codigo_interno:b.codigo_interno||'',nombre:b.nombre||'',cantidad:b.cantidad,motivo:b.motivo||'',usuario:b.usuario||'',observaciones:b.observaciones||'',revertible:b.revertible};});
+    document.getElementById('expStockCsv').addEventListener('click',function(){downloadText('stock_general.csv',csv(stockRows),'text/csv;charset=utf-8');});
+    document.getElementById('expStockJson').addEventListener('click',function(){downloadText('stock_general.json',JSON.stringify(stockRows,null,2),'application/json');});
+    document.getElementById('expAsignCsv').addEventListener('click',function(){downloadText('stock_por_movil.csv',csv(assignRows),'text/csv;charset=utf-8');});
+    document.getElementById('expAsignJson').addEventListener('click',function(){downloadText('stock_por_movil.json',JSON.stringify(assignRows,null,2),'application/json');});
+    document.getElementById('expMaintCsv').addEventListener('click',function(){downloadText('control_mantenimiento.csv',csv(maintRows),'text/csv;charset=utf-8');});
+    document.getElementById('expBajasCsv').addEventListener('click',function(){downloadText('archivo_bajas.csv',csv(bajaRows),'text/csv;charset=utf-8');});
+  }
+
+  async function plano(){
+    els.title.textContent='Plano del móvil';
+    var all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('v_stock_assignments_detail','movil',true),safeSelect('novedades_materiales','fecha_hora',false)]);
+    var movs=all[0],items=all[1],novedades=all[2];
+    els.content.innerHTML='<div class="card"><label class="small">Seleccionar móvil</label><select id="mapMovil" style="margin-top:8px; max-width:240px;">'+movs.map(function(m){return '<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>';}).join('')+'</select></div><div id="mapWrap" class="hero-grid" style="margin-top:12px;"></div>';
+    var sel=document.getElementById('mapMovil');
+    function renderMap(movil){
+      var byComp={};
+      items.filter(function(i){return String(i.movil)===String(movil)&&i.estado_asignacion==='ACTIVA';}).forEach(function(i){var comp=i.compartimiento||'Sin compartimiento';if(!byComp[comp])byComp[comp]=[];byComp[comp].push(i);});
+      var keys=Object.keys(byComp);
+      document.getElementById('mapWrap').innerHTML=keys.map(function(c){return '<div class="card"><strong>'+h(c)+'</strong><div style="margin-top:8px;">'+byComp[c].map(function(i){var alerta=novedades.find(function(n){return String(n.estado||'').toLowerCase()==='pendiente'&&String(n.movil)===String(movil)&&String(n.material)===String(i.nombre);});return '<div class="list-row">'+h(i.nombre)+' · Cantidad '+h(i.cantidad)+(alerta?' <span class="pill pill-bad">ALERTA</span>':'')+'</div>';}).join('')+'</div></div>';}).join('')||'<div class="card">Ese móvil no tiene materiales asignados.</div>';
+    }
+    sel.addEventListener('change',function(){renderMap(sel.value);});
+    if(sel.value)renderMap(sel.value);
+  }
+
+  async function diagnostico(){
+    els.title.textContent='Diagnóstico';
+    var lines=[];
+    async function run(label,fn){try{var result=await fn();lines.push('OK - '+label+(result?': '+result:''));}catch(err){lines.push('ERROR - '+label+': '+(err&&err.message?err.message:String(err)));}}
+    await run('Auth',async function(){var res=await sb.auth.getSession();if(res.error)throw res.error;return res.data.session?'sesión activa':'sin sesión';});
+    await run('v_stock_general',async function(){return String((await safeSelect('v_stock_general','id',false,1)).length);});
+    await run('v_stock_assignments_detail',async function(){return String((await safeSelect('v_stock_assignments_detail','id',false,1)).length);});
+    await run('v_maintenance_control_detail',async function(){return String((await safeSelect('v_maintenance_control_detail','id',false,1)).length);});
+    await run('v_stock_decommissions_detail',async function(){return String((await safeSelect('v_stock_decommissions_detail','id',false,1)).length);});
+    await run('revisiones',async function(){return String((await safeSelect('revisiones','id',false,1)).length);});
+    await run('controles_materiales',async function(){return String((await safeSelect('controles_materiales','id',false,1)).length);});
+    await run('novedades_materiales',async function(){return String((await safeSelect('novedades_materiales','id',false,1)).length);});
+    els.content.innerHTML='<div class="err" style="background:#0f172a;border-color:#334155;color:#e2e8f0;">'+h(lines.join('
+'))+'</div>';
+  }
+
+  async function nav(section){
+    if(!canView(section)){showFlash('Ese perfil no tiene acceso a esta sección','err');return;}
+    activateNav(section);
+    if(section==='dashboard')return dashboard();
+    if(section==='checklist_diario')return checklist_diario();
+    if(section==='control_materiales')return control_materiales();
+    if(section==='inventario_general')return inventario_general();
+    if(section==='asignaciones')return asignaciones();
+    if(section==='mantenimiento_stock')return mantenimiento_stock();
+    if(section==='archivo_bajas')return archivo_bajas();
+    if(section==='inventario_movil')return inventario_movil();
+    if(section==='reportes_stock')return reportes_stock();
+    if(section==='plano')return plano();
+    if(section==='diagnostico')return diagnostico();
+  }
+
+  async function init(){
+    try{
+      if(!window.supabase||typeof window.supabase.createClient!=='function')throw new Error('No cargó la librería de Supabase.');
+      sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+      els.bootMsg.textContent='Sistema listo.';
+      authInputs();
+      els.perfil.addEventListener('change',authInputs);
+      els.logout.addEventListener('click',logout);
+      els.logoutTop.addEventListener('click',logout);
+      document.querySelectorAll('.nav').forEach(function(btn){btn.addEventListener('click',function(){nav(btn.dataset.sec);});});
+      els.loginForm.addEventListener('submit',async function(e){
+        e.preventDefault();
+        perfilActual=els.perfil.value;
+        try{
+          if(perfilActual==='bomberos')await loginBomberos();else await loginAdmin(els.email.value,els.password.value,perfilActual);
+          els.login.classList.add('hidden');
+          els.app.classList.remove('hidden');
+          els.userInfo.textContent=perfilActual+' · permisos según rol';
+          updateNavVisibility();
+          nav('dashboard');
+        }catch(err){alert(err&&err.message?err.message:'No se pudo iniciar sesión.');}
+      });
+    }catch(err){
+      els.bootMsg.textContent='Error de inicialización.';
+      showBootError(err&&err.message?err.message:String(err));
+    }
+  }
+
+  window.addEventListener('error',function(event){showBootError(event&&event.message?event.message:'Script error');});
+  window.addEventListener('unhandledrejection',function(event){showBootError(event&&event.reason&&event.reason.message?event.reason.message:String(event&&event.reason?event.reason:'Promise error'));});
+  init();
+})();
+</script>
 </body>
 </html>
