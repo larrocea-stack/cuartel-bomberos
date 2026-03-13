@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cuartel Online</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -17,113 +17,50 @@
       --red-dark: #7f1d1d;
       --green: #166534;
       --amber: #92400e;
+      --blue: #1d4ed8;
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
+    body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color: var(--text); }
     .hidden { display: none !important; }
     .layout { display: flex; min-height: 100vh; }
-    .sidebar {
-      width: 300px;
-      background: var(--bg);
-      border-right: 1px solid var(--border);
-      padding: 16px;
-    }
+    .sidebar { width: 300px; background: var(--bg); border-right: 1px solid var(--border); padding: 16px; }
     .main { flex: 1; padding: 20px; }
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
-    }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
     .grid { display: grid; gap: 12px; }
     .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
     .small { font-size: 12px; color: var(--muted); }
-    .nav {
-      background: #111827;
-      color: var(--text);
-      padding: 10px 12px;
-      border: none;
-      border-radius: 10px;
-      text-align: left;
-      cursor: pointer;
-    }
+    .nav { background: #111827; color: var(--text); padding: 10px 12px; border: none; border-radius: 10px; text-align: left; cursor: pointer; }
     .nav.active { background: #991b1b; }
-    .primary, .secondary, .danger {
-      border: none;
-      border-radius: 10px;
-      padding: 10px 12px;
-      color: #fff;
-      cursor: pointer;
-    }
+    .primary, .secondary, .danger { border: none; border-radius: 10px; padding: 10px 12px; color: #fff; cursor: pointer; }
     .primary { background: var(--red); }
     .secondary { background: var(--soft); }
     .danger { background: var(--red-dark); }
-    input, select, textarea {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--soft);
-      color: #fff;
-    }
+    .info { background: var(--blue); }
+    input, select, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--soft); color: #fff; }
     textarea { min-height: 90px; resize: vertical; }
     table { width: 100%; border-collapse: collapse; }
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
-      vertical-align: top;
-    }
-    th {
-      font-size: 12px;
-      color: var(--muted);
-      text-transform: uppercase;
-    }
+    th, td { padding: 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { font-size: 12px; color: var(--muted); text-transform: uppercase; }
     .list-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
-    .pill {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-    }
+    .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; }
     .pill-ok { background: #052e16; color: #bbf7d0; }
     .pill-warn { background: #78350f; color: #fde68a; }
     .pill-bad { background: #450a0a; color: #fecaca; }
-    .err, .ok {
-      border-radius: 12px;
-      padding: 12px;
-      white-space: pre-wrap;
-    }
+    .pill-info { background: #172554; color: #bfdbfe; }
+    .err, .ok { border-radius: 12px; padding: 12px; white-space: pre-wrap; }
     .err { background: #450a0a; border: 1px solid var(--red-dark); color: #fecaca; }
     .ok { background: #052e16; border: 1px solid var(--green); color: #bbf7d0; }
-    .hero-grid, .stat-grid, .mobile-map {
-      display: grid;
-      gap: 12px;
-    }
+    .hero-grid, .stat-grid, .mobile-map { display: grid; gap: 12px; }
     .hero-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
     .stat-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
     .mobile-map { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
-    .hero-card {
-      border-radius: 18px;
-      padding: 18px;
-      border: 1px solid var(--border);
-    }
+    .hero-card { border-radius: 18px; padding: 18px; border: 1px solid var(--border); }
     .service { background: #052e16; border-color: var(--green); }
     .maint { background: #3b2a05; border-color: var(--amber); }
     .out { background: #450a0a; border-color: var(--red-dark); }
     .hero-number { font-size: 34px; font-weight: 800; }
     .hero-label { font-size: 12px; color: var(--muted); text-transform: uppercase; }
-    .comp-box {
-      background: #111827;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px;
-    }
+    .comp-box { background: #111827; border: 1px solid var(--border); border-radius: 14px; padding: 12px; }
     @media (max-width: 900px) {
       .layout { display: block; }
       .sidebar { width: auto; border-right: none; border-bottom: 1px solid var(--border); }
@@ -145,8 +82,8 @@
           <option value="jefatura">Jefatura</option>
           <option value="bomberos">Bomberos</option>
         </select>
-        <input id="email" type="email" placeholder="Email" />
-        <input id="password" type="password" placeholder="Contraseña" />
+        <input id="email" type="email" placeholder="Email">
+        <input id="password" type="password" placeholder="Contraseña">
         <button type="submit" class="primary">Ingresar</button>
       </form>
     </div>
@@ -243,7 +180,7 @@
       return perfilActual === 'administrador' || perfilActual === 'materiales' || perfilActual === 'bomberos' || perfilActual === 'jefatura';
     }
     function escapeHtml(value) {
-      return String(value ?? '')
+      return String(value == null ? '' : value)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -263,7 +200,7 @@
       }, 3200);
     }
     function authInputs() {
-      const isBombero = els.perfil.value === 'bomberos';
+      var isBombero = els.perfil.value === 'bomberos';
       els.email.classList.toggle('hidden', isBombero);
       els.password.classList.toggle('hidden', isBombero);
     }
@@ -271,7 +208,7 @@
       document.querySelectorAll('.nav').forEach(function (btn) {
         btn.classList.remove('active');
       });
-      const btn = document.querySelector('.nav[data-sec="' + section + '"]');
+      var btn = document.querySelector('.nav[data-sec="' + section + '"]');
       if (btn) btn.classList.add('active');
     }
     function updateNavVisibility() {
@@ -283,32 +220,34 @@
       return '<div class="card"><div class="small">' + escapeHtml(label) + '</div><div style="font-size:28px;font-weight:800;">' + escapeHtml(value) + '</div></div>';
     }
     async function safeSelect(table, orderBy, ascending, limit) {
-      let q = sb.from(table).select('*');
+      var q = sb.from(table).select('*');
       if (orderBy) q = q.order(orderBy, { ascending: !!ascending });
       if (limit) q = q.limit(limit);
-      const res = await q;
+      var res = await q;
       if (res.error) throw res.error;
       return res.data || [];
     }
     async function upsertRow(table, row) {
-      const res = await sb.from(table).upsert(row);
+      var res = await sb.from(table).upsert(row);
       if (res.error) throw res.error;
     }
     async function updateRows(table, values, id) {
-      const res = await sb.from(table).update(values).eq('id', id);
+      var res = await sb.from(table).update(values).eq('id', id);
       if (res.error) throw res.error;
     }
     async function loginAdmin(email, password, profile) {
-      const expected = PROFILE_EMAILS[profile];
+      var expected = PROFILE_EMAILS[profile];
       if (String(email || '').trim().toLowerCase() !== expected.toLowerCase()) {
         throw new Error('Para el perfil ' + profile + ' debés usar el email ' + expected);
       }
-      const authRes = await sb.auth.signInWithPassword({ email: email, password: password });
+      var authRes = await sb.auth.signInWithPassword({ email: email, password: password });
       if (authRes.error) throw authRes.error;
       userActual = authRes.data.user;
-      const roleRes = await sb.from('user_profiles').select('*').eq('user_id', userActual.id).eq('profile_name', profile).limit(1);
+      var roleRes = await sb.from('user_profiles').select('*').eq('user_id', userActual.id).eq('profile_name', profile).limit(1);
       if (roleRes.error) throw roleRes.error;
-      if (!roleRes.data || !roleRes.data.length) throw new Error('Ese usuario no tiene asignado el perfil seleccionado.');
+      if (!roleRes.data || !roleRes.data.length) {
+        throw new Error('Ese usuario no tiene asignado el perfil seleccionado.');
+      }
     }
     async function loginBomberos() {
       userActual = null;
@@ -320,9 +259,9 @@
       location.reload();
     }
     function downloadTextFile(filename, content, type) {
-      const blob = new Blob([content], { type: type || 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      var blob = new Blob([content], { type: type || 'text/plain;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
       a.href = url;
       a.download = filename;
       a.click();
@@ -330,19 +269,19 @@
     }
     function toCsv(rows) {
       if (!rows || !rows.length) return '';
-      const headers = Object.keys(rows[0]);
-      const esc = function (v) {
-        return '"' + String(v ?? '').replace(/"/g, '""') + '"';
-      };
-      return [headers.join(','), ...rows.map(function (r) {
+      var headers = Object.keys(rows[0]);
+      function esc(v) {
+        return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      }
+      return [headers.join(',')].concat(rows.map(function (r) {
         return headers.map(function (h) { return esc(r[h]); }).join(',');
-      })].join('
+      })).join('
 ');
     }
 
     async function dashboard() {
       els.title.textContent = 'Dashboard';
-      const all = await Promise.all([
+      var all = await Promise.all([
         safeSelect('moviles', 'numero', true),
         safeSelect('fallas', 'fecha_hora', false),
         safeSelect('repuestos', 'nombre', true),
@@ -351,23 +290,34 @@
         safeSelect('revisiones', 'fecha_hora', false),
         safeSelect('controles_materiales', 'fecha_hora', false)
       ]);
-      const mov = all[0];
-      const fallas = all[1];
-      const repuestos = all[2];
-      const novedades = all[3];
-      const stock = all[4];
-      const revisiones = all[5];
-      const controlesMat = all[6];
-      const enServicio = mov.filter(function (x) { return x.estado === 'En servicio'; }).length;
-      const enMantenimiento = mov.filter(function (x) { return x.estado === 'En mantenimiento'; }).length;
-      const fueraServicio = mov.filter(function (x) { return x.estado === 'Fuera de servicio'; }).length;
-      const fallasCriticas = fallas.filter(function (f) { return String(f.tipo_falla || '').toLowerCase().indexOf('crit') >= 0; });
-      const repuestosCriticos = repuestos.filter(function (r) { return Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0); });
-      const alertasMateriales = novedades.filter(function (n) { return String(n.estado || '').toLowerCase() === 'pendiente'; });
-      const alertasStockGeneral = stock.filter(function (s) { return s.alerta_minimo === true; });
-      const checklistHoy = revisiones.filter(function(r){ try{return new Date(r.fecha_hora).toDateString()===new Date().toDateString();}catch(e){return false;} }).length;
-      const controlesHoy = controlesMat.filter(function(r){ try{return new Date(r.fecha_hora).toDateString()===new Date().toDateString();}catch(e){return false;} }).length;
-      els.content.innerHTML =
+      var mov = all[0];
+      var fallas = all[1];
+      var repuestos = all[2];
+      var novedades = all[3];
+      var stock = all[4];
+      var revisiones = all[5];
+      var controlesMat = all[6];
+      var enServicio = mov.filter(function (x) { return x.estado === 'En servicio'; }).length;
+      var enMantenimiento = mov.filter(function (x) { return x.estado === 'En mantenimiento'; }).length;
+      var fueraServicio = mov.filter(function (x) { return x.estado === 'Fuera de servicio'; }).length;
+      var fallasCriticas = fallas.filter(function (f) { return String(f.tipo_falla || '').toLowerCase().indexOf('crit') >= 0; });
+      var repuestosCriticos = repuestos.filter(function (r) { return Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0); });
+      var alertasMateriales = novedades.filter(function (n) { return String(n.estado || '').toLowerCase() === 'pendiente'; });
+      var alertasStockGeneral = stock.filter(function (s) { return s.alerta_minimo === true; });
+      var hoy = new Date().toDateString();
+      var checklistHoy = revisiones.filter(function (r) { return r.fecha_hora && new Date(r.fecha_hora).toDateString() === hoy; }).length;
+      var controlesHoy = controlesMat.filter(function (r) { return r.fecha_hora && new Date(r.fecha_hora).toDateString() === hoy; }).length;
+
+      var centroAlertas = '';
+      centroAlertas += alertasMateriales.map(function (n) {
+        return '<div class="list-row"><strong>Móvil ' + escapeHtml(n.movil || '') + '</strong> · ' + escapeHtml(n.material || '') + ' · <span class="pill pill-bad">' + escapeHtml(n.tipo_novedad || 'Novedad') + '</span></div>';
+      }).join('');
+      centroAlertas += alertasStockGeneral.map(function (s) {
+        return '<div class="list-row"><strong>' + escapeHtml(s.nombre) + '</strong> · disponible ' + escapeHtml(s.disponible_real) + ' / mínimo ' + escapeHtml(s.stock_minimo) + ' <span class="pill pill-bad">Stock bajo</span></div>';
+      }).join('');
+      if (!centroAlertas) centroAlertas = 'Sin alertas activas.';
+
+      els.content.innerHTML = '' +
         '<div class="hero-grid">' +
           '<div class="hero-card service"><div class="hero-label">Móviles en servicio</div><div class="hero-number">' + enServicio + '</div></div>' +
           '<div class="hero-card maint"><div class="hero-label">En mantenimiento</div><div class="hero-number">' + enMantenimiento + '</div></div>' +
@@ -381,22 +331,17 @@
           card('Checklist hoy', checklistHoy) +
           card('Controles materiales hoy', controlesHoy) +
         '</div>' +
-        '<div class="card" style="margin-top:14px;"><strong>Centro de alertas</strong><div style="margin-top:10px;">' +
-          ((alertasMateriales.map(function(n){ return '<div class="list-row"><strong>Móvil '+escapeHtml(n.movil||'')+'</strong> · '+escapeHtml(n.material||'')+' · <span class="pill pill-bad">'+escapeHtml(n.tipo_novedad||'Novedad')+'</span></div>'; }).join('')) || '') +
-          ((alertasStockGeneral.map(function (s) {
-          ((alertasStockGeneral.map(function (s) {
-            return '<div class="list-row"><strong>' + escapeHtml(s.nombre) + '</strong> · disponible ' + escapeHtml(s.disponible_real) + ' / mínimo ' + escapeHtml(s.stock_minimo) + '</div>';
-          }).join('')) || 'Sin alertas de stock general.') +
-        '</div></div>';
-        }
+        '<div class="card" style="margin-top:14px;"><strong>Centro de alertas</strong><div style="margin-top:10px;">' + centroAlertas + '</div></div>';
+    }
 
     async function checklist_diario() {
       els.title.textContent = 'Checklist diario';
-      const moviles = await safeSelect('moviles', 'numero', true);
-      let html = '<div class="card" style="max-width:980px;"><strong>Control diario de móviles</strong><div class="small" style="margin-top:8px;">Registro operativo diario para automotores.</div>';
+      var moviles = await safeSelect('moviles', 'numero', true);
+      var history = await safeSelect('revisiones', 'fecha_hora', false, 20);
+      var html = '<div class="card" style="max-width:980px;"><strong>Control diario de móviles</strong><div class="small" style="margin-top:8px;">Registro operativo diario para automotores.</div>';
       if (canDoChecklist()) {
         html += '<form id="fChecklist" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); margin-top:14px;">' +
-          '<select name="movil">' + moviles.map(function(m){ return '<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>'; }).join('') + '</select>' +
+          '<select name="movil">' + moviles.map(function (m) { return '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>'; }).join('') + '</select>' +
           '<input name="responsable" placeholder="Responsable / legajo" required>' +
           '<select name="luces"><option value="OK">Luces emergencia OK</option><option value="FALLA">Luces emergencia FALLA</option></select>' +
           '<select name="sirena"><option value="OK">Sirena y bocina OK</option><option value="FALLA">Sirena y bocina FALLA</option></select>' +
@@ -411,18 +356,19 @@
       } else {
         html += '<div class="err" style="margin-top:12px;">Este perfil no tiene permiso para registrar checklist diario.</div>';
       }
-      html += '</div><div class="card" style="margin-top:12px;"><strong>Últimos checklist</strong><div id="checklistHistory"></div></div>';
+      html += '</div>' +
+        '<div class="card" style="margin-top:12px;"><strong>Últimos checklist</strong><div id="checklistHistory">' +
+        (history.map(function (r) {
+          return '<div class="list-row"><strong>Móvil ' + escapeHtml(r.movil || '') + '</strong> · ' + escapeHtml(new Date(r.fecha_hora || Date.now()).toLocaleString('es-AR')) + ' · ' + escapeHtml(r.responsable || '') + '<div class="small">Luces: ' + escapeHtml(r.luces || '') + ' | Sirena: ' + escapeHtml(r.sirena || '') + ' | Aceite: ' + escapeHtml(r.aceite || '') + ' | Agua: ' + escapeHtml(r.agua || '') + ' | Neumáticos: ' + escapeHtml(r.neumaticos || '') + ' | Radio: ' + escapeHtml(r.radio || '') + ' | Combustible: ' + escapeHtml(r.combustible || '') + '</div><div class="small">' + escapeHtml(r.observaciones || '') + '</div></div>';
+        }).join('') || '<div class="small">Sin checklist cargados.</div>') +
+        '</div></div>';
       els.content.innerHTML = html;
-      const history = await safeSelect('revisiones', 'fecha_hora', false, 20);
-      document.getElementById('checklistHistory').innerHTML = history.map(function(r){
-        return '<div class="list-row"><strong>Móvil '+escapeHtml(r.movil||'')+'</strong> · '+escapeHtml(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+' · '+escapeHtml(r.responsable||'')+'<div class="small">Luces: '+escapeHtml(r.luces||'')+' | Sirena: '+escapeHtml(r.sirena||'')+' | Aceite: '+escapeHtml(r.aceite||'')+' | Agua: '+escapeHtml(r.agua||'')+' | Neumáticos: '+escapeHtml(r.neumaticos||'')+' | Radio: '+escapeHtml(r.radio||'')+' | Combustible: '+escapeHtml(r.combustible||'')+'</div><div class="small">'+escapeHtml(r.observaciones||'')+'</div></div>';
-      }).join('') || '<div class="small">Sin checklist cargados.</div>';
-      const form = document.getElementById('fChecklist');
+      var form = document.getElementById('fChecklist');
       if (form) {
-        form.addEventListener('submit', async function(e){
+        form.addEventListener('submit', async function (e) {
           e.preventDefault();
-          const fd = new FormData(form);
-          const row = {
+          var fd = new FormData(form);
+          var row = {
             movil: fd.get('movil'),
             responsable: fd.get('responsable'),
             luces: fd.get('luces'),
@@ -435,7 +381,7 @@
             observaciones: fd.get('observaciones'),
             fecha_hora: new Date().toISOString()
           };
-          const res = await sb.from('revisiones').insert(row);
+          var res = await sb.from('revisiones').insert(row);
           if (res.error) { alert(res.error.message); return; }
           showFlash('Checklist diario guardado', 'ok');
           checklist_diario();
@@ -445,75 +391,94 @@
 
     async function control_materiales() {
       els.title.textContent = 'Control diario materiales';
-      const all = await Promise.all([
+      var all = await Promise.all([
         safeSelect('moviles', 'numero', true),
         safeSelect('v_stock_assignments_detail', 'movil', true),
         safeSelect('controles_materiales', 'fecha_hora', false, 20)
       ]);
-      const moviles = all[0];
-      const asignaciones = all[1];
-      const historial = all[2];
-      let html = '<div class="card" style="max-width:1100px;"><strong>Verificación diaria de materiales</strong><div class="small" style="margin-top:8px;">Seleccioná el móvil y verificá cantidades reales por compartimiento.</div>';
+      var moviles = all[0];
+      var asignaciones = all[1];
+      var historial = all[2];
+      var html = '<div class="card" style="max-width:1100px;"><strong>Verificación diaria de materiales</strong><div class="small" style="margin-top:8px;">Seleccioná el móvil y verificá cantidades reales por compartimiento.</div>';
       if (canDoMaterialControl()) {
         html += '<div class="grid" style="grid-template-columns:240px 1fr; margin-top:14px; align-items:start;">' +
-          '<div><select id="ctrlMovil">' + moviles.map(function(m){ return '<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>'; }).join('') + '</select><input id="ctrlResponsable" placeholder="Responsable / legajo" style="margin-top:10px;"><textarea id="ctrlObs" placeholder="Observaciones generales" style="margin-top:10px;"></textarea><button id="saveMatCtrl" class="primary" type="button" style="margin-top:10px;">Guardar control</button></div>' +
+          '<div>' +
+          '<select id="ctrlMovil">' + moviles.map(function (m) { return '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>'; }).join('') + '</select>' +
+          '<input id="ctrlResponsable" placeholder="Responsable / legajo" style="margin-top:10px;">' +
+          '<textarea id="ctrlObs" placeholder="Observaciones generales" style="margin-top:10px;"></textarea>' +
+          '<button id="saveMatCtrl" class="primary" type="button" style="margin-top:10px;">Guardar control</button>' +
+          '</div>' +
           '<div id="ctrlMaterialesWrap"></div>' +
-        '</div>';
+          '</div>';
       } else {
         html += '<div class="err" style="margin-top:12px;">Este perfil no tiene permiso para registrar control de materiales.</div>';
       }
-      html += '</div><div class="card" style="margin-top:12px;"><strong>Últimos controles de materiales</strong><div>' +
-        (historial.map(function(h){ return '<div class="list-row"><strong>Móvil '+escapeHtml(h.movil||'')+'</strong> · '+escapeHtml(new Date(h.fecha_hora||Date.now()).toLocaleString('es-AR'))+' · '+escapeHtml(h.responsable||'')+'<div class="small">'+escapeHtml(h.resumen||'')+'</div></div>'; }).join('') || '<div class="small">Sin controles cargados.</div>') +
-      '</div></div>';
+      html += '</div>' +
+        '<div class="card" style="margin-top:12px;"><strong>Últimos controles de materiales</strong><div>' +
+        (historial.map(function (h) {
+          return '<div class="list-row"><strong>Móvil ' + escapeHtml(h.movil || '') + '</strong> · ' + escapeHtml(new Date(h.fecha_hora || Date.now()).toLocaleString('es-AR')) + ' · ' + escapeHtml(h.responsable || '') + '<div class="small">' + escapeHtml(h.resumen || '') + '</div></div>';
+        }).join('') || '<div class="small">Sin controles cargados.</div>') +
+        '</div></div>';
       els.content.innerHTML = html;
       if (!canDoMaterialControl()) return;
-      const sel = document.getElementById('ctrlMovil');
-      const wrap = document.getElementById('ctrlMaterialesWrap');
+      var sel = document.getElementById('ctrlMovil');
+      var wrap = document.getElementById('ctrlMaterialesWrap');
       function renderMateriales(movil) {
-        const rows = asignaciones.filter(function(a){ return String(a.movil) === String(movil) && a.estado_asignacion === 'ACTIVA'; });
-        if (!rows.length) { wrap.innerHTML = '<div class="card">Ese móvil no tiene materiales asignados.</div>'; return; }
+        var rows = asignaciones.filter(function (a) {
+          return String(a.movil) === String(movil) && a.estado_asignacion === 'ACTIVA';
+        });
+        if (!rows.length) {
+          wrap.innerHTML = '<div class="card">Ese móvil no tiene materiales asignados.</div>';
+          wrap.dataset.rows = '[]';
+          return;
+        }
         wrap.innerHTML = '<div class="card"><table><thead><tr><th>Compartimiento</th><th>Ítem</th><th>Asignado</th><th>Verificado</th><th>Estado</th><th>Novedad</th></tr></thead><tbody>' +
-          rows.map(function(r,idx){
-            return '<tr>'+
-              '<td>'+escapeHtml(r.compartimiento||'Sin compartimiento')+'</td>'+
-              '<td><strong>'+escapeHtml(r.nombre)+'</strong><div class="small">'+escapeHtml(r.codigo_interno||'')+'</div></td>'+
-              '<td>'+escapeHtml(r.cantidad)+'</td>'+
-              '<td><input class="mat-verif" data-idx="'+idx+'" type="number" min="0" value="'+escapeHtml(r.cantidad)+'"></td>'+
-              '<td><select class="mat-estado" data-idx="'+idx+'"><option value="OK">OK</option><option value="FALTANTE">Faltante</option><option value="DANADO">Dañado</option></select></td>'+
-              '<td><input class="mat-nov" data-idx="'+idx+'" placeholder="Detalle"></td>'+
+          rows.map(function (r, idx) {
+            return '<tr>' +
+              '<td>' + escapeHtml(r.compartimiento || 'Sin compartimiento') + '</td>' +
+              '<td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml(r.codigo_interno || '') + '</div></td>' +
+              '<td>' + escapeHtml(r.cantidad) + '</td>' +
+              '<td><input class="mat-verif" data-idx="' + idx + '" type="number" min="0" value="' + escapeHtml(r.cantidad) + '"></td>' +
+              '<td><select class="mat-estado" data-idx="' + idx + '"><option value="OK">OK</option><option value="FALTANTE">Faltante</option><option value="DANADO">Dañado</option></select></td>' +
+              '<td><input class="mat-nov" data-idx="' + idx + '" placeholder="Detalle"></td>' +
             '</tr>';
           }).join('') +
-        '</tbody></table></div>';
+          '</tbody></table><div class="small" style="margin-top:10px;">Los faltantes y dañados generan novedad automática en dashboard. No se descuenta stock en forma automática; quedan en cola de revisión.</div></div>';
         wrap.dataset.rows = JSON.stringify(rows);
       }
       renderMateriales(sel.value);
-      sel.addEventListener('change', function(){ renderMateriales(sel.value); });
-      document.getElementById('saveMatCtrl').addEventListener('click', async function(){
-        const rows = JSON.parse(wrap.dataset.rows || '[]');
-        const responsable = document.getElementById('ctrlResponsable').value;
-        const obs = document.getElementById('ctrlObs').value;
-        if (!responsable) { alert('Completá el responsable.'); return; }
-        const resumenPartes = [];
-        for (let i = 0; i < rows.length; i++) {
-          const verif = Number(document.querySelector('.mat-verif[data-idx="'+i+'"]').value || 0);
-          const estado = document.querySelector('.mat-estado[data-idx="'+i+'"]').value;
-          const nov = document.querySelector('.mat-nov[data-idx="'+i+'"]').value;
-          const base = rows[i];
+      sel.addEventListener('change', function () { renderMateriales(sel.value); });
+      document.getElementById('saveMatCtrl').addEventListener('click', async function () {
+        var rows = JSON.parse(wrap.dataset.rows || '[]');
+        var responsable = document.getElementById('ctrlResponsable').value;
+        var obs = document.getElementById('ctrlObs').value;
+        if (!responsable) {
+          alert('Completá el responsable.');
+          return;
+        }
+        var resumenPartes = [];
+        for (var i = 0; i < rows.length; i++) {
+          var verif = Number(document.querySelector('.mat-verif[data-idx="' + i + '"]').value || 0);
+          var estado = document.querySelector('.mat-estado[data-idx="' + i + '"]').value;
+          var nov = document.querySelector('.mat-nov[data-idx="' + i + '"]').value;
+          var base = rows[i];
           resumenPartes.push(base.nombre + ' [' + estado + ' ' + verif + '/' + base.cantidad + ']');
           if (estado !== 'OK' || verif !== Number(base.cantidad)) {
-            const novedad = await sb.from('novedades_materiales').insert({
+            var tipo = estado === 'DANADO' ? 'Dañado' : 'Faltante';
+            var detalle = nov || ('Verificado ' + verif + ' de ' + base.cantidad);
+            var novedad = await sb.from('novedades_materiales').insert({
               movil: base.movil,
               compartimiento: base.compartimiento,
               material: base.nombre,
-              tipo_novedad: estado === 'DANADO' ? 'Dañado' : 'Faltante',
-              detalle: nov || ('Verificado ' + verif + ' de ' + base.cantidad),
+              tipo_novedad: tipo,
+              detalle: detalle,
               estado: 'pendiente',
               fecha_hora: new Date().toISOString()
             });
             if (novedad.error) { alert(novedad.error.message); return; }
           }
         }
-        const control = await sb.from('controles_materiales').insert({
+        var control = await sb.from('controles_materiales').insert({
           movil: sel.value,
           responsable: responsable,
           resumen: resumenPartes.join(' | '),
@@ -528,9 +493,9 @@
 
     async function inventario_general() {
       els.title.textContent = 'Inventario general';
-      const vista = await safeSelect('v_stock_general', 'nombre', true);
-      const maestro = await safeSelect('stock_items', 'nombre', true);
-      let html = '';
+      var vista = await safeSelect('v_stock_general', 'nombre', true);
+      var maestro = await safeSelect('stock_items', 'nombre', true);
+      var html = '';
       if (canEditStockGeneral()) {
         html += '<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de stock maestro</strong><form id="fStockMaster" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="codigo_interno" placeholder="Código interno"><input name="nombre" placeholder="Nombre" required><input name="categoria" placeholder="Categoría"><input name="marca" placeholder="Marca"><input name="modelo" placeholder="Modelo"><input name="numero_serie" placeholder="N° serie"><input name="cantidad_total" type="number" min="0" placeholder="Cantidad total" required><input name="stock_minimo" type="number" min="0" placeholder="Stock mínimo" required><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar ítem</button></form></div>';
       }
@@ -552,11 +517,11 @@
         '</tbody></table></div>';
       els.content.innerHTML = html;
       if (!canEditStockGeneral()) return;
-      const form = document.getElementById('fStockMaster');
+      var form = document.getElementById('fStockMaster');
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
-        const fd = new FormData(form);
-        const row = {
+        var fd = new FormData(form);
+        var row = {
           codigo_interno: fd.get('codigo_interno'),
           nombre: fd.get('nombre'),
           categoria: fd.get('categoria'),
@@ -574,7 +539,7 @@
       });
       document.querySelectorAll('.edit-stock').forEach(function (btn) {
         btn.addEventListener('click', function () {
-          const item = maestro.find(function (x) { return String(x.id) === btn.dataset.id; });
+          var item = maestro.find(function (x) { return String(x.id) === btn.dataset.id; });
           if (!item) return;
           form.elements.id.value = item.id;
           form.elements.codigo_interno.value = item.codigo_interno || '';
@@ -590,41 +555,35 @@
       });
       document.querySelectorAll('.maint-stock').forEach(function (btn) {
         btn.addEventListener('click', async function () {
-          const motivo = prompt('Motivo de reparación / mantenimiento:');
+          var motivo = prompt('Motivo de reparación / mantenimiento:');
           if (!motivo) return;
-          const cantidad = Number(prompt('Cantidad a enviar a reparación:', '1') || 0);
+          var cantidad = Number(prompt('Cantidad a enviar a reparación:', '1') || 0);
           if (cantidad < 1) return;
-          const res = await sb.rpc('send_item_to_maintenance', {
+          var res = await sb.rpc('send_item_to_maintenance', {
             p_stock_item_id: Number(btn.dataset.id),
             p_cantidad: cantidad,
             p_motivo: motivo,
             p_usuario: perfilActual,
             p_movil: null
           });
-          if (res.error) {
-            alert(res.error.message);
-            return;
-          }
+          if (res.error) { alert(res.error.message); return; }
           showFlash('Ítem enviado a reparación', 'ok');
           inventario_general();
         });
       });
       document.querySelectorAll('.baja-stock').forEach(function (btn) {
         btn.addEventListener('click', async function () {
-          const motivo = prompt('Motivo de baja:');
+          var motivo = prompt('Motivo de baja:');
           if (!motivo) return;
-          const cantidad = Number(prompt('Cantidad a dar de baja:', '1') || 0);
+          var cantidad = Number(prompt('Cantidad a dar de baja:', '1') || 0);
           if (cantidad < 1) return;
-          const res = await sb.rpc('decommission_item', {
+          var res = await sb.rpc('decommission_item', {
             p_stock_item_id: Number(btn.dataset.id),
             p_cantidad: cantidad,
             p_motivo: motivo,
             p_usuario: perfilActual
           });
-          if (res.error) {
-            alert(res.error.message);
-            return;
-          }
+          if (res.error) { alert(res.error.message); return; }
           showFlash('Ítem dado de baja', 'ok');
           inventario_general();
         });
@@ -633,17 +592,17 @@
 
     async function asignaciones() {
       els.title.textContent = 'Asignaciones';
-      const all = await Promise.all([
+      var all = await Promise.all([
         safeSelect('v_stock_general', 'nombre', true),
         safeSelect('v_stock_assignments_detail', 'fecha_hora', false),
         safeSelect('moviles', 'numero', true),
         safeSelect('stock_compartments', 'movil', true)
       ]);
-      const stock = all[0];
-      const assigns = all[1];
-      const movs = all[2];
-      const comps = all[3];
-      let html = '';
+      var stock = all[0];
+      var assigns = all[1];
+      var movs = all[2];
+      var comps = all[3];
+      var html = '';
       if (canEditStockGeneral()) {
         html += '<div class="card" style="margin-bottom:12px;"><strong>Asignar stock</strong><form id="fAssign" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="stock_item_id">' + stock.map(function (s) {
           return '<option value="' + s.id + '">' + escapeHtml(s.nombre) + ' · disponible ' + escapeHtml(s.disponible_real) + '</option>';
@@ -658,11 +617,11 @@
         '</tbody></table></div>';
       els.content.innerHTML = html;
       if (!canEditStockGeneral()) return;
-      const form = document.getElementById('fAssign');
-      const assignMovil = document.getElementById('assignMovil');
-      const assignComp = document.getElementById('assignComp');
+      var form = document.getElementById('fAssign');
+      var assignMovil = document.getElementById('assignMovil');
+      var assignComp = document.getElementById('assignComp');
       function fillAssignComp(movil) {
-        const list = comps.filter(function (c) {
+        var list = comps.filter(function (c) {
           return String(c.movil) === String(movil) && c.activo !== false;
         });
         assignComp.innerHTML = list.map(function (c) {
@@ -673,43 +632,37 @@
       assignMovil.addEventListener('change', function () { fillAssignComp(assignMovil.value); });
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
-        const fd = new FormData(form);
-        let comp = fd.get('compartimiento');
-        const nuevo = String(fd.get('nuevoCompartimiento') || '').trim();
+        var fd = new FormData(form);
+        var comp = fd.get('compartimiento');
+        var nuevo = String(fd.get('nuevoCompartimiento') || '').trim();
         if (nuevo) {
           comp = nuevo;
-          const exists = comps.find(function (c) {
+          var exists = comps.find(function (c) {
             return String(c.movil) === String(fd.get('movil')) && String(c.nombre).toLowerCase() === nuevo.toLowerCase();
           });
           if (!exists && canDeleteCompartments()) {
-            const r = await sb.from('stock_compartments').insert({ movil: fd.get('movil'), nombre: nuevo, activo: true });
-            if (r.error) {
-              alert(r.error.message);
-              return;
-            }
+            var r = await sb.from('stock_compartments').insert({ movil: fd.get('movil'), nombre: nuevo, activo: true });
+            if (r.error) { alert(r.error.message); return; }
           }
         }
-        const res = await sb.rpc('assign_item_to_mobile', {
+        var res = await sb.rpc('assign_item_to_mobile', {
           p_stock_item_id: Number(fd.get('stock_item_id')),
           p_movil: fd.get('movil'),
           p_compartimiento: comp || '',
           p_cantidad: Number(fd.get('cantidad') || 0),
           p_usuario: perfilActual
         });
-        if (res.error) {
-          alert(res.error.message);
-          return;
-        }
+        if (res.error) { alert(res.error.message); return; }
         showFlash('Asignación realizada', 'ok');
         asignaciones();
       });
       document.querySelectorAll('.devolver-assign').forEach(function (btn) {
         btn.addEventListener('click', async function () {
-          const id = Number(btn.dataset.id);
-          const item = assigns.find(function (a) { return a.id === id; });
+          var id = Number(btn.dataset.id);
+          var item = assigns.find(function (a) { return a.id === id; });
           if (!item) return;
           await updateRows('stock_assignments', { estado_asignacion: 'DEVUELTA' }, id);
-          const r2 = await sb.from('stock_movements').insert({
+          var r2 = await sb.from('stock_movements').insert({
             stock_item_id: item.stock_item_id,
             tipo_movimiento: 'devolucion',
             cantidad: item.cantidad,
@@ -718,10 +671,7 @@
             movil_origen: item.movil,
             usuario: perfilActual
           });
-          if (r2.error) {
-            alert(r2.error.message);
-            return;
-          }
+          if (r2.error) { alert(r2.error.message); return; }
           showFlash('Ítem devuelto a stock central', 'ok');
           asignaciones();
         });
@@ -730,9 +680,9 @@
 
     async function mantenimiento_stock() {
       els.title.textContent = 'Control de mantenimiento';
-      const rows = await safeSelect('v_maintenance_control_detail', 'fecha_ingreso', false);
-      const items = await safeSelect('stock_items', 'nombre', true);
-      let html = '';
+      var rows = await safeSelect('v_maintenance_control_detail', 'fecha_ingreso', false);
+      var items = await safeSelect('stock_items', 'nombre', true);
+      var html = '';
       if (canManageMaintenanceStock()) {
         html += '<div class="card" style="margin-bottom:12px;"><strong>Ingreso manual a mantenimiento</strong><form id="fMaintStock" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="stock_item_id">' + items.map(function (i) {
           return '<option value="' + i.id + '">' + escapeHtml(i.nombre) + '</option>';
@@ -740,27 +690,24 @@
       }
       html += '<div class="card"><table><thead><tr><th>Fecha ingreso</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Estado</th><th>Observaciones</th>' + (canManageMaintenanceStock() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
         (rows.map(function (r) {
-          return '<tr><td>' + escapeHtml(new Date(r.fecha_ingreso || Date.now()).toLocaleString('es-AR')) + '</td><td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml(r.codigo_interno || '') + '</div></td><td>' + escapeHtml(r.cantidad) + '</td><td>' + escapeHtml(r.motivo || '') + '</td><td>' + (String(r.estado || '').toUpperCase() === 'DISPONIBLE' ? '<span class="pill pill-ok">Disponible</span>' : '<span class="pill pill-warn">' + escapeHtml(r.estado || 'REPARACION') + '</span>') + '</td><td>' + escapeHtml(r.observaciones || '') + '</td>' + (canManageMaintenanceStock() ? '<td>' + (String(r.estado || '').toUpperCase() !== 'DISPONIBLE' ? '<button class="secondary return-maint" data-id="' + r.id + '">Retornar a stock</button>' : '') + '</td>' : '') + '</tr>';
+          return '<tr><td>' + escapeHtml(new Date(r.fecha_ingreso || Date.now()).toLocaleString('es-AR')) + '</td><td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml(r.codigo_interno || '') + '</div></td><td>' + escapeHtml(r.cantidad) + '</td><td>' + escapeHtml(r.motivo || '') + '</td><td>' + (String(r.estado || '').toUpperCase() === 'DISPONIBLE' ? '<span class="pill pill-ok">Disponible</span>' : '<span class="pill pill-warn">' + escapeHtml(r.estado || 'REPARACION') + '</span>') + '</td><td>' + escapeHtml(r.observaciones || '') + '</td><td>' + (canManageMaintenanceStock() && String(r.estado || '').toUpperCase() !== 'DISPONIBLE' ? '<button class="secondary return-maint" data-id="' + r.id + '">Retornar a stock</button>' : '') + '</td></tr>';
         }).join('') || '<tr><td colspan="7">Sin registros de mantenimiento.</td></tr>') +
         '</tbody></table></div>';
       els.content.innerHTML = html;
       if (!canManageMaintenanceStock()) return;
-      const form = document.getElementById('fMaintStock');
+      var form = document.getElementById('fMaintStock');
       form.addEventListener('submit', async function (e) {
         e.preventDefault();
-        const fd = new FormData(form);
-        const res = await sb.from('maintenance_control').insert({
+        var fd = new FormData(form);
+        var res = await sb.from('maintenance_control').insert({
           stock_item_id: Number(fd.get('stock_item_id')),
           cantidad: Number(fd.get('cantidad') || 0),
           motivo: fd.get('motivo'),
           estado: 'REPARACION',
           observaciones: fd.get('observaciones')
         });
-        if (res.error) {
-          alert(res.error.message);
-          return;
-        }
-        const mv = await sb.from('stock_movements').insert({
+        if (res.error) { alert(res.error.message); return; }
+        var mv = await sb.from('stock_movements').insert({
           stock_item_id: Number(fd.get('stock_item_id')),
           tipo_movimiento: 'reparacion',
           cantidad: Number(fd.get('cantidad') || 0),
@@ -769,23 +716,17 @@
           motivo: fd.get('motivo'),
           usuario: perfilActual
         });
-        if (mv.error) {
-          alert(mv.error.message);
-          return;
-        }
+        if (mv.error) { alert(mv.error.message); return; }
         showFlash('Ítem enviado a mantenimiento', 'ok');
         mantenimiento_stock();
       });
       document.querySelectorAll('.return-maint').forEach(function (btn) {
         btn.addEventListener('click', async function () {
-          const res = await sb.rpc('return_item_from_maintenance', {
+          var res = await sb.rpc('return_item_from_maintenance', {
             p_maintenance_id: Number(btn.dataset.id),
             p_usuario: perfilActual
           });
-          if (res.error) {
-            alert(res.error.message);
-            return;
-          }
+          if (res.error) { alert(res.error.message); return; }
           showFlash('Ítem retornado a stock central', 'ok');
           mantenimiento_stock();
         });
@@ -794,25 +735,22 @@
 
     async function archivo_bajas() {
       els.title.textContent = 'Archivo / bajas';
-      const rows = await safeSelect('v_stock_decommissions_detail', 'fecha_baja', false);
-      let html = '<div class="card"><table><thead><tr><th>Fecha</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Usuario</th><th>Observaciones</th><th>Revertible</th>' + (canManageDecommissions() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
+      var rows = await safeSelect('v_stock_decommissions_detail', 'fecha_baja', false);
+      var html = '<div class="card"><table><thead><tr><th>Fecha</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Usuario</th><th>Observaciones</th><th>Revertible</th><th>Acciones</th></tr></thead><tbody>' +
         (rows.map(function (r) {
-          return '<tr><td>' + escapeHtml(new Date(r.fecha_baja || Date.now()).toLocaleString('es-AR')) + '</td><td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml(r.codigo_interno || '') + '</div></td><td>' + escapeHtml(r.cantidad) + '</td><td>' + escapeHtml(r.motivo || '') + '</td><td>' + escapeHtml(r.usuario || '') + '</td><td>' + escapeHtml(r.observaciones || '') + '</td><td>' + (r.revertible ? '<span class="pill pill-ok">Sí</span>' : '<span class="pill pill-bad">No</span>') + '</td>' + (canManageDecommissions() ? '<td>' + (r.revertible ? '<button class="secondary revert-baja" data-id="' + r.id + '">Revertir</button>' : '') + '</td>' : '') + '</tr>';
+          return '<tr><td>' + escapeHtml(new Date(r.fecha_baja || Date.now()).toLocaleString('es-AR')) + '</td><td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml(r.codigo_interno || '') + '</div></td><td>' + escapeHtml(r.cantidad) + '</td><td>' + escapeHtml(r.motivo || '') + '</td><td>' + escapeHtml(r.usuario || '') + '</td><td>' + escapeHtml(r.observaciones || '') + '</td><td>' + (r.revertible ? '<span class="pill pill-ok">Sí</span>' : '<span class="pill pill-bad">No</span>') + '</td><td>' + (canManageDecommissions() && r.revertible ? '<button class="secondary revert-baja" data-id="' + r.id + '">Revertir</button>' : '') + '</td></tr>';
         }).join('') || '<tr><td colspan="8">Sin bajas registradas.</td></tr>') +
         '</tbody></table></div>';
       els.content.innerHTML = html;
       if (!canManageDecommissions()) return;
       document.querySelectorAll('.revert-baja').forEach(function (btn) {
         btn.addEventListener('click', async function () {
-          const id = Number(btn.dataset.id);
-          const item = rows.find(function (x) { return x.id === id; });
+          var id = Number(btn.dataset.id);
+          var item = rows.find(function (x) { return x.id === id; });
           if (!item) return;
-          const del = await sb.from('stock_decommissions').delete().eq('id', id);
-          if (del.error) {
-            alert(del.error.message);
-            return;
-          }
-          const mv = await sb.from('stock_movements').insert({
+          var del = await sb.from('stock_decommissions').delete().eq('id', id);
+          if (del.error) { alert(del.error.message); return; }
+          var mv = await sb.from('stock_movements').insert({
             stock_item_id: item.stock_item_id,
             tipo_movimiento: 'reversa_baja',
             cantidad: item.cantidad,
@@ -821,10 +759,7 @@
             motivo: 'Reversión de baja',
             usuario: perfilActual
           });
-          if (mv.error) {
-            alert(mv.error.message);
-            return;
-          }
+          if (mv.error) { alert(mv.error.message); return; }
           showFlash('Baja revertida, vuelve a stock central', 'ok');
           archivo_bajas();
         });
@@ -833,7 +768,7 @@
 
     async function inventario_movil() {
       els.title.textContent = 'Inventario por móvil';
-      const rows = await safeSelect('v_stock_assignments_detail', 'movil', true);
+      var rows = await safeSelect('v_stock_assignments_detail', 'movil', true);
       els.content.innerHTML = '<div class="card"><table><thead><tr><th>Móvil</th><th>Compartimiento</th><th>Ítem</th><th>Cantidad</th><th>Estado</th></tr></thead><tbody>' +
         (rows.map(function (r) {
           return '<tr><td>Móvil ' + escapeHtml(r.movil) + '</td><td>' + escapeHtml(r.compartimiento || '') + '</td><td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml(r.codigo_interno || '') + '</div></td><td>' + escapeHtml(r.cantidad) + '</td><td>' + escapeHtml(r.estado_asignacion) + '</td></tr>';
@@ -843,16 +778,16 @@
 
     async function reportes_stock() {
       els.title.textContent = 'Reportes de stock';
-      const all = await Promise.all([
+      var all = await Promise.all([
         safeSelect('v_stock_general', 'nombre', true),
         safeSelect('v_stock_assignments_detail', 'movil', true),
         safeSelect('v_maintenance_control_detail', 'fecha_ingreso', false),
         safeSelect('v_stock_decommissions_detail', 'fecha_baja', false)
       ]);
-      const stock = all[0];
-      const assignments = all[1];
-      const maint = all[2];
-      const bajas = all[3];
+      var stock = all[0];
+      var assignments = all[1];
+      var maint = all[2];
+      var bajas = all[3];
       els.content.innerHTML = '<div class="card"><strong>Exportación de reportes</strong><div class="small" style="margin-top:8px;">Descargá reportes del stock maestro, stock asignado a móviles, mantenimiento y bajas.</div><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); margin-top:16px;">' +
         '<button id="expStockCsv" class="primary" type="button">Exportar stock general CSV</button>' +
         '<button id="expStockJson" class="secondary" type="button">Exportar stock general JSON</button>' +
@@ -861,7 +796,7 @@
         '<button id="expMaintCsv" class="primary" type="button">Exportar mantenimiento CSV</button>' +
         '<button id="expBajasCsv" class="secondary" type="button">Exportar bajas CSV</button>' +
         '</div></div>';
-      const stockRows = stock.map(function (r) {
+      var stockRows = stock.map(function (r) {
         return {
           codigo_interno: r.codigo_interno || '',
           nombre: r.nombre,
@@ -878,7 +813,7 @@
           alerta_minimo: r.alerta_minimo
         };
       });
-      const assignRows = assignments.map(function (a) {
+      var assignRows = assignments.map(function (a) {
         return {
           fecha_hora: a.fecha_hora,
           movil: a.movil,
@@ -889,7 +824,7 @@
           estado_asignacion: a.estado_asignacion
         };
       });
-      const maintRows = maint.map(function (m) {
+      var maintRows = maint.map(function (m) {
         return {
           fecha_ingreso: m.fecha_ingreso,
           codigo_interno: m.codigo_interno || '',
@@ -901,7 +836,7 @@
           observaciones: m.observaciones || ''
         };
       });
-      const bajaRows = bajas.map(function (b) {
+      var bajaRows = bajas.map(function (b) {
         return {
           fecha_baja: b.fecha_baja,
           codigo_interno: b.codigo_interno || '',
@@ -935,31 +870,31 @@
 
     async function plano() {
       els.title.textContent = 'Plano del móvil';
-      const all = await Promise.all([
+      var all = await Promise.all([
         safeSelect('moviles', 'numero', true),
         safeSelect('v_stock_assignments_detail', 'movil', true),
         safeSelect('novedades_materiales', 'fecha_hora', false)
       ]);
-      const movs = all[0];
-      const items = all[1];
-      const novedades = all[2];
+      var movs = all[0];
+      var items = all[1];
+      var novedades = all[2];
       els.content.innerHTML = '<div class="card"><label class="small">Seleccionar móvil</label><select id="mapMovil" style="margin-top:8px; max-width:240px;">' + movs.map(function (m) {
         return '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>';
       }).join('') + '</select></div><div id="mapWrap" class="mobile-map" style="margin-top:12px;"></div>';
-      const sel = document.getElementById('mapMovil');
+      var sel = document.getElementById('mapMovil');
       function renderMap(movil) {
-        const byComp = {};
+        var byComp = {};
         items.filter(function (i) {
           return String(i.movil) === String(movil) && i.estado_asignacion === 'ACTIVA';
         }).forEach(function (i) {
-          const comp = i.compartimiento || 'Sin compartimiento';
+          var comp = i.compartimiento || 'Sin compartimiento';
           if (!byComp[comp]) byComp[comp] = [];
           byComp[comp].push(i);
         });
-        const keys = Object.keys(byComp);
+        var keys = Object.keys(byComp);
         document.getElementById('mapWrap').innerHTML = keys.map(function (c) {
           return '<div class="comp-box"><strong>' + escapeHtml(c) + '</strong><div style="margin-top:8px;">' + byComp[c].map(function (i) {
-            const alerta = novedades.find(function (n) {
+            var alerta = novedades.find(function (n) {
               return String(n.estado || '').toLowerCase() === 'pendiente' && String(n.movil) === String(movil) && String(n.material) === String(i.nombre);
             });
             return '<div class="list-row">' + escapeHtml(i.nombre) + ' · Cantidad ' + escapeHtml(i.cantidad) + (alerta ? ' <span class="pill pill-bad">ALERTA</span>' : '') + '</div>';
@@ -974,17 +909,17 @@
 
     async function diagnostico() {
       els.title.textContent = 'Diagnóstico';
-      const lines = [];
+      var lines = [];
       async function run(label, fn) {
         try {
-          const result = await fn();
+          var result = await fn();
           lines.push('OK - ' + label + (result ? ': ' + result : ''));
         } catch (err) {
           lines.push('ERROR - ' + label + ': ' + (err && err.message ? err.message : String(err)));
         }
       }
       await run('Auth', async function () {
-        const res = await sb.auth.getSession();
+        var res = await sb.auth.getSession();
         if (res.error) throw res.error;
         return res.data.session ? 'sesión activa' : 'sin sesión';
       });
@@ -992,6 +927,9 @@
       await run('v_stock_assignments_detail', async function () { return String((await safeSelect('v_stock_assignments_detail', 'id', false, 1)).length); });
       await run('v_maintenance_control_detail', async function () { return String((await safeSelect('v_maintenance_control_detail', 'id', false, 1)).length); });
       await run('v_stock_decommissions_detail', async function () { return String((await safeSelect('v_stock_decommissions_detail', 'id', false, 1)).length); });
+      await run('revisiones', async function () { return String((await safeSelect('revisiones', 'id', false, 1)).length); });
+      await run('controles_materiales', async function () { return String((await safeSelect('controles_materiales', 'id', false, 1)).length); });
+      await run('novedades_materiales', async function () { return String((await safeSelect('novedades_materiales', 'id', false, 1)).length); });
       els.content.innerHTML = '<div class="err" style="background:#0f172a;border-color:#334155;color:#e2e8f0;">' + escapeHtml(lines.join('
 ')) + '</div>';
     }
@@ -1059,7 +997,7 @@
       showBootError(event && event.message ? event.message : 'Script error');
     });
     window.addEventListener('unhandledrejection', function (event) {
-      showBootError(event && event.reason && event.reason.message ? event.reason.message : String((event && event.reason) || 'Promise error'));
+      showBootError(event && event.reason && event.reason.message ? event.reason.message : String(event && event.reason ? event.reason : 'Promise error'));
     });
 
     init();
