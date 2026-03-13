@@ -5,40 +5,135 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cuartel Online</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body{font-family:Arial,sans-serif;background:#020617;color:#e2e8f0;margin:0}
-    .card{background:#0f172a;border:1px solid #334155;border-radius:16px;padding:16px}
-    input,select,textarea{width:100%;box-sizing:border-box;background:#1e293b;border:1px solid #334155;color:#fff;border-radius:12px;padding:12px}
-    textarea{min-height:100px;resize:vertical}
-    button{cursor:pointer;border:none}
-    .primary{background:#b91c1c;color:#fff;padding:12px;border-radius:12px;font-weight:700}
-    .secondary{background:#1e293b;color:#fff;padding:10px 12px;border-radius:10px}
-    .danger{background:#7f1d1d;color:#fff;padding:10px 12px;border-radius:10px}
-    .nav{background:#111827;color:#e2e8f0;padding:10px 12px;border-radius:10px;text-align:left}
-    .nav.active{background:#991b1b;color:#fff}
-    .hidden{display:none!important}.grid{display:grid;gap:12px}.small{font-size:12px;color:#94a3b8}
-    .list-row{padding:10px 0;border-bottom:1px solid #334155}.err{background:#450a0a;border:1px solid #7f1d1d;color:#fecaca;border-radius:12px;padding:12px;white-space:pre-wrap}
-    .ok{background:#052e16;border:1px solid #166534;color:#bbf7d0;border-radius:12px;padding:12px}.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px}
-    .pill-ok{background:#052e16;color:#bbf7d0}.pill-warn{background:#78350f;color:#fde68a}.pill-bad{background:#450a0a;color:#fecaca}
-    table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #334155;text-align:left;vertical-align:top}th{color:#94a3b8;font-size:12px;text-transform:uppercase}
-    .toolbar{display:flex;gap:8px;flex-wrap:wrap}.mobile-map{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.comp-box{background:#111827;border:1px solid #334155;border-radius:14px;padding:12px}
-    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.hero-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-    .hero-number{font-size:34px;font-weight:800;line-height:1;margin-top:8px}.hero-label{font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
-    .status-big,.guardia-card{border-radius:18px;padding:18px;border:1px solid #334155}.status-service{background:#052e16;border-color:#166534}.status-maint{background:#3b2a05;border-color:#92400e}.status-out{background:#450a0a;border-color:#7f1d1d}
-    .guardia-wrap{min-height:100vh;background:#020617;color:#e2e8f0;padding:20px}.guardia-header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}.guardia-title{font-size:34px;font-weight:800;letter-spacing:.04em}.guardia-sub{color:#94a3b8;font-size:14px}
-    .guardia-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}.guardia-number{font-size:56px;font-weight:900;line-height:1;margin-top:10px}.guardia-label{font-size:13px;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em}
-    .guardia-list{margin-top:18px;display:grid;grid-template-columns:1.1fr .9fr;gap:16px}.guardia-item{padding:12px 0;border-bottom:1px solid #334155;font-size:18px}.guardia-item:last-child{border-bottom:none}.guardia-badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}.guardia-danger{background:#7f1d1d;color:#fecaca}.guardia-warn{background:#92400e;color:#fde68a}.guardia-ok{background:#166534;color:#bbf7d0}.guardia-footer{margin-top:16px;color:#94a3b8;font-size:13px}
-    @media (max-width:900px){.layout{display:block!important}aside{width:auto!important;border-right:none!important;border-bottom:1px solid #334155!important}.guardia-list{grid-template-columns:1fr}}
+    :root {
+      --bg: #020617;
+      --panel: #0f172a;
+      --soft: #1e293b;
+      --border: #334155;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --red: #b91c1c;
+      --red-dark: #7f1d1d;
+      --green: #166534;
+      --amber: #92400e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .hidden { display: none !important; }
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 300px;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      padding: 16px;
+    }
+    .main { flex: 1; padding: 20px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .grid { display: grid; gap: 12px; }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+    .small { font-size: 12px; color: var(--muted); }
+    .nav {
+      background: #111827;
+      color: var(--text);
+      padding: 10px 12px;
+      border: none;
+      border-radius: 10px;
+      text-align: left;
+      cursor: pointer;
+    }
+    .nav.active { background: #991b1b; }
+    .primary, .secondary, .danger {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: #fff;
+      cursor: pointer;
+    }
+    .primary { background: var(--red); }
+    .secondary { background: var(--soft); }
+    .danger { background: var(--red-dark); }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--soft);
+      color: #fff;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .list-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+    }
+    .pill-ok { background: #052e16; color: #bbf7d0; }
+    .pill-warn { background: #78350f; color: #fde68a; }
+    .pill-bad { background: #450a0a; color: #fecaca; }
+    .err, .ok {
+      border-radius: 12px;
+      padding: 12px;
+      white-space: pre-wrap;
+    }
+    .err { background: #450a0a; border: 1px solid var(--red-dark); color: #fecaca; }
+    .ok { background: #052e16; border: 1px solid var(--green); color: #bbf7d0; }
+    .hero-grid, .stat-grid, .mobile-map {
+      display: grid;
+      gap: 12px;
+    }
+    .hero-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .stat-grid { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    .mobile-map { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    .hero-card {
+      border-radius: 18px;
+      padding: 18px;
+      border: 1px solid var(--border);
+    }
+    .service { background: #052e16; border-color: var(--green); }
+    .maint { background: #3b2a05; border-color: var(--amber); }
+    .out { background: #450a0a; border-color: var(--red-dark); }
+    .hero-number { font-size: 34px; font-weight: 800; }
+    .hero-label { font-size: 12px; color: var(--muted); text-transform: uppercase; }
+    .comp-box {
+      background: #111827;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    @media (max-width: 900px) {
+      .layout { display: block; }
+      .sidebar { width: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    }
   </style>
 </head>
 <body>
   <div id="login" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
-    <div class="card" style="width:100%;max-width:420px;">
-      <div style="display:flex;align-items:center;gap:12px;margin:0 0 8px 0;">
-        <img id="logoPreviewLogin" src="" alt="Escudo institucional" style="width:58px;height:58px;object-fit:contain;border-radius:12px;display:none;background:#fff;padding:4px;">
-        <h1 id="systemBrandTitle" style="font-size:32px;font-weight:800;margin:0;">CUARTEL<span style="color:#ef4444;">ONLINE</span></h1>
-      </div>
+    <div class="card" style="width:100%;max-width:430px;">
+      <h1 style="font-size:32px;font-weight:800;margin:0 0 8px 0;">CUARTEL<span style="color:#ef4444;">ONLINE</span></h1>
       <p class="small" style="margin:0 0 16px 0;">Sistema con perfiles y control operativo</p>
       <div id="bootMsg" class="small" style="margin-bottom:12px;">Cargando sistema…</div>
       <div id="bootErr" class="err hidden" style="margin-bottom:12px;"></div>
@@ -58,40 +153,26 @@
   </div>
 
   <div id="app" class="hidden">
-    <div class="layout" style="display:flex;min-height:100vh;">
-      <aside style="width:300px;background:#020617;border-right:1px solid #334155;padding:16px;box-sizing:border-box;">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-          <img id="logoPreviewSidebar" src="" alt="Escudo institucional" style="width:42px;height:42px;object-fit:contain;border-radius:10px;display:none;background:#fff;padding:2px;">
-          <div style="font-weight:800;font-size:22px;">CUARTEL<span style="color:#ef4444;">ONLINE</span></div>
-        </div>
+    <div class="layout">
+      <aside class="sidebar">
+        <div style="font-weight:800;font-size:22px;margin-bottom:8px;">CUARTEL<span style="color:#ef4444;">ONLINE</span></div>
         <div id="userInfo" class="small" style="margin-bottom:16px;"></div>
         <div class="grid">
           <button class="nav active" data-sec="dashboard" type="button">Dashboard</button>
-          <button class="nav" data-sec="moviles" type="button">Móviles</button>
-          <button class="nav" data-sec="bomberos" type="button">Bomberos</button>
-          <button class="nav" data-sec="inventario" type="button">Inventario por móvil</button>
+          <button class="nav" data-sec="inventario_general" type="button">Inventario general</button>
+          <button class="nav" data-sec="asignaciones" type="button">Asignaciones</button>
+          <button class="nav" data-sec="mantenimiento_stock" type="button">Control de mantenimiento</button>
+          <button class="nav" data-sec="archivo_bajas" type="button">Archivo / bajas</button>
+          <button class="nav" data-sec="inventario_movil" type="button">Inventario por móvil</button>
+          <button class="nav" data-sec="reportes_stock" type="button">Reportes de stock</button>
           <button class="nav" data-sec="plano" type="button">Plano del móvil</button>
-          <button class="nav" data-sec="fallas" type="button">Reporte de fallas</button>
-          <button class="nav" data-sec="checklist" type="button">Checklist de materiales</button>
-          <button class="nav" data-sec="repuestos" type="button">Repuestos</button>
-          <button class="nav" data-sec="proveedores" type="button">Proveedores</button>
-          <button class="nav" data-sec="mantenimiento" type="button">Bitácora</button>
-          <button class="nav" data-sec="respaldo" type="button">Importar / exportar</button>
-          <button class="nav" data-sec="estadisticas" type="button">Estadísticas</button>
-          <button class="nav" data-sec="novedades" type="button">Novedades de materiales</button>
           <button class="nav" data-sec="diagnostico" type="button">Diagnóstico</button>
-          <button class="nav" data-sec="guardia" type="button">Modo guardia</button>
-          <button class="nav" data-sec="institucional" type="button">Imagen institucional</button>
-          <button class="nav" data-sec="personalizacion" type="button">Personalización</button>
         </div>
         <button id="logout" class="secondary" style="margin-top:20px;width:100%;" type="button">Cerrar sesión</button>
       </aside>
-      <main style="flex:1;padding:20px;box-sizing:border-box;">
+      <main class="main">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <img id="logoPreviewTop" src="" alt="Escudo institucional" style="width:54px;height:54px;object-fit:contain;border-radius:12px;display:none;background:#fff;padding:3px;">
-            <h2 id="title" style="margin:0;">Dashboard</h2>
-          </div>
+          <h2 id="title" style="margin:0;">Dashboard</h2>
           <button id="logoutTop" class="secondary" type="button">Salir</button>
         </div>
         <div id="flash" class="hidden" style="margin-top:12px;"></div>
@@ -100,185 +181,730 @@
     </div>
   </div>
 
-<script>
-const SUPABASE_URL='https://nksnxiqteqqlngmpzeew.supabase.co';
-const SUPABASE_KEY='sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
-const PROFILE_EMAILS={administrador:'admin@cuartel.com',materiales:'materiales@cuartel.com',automotores:'automotores@cuartel.com',jefatura:'jefatura@cuartel.com'};
-const VIEW_RULES={
-  administrador:['dashboard','moviles','bomberos','inventario','plano','fallas','checklist','repuestos','proveedores','mantenimiento','respaldo','estadisticas','novedades','diagnostico','guardia','institucional','personalizacion'],
-  materiales:['dashboard','inventario','plano','estadisticas','novedades','diagnostico','guardia'],
-  automotores:['dashboard','moviles','plano','fallas','checklist','repuestos','proveedores','estadisticas','diagnostico','guardia'],
-  jefatura:['dashboard','moviles','bomberos','inventario','plano','fallas','checklist','repuestos','proveedores','mantenimiento','estadisticas','novedades','diagnostico','guardia'],
-  bomberos:['dashboard','plano','checklist','diagnostico','guardia']
-};
-const els={
-  logoPreviewSidebar:document.getElementById('logoPreviewSidebar'),logoPreviewTop:document.getElementById('logoPreviewTop'),logoPreviewLogin:document.getElementById('logoPreviewLogin'),systemBrandTitle:document.getElementById('systemBrandTitle'),
-  login:document.getElementById('login'),app:document.getElementById('app'),loginForm:document.getElementById('loginForm'),perfil:document.getElementById('perfil'),email:document.getElementById('email'),password:document.getElementById('password'),bootMsg:document.getElementById('bootMsg'),bootErr:document.getElementById('bootErr'),userInfo:document.getElementById('userInfo'),title:document.getElementById('title'),content:document.getElementById('content'),flash:document.getElementById('flash'),logout:document.getElementById('logout'),logoutTop:document.getElementById('logoutTop')
-};
-let sb=null,perfilActual=null,userActual=null;
-let institutionalLogoUrl='';
-let institutionalName='CUARTELONLINE';
-let institutionalAccent='#ef4444';
-let institutionalBanner='';
-async function loadInstitutionalLogo(){
-  try{
-    const logoRes=await sb.from('app_config').select('config_value').eq('config_key','institutional_logo').maybeSingle();
-    const nameRes=await sb.from('app_config').select('config_value').eq('config_key','institutional_name').maybeSingle();
-    const accentRes=await sb.from('app_config').select('config_value').eq('config_key','institutional_accent').maybeSingle();
-    const bannerRes=await sb.from('app_config').select('config_value').eq('config_key','institutional_banner').maybeSingle();
-    institutionalLogoUrl=(logoRes.data&&logoRes.data.config_value)||'';
-    institutionalName=(nameRes.data&&nameRes.data.config_value)||'CUARTELONLINE';
-    institutionalAccent=(accentRes.data&&accentRes.data.config_value)||'#ef4444';
-    institutionalBanner=(bannerRes.data&&bannerRes.data.config_value)||'';
-  }catch(e){
-    institutionalLogoUrl='';
-    institutionalName='CUARTELONLINE';
-    institutionalAccent='#ef4444';
-    institutionalBanner='';
-  }
-}
-function getInstitutionalLogo(){return institutionalLogoUrl}
-async function setInstitutionalLogo(dataUrl){
-  const res=await sb.from('app_config').upsert({config_key:'institutional_logo',config_value:dataUrl||''});
-  if(res.error)throw res.error;
-  institutionalLogoUrl=dataUrl||'';
-}
-async function setInstitutionalName(value){
-  const res=await sb.from('app_config').upsert({config_key:'institutional_name',config_value:value||'CUARTELONLINE'});
-  if(res.error)throw res.error;
-  institutionalName=value||'CUARTELONLINE';
-}
-async function setInstitutionalAccent(value){
-  const res=await sb.from('app_config').upsert({config_key:'institutional_accent',config_value:value||'#ef4444'});
-  if(res.error)throw res.error;
-  institutionalAccent=value||'#ef4444';
-}
-async function setInstitutionalBanner(value){
-  const res=await sb.from('app_config').upsert({config_key:'institutional_banner',config_value:value||''});
-  if(res.error)throw res.error;
-  institutionalBanner=value||'';
-}
-function applyInstitutionalLogo(){const url=institutionalLogoUrl;[els.logoPreviewSidebar,els.logoPreviewTop,els.logoPreviewLogin].forEach(function(img){if(!img)return;if(url){img.src=url;img.style.display='block';}else{img.removeAttribute('src');img.style.display='none';}})}
-function applyInstitutionalBrand(){
-  const titleText=institutionalName||'CUARTELONLINE';
-  if(els.systemBrandTitle){
-    const splitAt=Math.max(1, Math.floor(titleText.length/2));
-    const a=escapeHtml(titleText.slice(0,splitAt));
-    const b=escapeHtml(titleText.slice(splitAt));
-    els.systemBrandTitle.innerHTML=a+'<span style="color:'+institutionalAccent+';">'+b+'</span>';
-  }
-  document.querySelectorAll('.primary').forEach(function(btn){btn.style.background=institutionalAccent;});
-  if(institutionalBanner){document.body.style.backgroundImage='linear-gradient(rgba(2,6,23,.88), rgba(2,6,23,.92)), url('+institutionalBanner+')';document.body.style.backgroundSize='cover';document.body.style.backgroundAttachment='fixed';}else{document.body.style.backgroundImage='';document.body.style.background='#020617';}
-}
-function canView(s){return (VIEW_RULES[perfilActual]||[]).includes(s)}
-function canAdmin(){return perfilActual==='administrador'}
-function canBombero(){return perfilActual==='bomberos'}
-function canEditMoviles(){return perfilActual==='administrador'}
-function canEditBomberos(){return perfilActual==='administrador'}
-function canEditInventarioMovil(){return perfilActual==='administrador'||perfilActual==='materiales'}
-function canEditFallas(){return perfilActual==='administrador'||perfilActual==='automotores'}
-function canEditChecklist(){return perfilActual==='administrador'||perfilActual==='automotores'||perfilActual==='bomberos'}
-function canEditRepuestos(){return perfilActual==='administrador'||perfilActual==='automotores'}
-function canEditProveedores(){return perfilActual==='administrador'||perfilActual==='automotores'}
-function canEditMantenimiento(){return perfilActual==='administrador'}
-function canBackup(){return perfilActual==='administrador'}
-function canManageNovedades(){return perfilActual==='administrador'||perfilActual==='materiales'}
-function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
-function showBootError(msg){els.bootErr.textContent=msg;els.bootErr.classList.remove('hidden')}
-function showFlash(msg,type){els.flash.className=type==='ok'?'ok':'err';els.flash.textContent=msg;els.flash.classList.remove('hidden');setTimeout(()=>els.flash.classList.add('hidden'),3200)}
-function authInputs(){const b=els.perfil.value==='bomberos';els.email.classList.toggle('hidden',b);els.password.classList.toggle('hidden',b)}
-function activateNav(sec){document.querySelectorAll('.nav').forEach(btn=>btn.classList.remove('active'));const btn=document.querySelector('.nav[data-sec="'+sec+'"]');if(btn)btn.classList.add('active')}
-function updateNavVisibility(){document.querySelectorAll('.nav').forEach(btn=>btn.classList.toggle('hidden',!canView(btn.dataset.sec)))}
-function card(label,value){return '<div class="card"><div class="small">'+escapeHtml(label)+'</div><div style="font-size:28px;font-weight:800;">'+escapeHtml(value)+'</div></div>'}
-function statusPill(status){const s=String(status||'').trim().toLowerCase();if(s==='en servicio')return '<span class="pill pill-ok">En servicio</span>';if(s==='en mantenimiento')return '<span class="pill pill-warn">En mantenimiento</span>';if(s==='fuera de servicio')return '<span class="pill pill-bad">Fuera de servicio</span>';return '<span class="pill pill-bad">'+escapeHtml(status||'Sin estado')+'</span>'}
-function severityPill(sev){const s=String(sev||'').trim().toLowerCase();if(s==='leve')return '<span class="pill pill-ok">Leve</span>';if(s==='moderada')return '<span class="pill pill-warn">Moderada</span>';return '<span class="pill pill-bad">'+escapeHtml(sev||'Crítica')+'</span>'}
-async function safeSelect(table,orderBy,ascending,limit){let q=sb.from(table).select('*').order(orderBy||'id',{ascending:!!ascending});if(limit)q=q.limit(limit);const res=await q;if(res.error)throw res.error;return res.data||[]}
-async function upsertRow(table,row){const res=await sb.from(table).upsert(row);if(res.error)throw res.error}
-async function insertRow(table,row){const res=await sb.from(table).insert(row);if(res.error)throw res.error}
-async function deleteRow(table,id){const res=await sb.from(table).delete().eq('id',id);if(res.error)throw res.error}
-async function updateRows(table,values,id){const res=await sb.from(table).update(values).eq('id',id);if(res.error)throw res.error}
-async function loginAdmin(email,password,profile){const expected=PROFILE_EMAILS[profile];if(!expected)throw new Error('Perfil inválido.');if(String(email||'').trim().toLowerCase()!==expected.toLowerCase())throw new Error('Para el perfil '+profile+' debés usar el email '+expected);const authRes=await sb.auth.signInWithPassword({email:email,password:password});if(authRes.error)throw authRes.error;userActual=authRes.data.user;const roleRes=await sb.from('user_profiles').select('*').eq('user_id',userActual.id).eq('profile_name',profile).limit(1);if(roleRes.error)throw roleRes.error;if(!roleRes.data||!roleRes.data.length)throw new Error('Ese usuario no tiene asignado el perfil seleccionado.')}
-async function loginBomberos(){userActual=null}
-async function logout(){try{if(userActual)await sb.auth.signOut()}catch(e){}location.reload()}
-async function dashboard(){els.title.textContent='Dashboard';const all=await Promise.all([safeSelect('moviles'),safeSelect('inventario'),safeSelect('fallas'),safeSelect('repuestos'),safeSelect('novedades_materiales'),safeSelect('revisiones')]);const mov=all[0],inv=all[1],fallas=all[2],repuestos=all[3],novedades=all[4],revisiones=all[5];const enServicio=mov.filter(x=>x.estado==='En servicio').length;const enMantenimiento=mov.filter(x=>x.estado==='En mantenimiento').length;const fueraServicio=mov.filter(x=>x.estado==='Fuera de servicio').length;const fallasCriticas=fallas.filter(f=>String(f.tipo_falla||'').toLowerCase().indexOf('crit')>=0);const repuestosCriticos=repuestos.filter(r=>Number(r.stock_actual||0)<=Number(r.stock_minimo||0));const alertasMateriales=novedades.filter(n=>String(n.estado||'').toLowerCase()==='pendiente');const checklistPendientes=Math.max(mov.length-revisiones.length,0);els.content.innerHTML='<div class="hero-grid">'+'<div class="status-big status-service"><div class="hero-label">Móviles en servicio</div><div class="hero-number">'+enServicio+'</div><div class="small">Operativos para salida</div></div>'+'<div class="status-big status-maint"><div class="hero-label">En mantenimiento</div><div class="hero-number">'+enMantenimiento+'</div><div class="small">Requieren intervención</div></div>'+'<div class="status-big status-out"><div class="hero-label">Fuera de servicio</div><div class="hero-number">'+fueraServicio+'</div><div class="small">No disponibles</div></div>'+'</div>'+'<div class="stat-grid" style="margin-top:14px;">'+card('Inventario por móvil',inv.length)+card('Fallas críticas',fallasCriticas.length)+card('Repuestos críticos',repuestosCriticos.length)+card('Alertas materiales',alertasMateriales.length)+card('Checklist registrados',revisiones.length)+card('Checklist pendientes',checklistPendientes)+'</div>'+'<div class="grid" style="grid-template-columns:1.1fr .9fr; margin-top:14px; align-items:start;">'+'<div class="card"><strong>Centro de alertas</strong><div style="margin-top:10px;">'+((alertasMateriales.slice(0,6).map(n=>'<div class="list-row"><strong>Móvil '+escapeHtml(n.movil)+'</strong> · '+escapeHtml(n.compartimiento)+' · '+escapeHtml(n.material)+' · <span class="pill pill-bad">'+escapeHtml(n.tipo_novedad)+'</span></div>').join(''))||'<div class="list-row">Sin alertas de materiales.</div>')+((fallasCriticas.slice(0,4).map(f=>'<div class="list-row"><strong>Móvil '+escapeHtml(f.movil)+'</strong> · '+escapeHtml(f.componente)+' · <span class="pill pill-bad">Crítica</span></div>').join(''))||'')+((repuestosCriticos.slice(0,4).map(r=>'<div class="list-row"><strong>'+escapeHtml(r.nombre)+'</strong> · stock '+escapeHtml(r.stock_actual)+'/'+escapeHtml(r.stock_minimo)+'</div>').join(''))||'')+'</div></div>'+'<div class="card"><strong>Resumen operativo</strong><div style="margin-top:10px;">'+'<div class="list-row">Total de móviles: <strong>'+mov.length+'</strong></div>'+'<div class="list-row">Móviles operativos: <strong>'+enServicio+'</strong></div>'+'<div class="list-row">Materiales observados: <strong>'+alertasMateriales.length+'</strong></div>'+'<div class="list-row">Fallas registradas: <strong>'+fallas.length+'</strong></div>'+'<div class="list-row">Repuestos bajo mínimo: <strong>'+repuestosCriticos.length+'</strong></div>'+'<div class="list-row">Último checklist: <strong>'+(revisiones[0]?escapeHtml(new Date(revisiones[0].fecha_hora||Date.now()).toLocaleString('es-AR')):'Sin datos')+'</strong></div>'+'</div></div>'+'</div>'}
-async function moviles(){els.title.textContent='Móviles';const data=await safeSelect('moviles');let html='';if(canEditMoviles()){html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de móvil</strong><form id="fMovil" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="numero" placeholder="Número de móvil" required><input name="patente" placeholder="Patente" required><input name="modelo" placeholder="Modelo" required><input name="tipo" placeholder="Tipo" required><input name="agua" type="number" placeholder="Capacidad de agua"><select name="estado"><option>En servicio</option><option>En mantenimiento</option><option>Fuera de servicio</option></select><button class="primary" type="submit">Guardar móvil</button></form></div>'}html+='<div class="card"><table><thead><tr><th>Móvil</th><th>Patente</th><th>Modelo</th><th>Tipo</th><th>Agua</th><th>Estado</th>'+(canEditMoviles()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(data.map(x=>'<tr><td><strong>'+escapeHtml(x.numero)+'</strong></td><td>'+escapeHtml(x.patente)+'</td><td>'+escapeHtml(x.modelo)+'</td><td>'+escapeHtml(x.tipo)+'</td><td>'+escapeHtml(x.agua||0)+' L</td><td>'+statusPill(x.estado)+'</td>'+(canEditMoviles()?'<td><button class="secondary edit-movil" data-id="'+x.id+'">Editar</button> <button class="danger del-movil" data-id="'+x.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin móviles cargados.</td></tr>')+'</tbody></table></div>';els.content.innerHTML=html;if(!canEditMoviles())return;const form=document.getElementById('fMovil');form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={numero:fd.get('numero'),patente:fd.get('patente'),modelo:fd.get('modelo'),tipo:fd.get('tipo'),agua:Number(fd.get('agua')||0),estado:fd.get('estado')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('moviles',row);showFlash('Móvil guardado','ok');moviles()});document.querySelectorAll('.edit-movil').forEach(btn=>btn.addEventListener('click',()=>{const item=data.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.numero.value=item.numero||'';form.elements.patente.value=item.patente||'';form.elements.modelo.value=item.modelo||'';form.elements.tipo.value=item.tipo||'';form.elements.agua.value=item.agua||0;form.elements.estado.value=item.estado||'En servicio'}));document.querySelectorAll('.del-movil').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar móvil?'))return;await deleteRow('moviles',Number(btn.dataset.id));showFlash('Móvil eliminado','ok');moviles()}))}
-async function bomberos(){els.title.textContent='Bomberos';const data=await safeSelect('bomberos');let html='';if(canEditBomberos()){html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de bombero</strong><form id="fBombero" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="jerarquia" placeholder="Jerarquía" required><input name="nombre" placeholder="Nombre" required><input name="apellido" placeholder="Apellido" required><input name="legajo" placeholder="Legajo" required><button class="primary" type="submit">Guardar bombero</button></form></div>'}html+='<div class="card"><table><thead><tr><th>Jerarquía</th><th>Apellido y nombre</th><th>Legajo</th>'+(canEditBomberos()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(data.map(x=>'<tr><td>'+escapeHtml(x.jerarquia)+'</td><td><strong>'+escapeHtml(x.apellido)+', '+escapeHtml(x.nombre)+'</strong></td><td>'+escapeHtml(x.legajo)+'</td>'+(canEditBomberos()?'<td><button class="secondary edit-bombero" data-id="'+x.id+'">Editar</button> <button class="danger del-bombero" data-id="'+x.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="4">Sin bomberos cargados.</td></tr>')+'</tbody></table></div>';els.content.innerHTML=html;if(!canEditBomberos())return;const form=document.getElementById('fBombero');form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={jerarquia:fd.get('jerarquia'),nombre:fd.get('nombre'),apellido:fd.get('apellido'),legajo:fd.get('legajo')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('bomberos',row);showFlash('Bombero guardado','ok');bomberos()});document.querySelectorAll('.edit-bombero').forEach(btn=>btn.addEventListener('click',()=>{const item=data.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.jerarquia.value=item.jerarquia||'';form.elements.nombre.value=item.nombre||'';form.elements.apellido.value=item.apellido||'';form.elements.legajo.value=item.legajo||''}));document.querySelectorAll('.del-bombero').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar bombero?'))return;await deleteRow('bomberos',Number(btn.dataset.id));showFlash('Bombero eliminado','ok');bomberos()}))}
-async function inventario(){els.title.textContent='Inventario por móvil';const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('compartimientos'),safeSelect('inventario')]);const movs=all[0],comps=all[1],items=all[2];let html='';if(canEditInventarioMovil()){html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de material</strong><form id="fInv" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><select name="movil">'+movs.map(m=>'<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>').join('')+'</select><select name="compartimiento" id="compSelect"></select><input name="nuevoCompartimiento" placeholder="Nuevo compartimiento (opcional)"><input name="material" placeholder="Material / herramienta" required><input name="cantidad" type="number" placeholder="Cantidad" required><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar material</button></form></div>'}html+='<div class="card"><table><thead><tr><th>Móvil</th><th>Compartimiento</th><th>Material</th><th>Cantidad</th><th>Observaciones</th>'+(canEditInventarioMovil()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(items.map(x=>'<tr><td>Móvil '+escapeHtml(x.movil)+'</td><td>'+escapeHtml(x.compartimiento)+'</td><td><strong>'+escapeHtml(x.material)+'</strong></td><td>'+escapeHtml(x.cantidad)+'</td><td>'+escapeHtml(x.observaciones||'')+'</td>'+(canEditInventarioMovil()?'<td><button class="secondary edit-inv" data-id="'+x.id+'">Editar</button> <button class="danger del-inv" data-id="'+x.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="6">Sin inventario cargado.</td></tr>')+'</tbody></table></div>';els.content.innerHTML=html;if(!canEditInventarioMovil())return;const form=document.getElementById('fInv');const compSelect=document.getElementById('compSelect');function fillCompartimientos(movil,selected){const list=comps.filter(c=>String(c.movil)===String(movil));compSelect.innerHTML=list.map(c=>'<option value="'+escapeHtml(c.nombre)+'">'+escapeHtml(c.nombre)+'</option>').join('');if(selected)compSelect.value=selected}fillCompartimientos(form.elements.movil.value,'');form.elements.movil.addEventListener('change',()=>fillCompartimientos(form.elements.movil.value,''));form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);let compartimiento=fd.get('compartimiento');const nuevo=String(fd.get('nuevoCompartimiento')||'').trim();const movil=fd.get('movil');if(nuevo){compartimiento=nuevo;const existe=comps.find(c=>String(c.movil)===String(movil)&&String(c.nombre).toLowerCase()===nuevo.toLowerCase());if(!existe)await insertRow('compartimientos',{movil:movil,nombre:nuevo})}const row={movil:movil,compartimiento:compartimiento,material:fd.get('material'),cantidad:Number(fd.get('cantidad')||0),observaciones:fd.get('observaciones')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('inventario',row);showFlash('Material guardado','ok');inventario()});document.querySelectorAll('.edit-inv').forEach(btn=>btn.addEventListener('click',()=>{const item=items.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.movil.value=item.movil;fillCompartimientos(item.movil,item.compartimiento);form.elements.material.value=item.material||'';form.elements.cantidad.value=item.cantidad||0;form.elements.observaciones.value=item.observaciones||''}));document.querySelectorAll('.del-inv').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar material?'))return;await deleteRow('inventario',Number(btn.dataset.id));showFlash('Material eliminado','ok');inventario()}))}
-async function plano(){els.title.textContent='Plano del móvil';const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('inventario'),safeSelect('novedades_materiales')]);const movs=all[0],items=all[1],novedades=all[2];els.content.innerHTML='<div class="card"><label class="small">Seleccionar móvil</label><select id="mapMovil" style="margin-top:8px; max-width:240px;">'+movs.map(m=>'<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>').join('')+'</select></div><div id="mapWrap" class="mobile-map" style="margin-top:12px;"></div>';const sel=document.getElementById('mapMovil');function renderMap(movil){const byComp={};items.filter(i=>String(i.movil)===String(movil)).forEach(i=>{if(!byComp[i.compartimiento])byComp[i.compartimiento]=[];byComp[i.compartimiento].push(i)});const keys=Object.keys(byComp);document.getElementById('mapWrap').innerHTML=keys.map(c=>'<div class="comp-box"><strong>'+escapeHtml(c)+'</strong><div style="margin-top:8px;">'+byComp[c].map(i=>{const alerta=novedades.find(n=>String(n.estado||'').toLowerCase()==='pendiente'&&String(n.movil)===String(movil)&&String(n.compartimiento)===String(i.compartimiento)&&String(n.material)===String(i.material));return '<div class="list-row">'+escapeHtml(i.material)+' · Cantidad '+escapeHtml(i.cantidad)+(alerta?' <span class="pill pill-bad">ALERTA</span>':'')+'</div>'}).join('')+'</div></div>').join('')||'<div class="card">Ese móvil no tiene compartimientos cargados.</div>'}sel.addEventListener('change',()=>renderMap(sel.value));if(sel.value)renderMap(sel.value)}
-async function fallas(){els.title.textContent='Reporte de fallas';const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('fallas')]);const movs=all[0],rows=all[1];let html='';if(canEditFallas()){html+='<div class="card" style="margin-bottom:12px;"><strong>Registrar falla</strong><form id="fFalla" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><select name="movil">'+movs.map(m=>'<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>').join('')+'</select><select name="tipo_falla"><option>Leve</option><option>Moderada</option><option>Critica (FS)</option></select><input name="componente" placeholder="Componente (ej: frenos)" required><textarea name="descripcion" placeholder="Descripción detallada de la falla" required></textarea><button class="primary" type="submit">Guardar falla</button></form></div>'}html+='<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Gravedad</th><th>Componente</th><th>Descripción</th>'+(canEditFallas()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+escapeHtml(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+'</td><td>Móvil '+escapeHtml(r.movil)+'</td><td>'+severityPill(r.tipo_falla)+'</td><td>'+escapeHtml(r.componente)+'</td><td>'+escapeHtml(r.descripcion)+'</td>'+(canEditFallas()?'<td><button class="secondary edit-falla" data-id="'+r.id+'">Editar</button> <button class="danger del-falla" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="6">Sin fallas cargadas.</td></tr>')+'</tbody></table></div>';els.content.innerHTML=html;if(!canEditFallas())return;const form=document.getElementById('fFalla');form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={movil:fd.get('movil'),tipo_falla:fd.get('tipo_falla'),componente:fd.get('componente'),descripcion:fd.get('descripcion'),fecha_hora:new Date().toISOString()};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('fallas',row);showFlash('Falla guardada','ok');fallas()});document.querySelectorAll('.edit-falla').forEach(btn=>btn.addEventListener('click',()=>{const item=rows.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.movil.value=item.movil;form.elements.tipo_falla.value=item.tipo_falla||'Leve';form.elements.componente.value=item.componente||'';form.elements.descripcion.value=item.descripcion||''}));document.querySelectorAll('.del-falla').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar falla?'))return;await deleteRow('fallas',Number(btn.dataset.id));showFlash('Falla eliminada','ok');fallas()}))}
-async function checklist(){els.title.textContent='Checklist de materiales';const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('bomberos','apellido',true),safeSelect('inventario'),safeSelect('revisiones','id',false,10),safeSelect('novedades_materiales','id',false,10)]);const movs=all[0],boms=all[1],inventario=all[2],revisiones=all[3],novedades=all[4];els.content.innerHTML='<div class="card"><form id="fcheck" class="grid"><select name="movil" id="checkMovil">'+movs.map(m=>'<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>').join('')+'</select><select name="bombero">'+boms.map(b=>{const nombre=((b.jerarquia||'')+' '+(b.apellido||'')+' '+(b.nombre||'')).trim();return '<option value="'+escapeHtml(nombre)+'">'+escapeHtml(nombre)+'</option>'}).join('')+'</select><div id="checkItems"></div><textarea name="comentarios" placeholder="Observaciones generales del control"></textarea><button class="primary" type="submit">Registrar checklist de materiales</button></form></div><div class="card" style="margin-top:12px;"><strong>Reportar material faltante o dañado</strong><form id="fNovedad" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="movil" id="novMovil">'+movs.map(m=>'<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>').join('')+'</select><select name="compartimiento" id="novComp"></select><select name="material" id="novMaterial"></select><select name="tipo_novedad"><option>Faltante</option><option>Dañado</option></select><textarea name="detalle" placeholder="Detalle de la novedad" required></textarea><button class="primary" type="submit">Registrar novedad</button></form></div><div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;"><div class="card"><strong>Últimos checklist</strong><div style="margin-top:8px;">'+(revisiones.map(r=>'<div class="list-row">Móvil '+escapeHtml(r.movil)+' · '+escapeHtml(r.bombero)+' · '+escapeHtml(r.comentarios||'Sin novedades')+((canEditChecklist()&&!canBombero())?' <button class="danger del-rev" data-id="'+r.id+'" style="margin-left:8px;">Borrar</button>':'')+'</div>').join('')||'Sin checklist.')+'</div></div><div class="card"><strong>Últimas novedades</strong><div style="margin-top:8px;">'+(novedades.map(n=>'<div class="list-row">Móvil '+escapeHtml(n.movil)+' · '+escapeHtml(n.compartimiento)+' · '+escapeHtml(n.material)+' · '+escapeHtml(n.tipo_novedad)+' · '+escapeHtml(n.detalle||'')+' <span class="pill pill-bad">'+escapeHtml(n.estado||'pendiente')+'</span>'+(canManageNovedades()?' <button class="secondary cerrar-nov" data-id="'+n.id+'">Cerrar</button>':'')+'</div>').join('')||'Sin novedades.')+'</div></div></div>';const checkMovil=document.getElementById('checkMovil');const novMovil=document.getElementById('novMovil');const novComp=document.getElementById('novComp');const novMaterial=document.getElementById('novMaterial');const checkItems=document.getElementById('checkItems');function renderChecklistItems(movil){const items=inventario.filter(i=>String(i.movil)===String(movil));if(!items.length){checkItems.innerHTML='<div class="card">Ese móvil no tiene materiales cargados.</div>';return}checkItems.innerHTML='<div class="card"><strong>Control por material y cantidad</strong><div style="margin-top:12px;">'+items.map((i,idx)=>'<div class="list-row"><div><strong>'+escapeHtml(i.compartimiento)+'</strong> · '+escapeHtml(i.material)+' · Cantidad esperada: '+escapeHtml(i.cantidad)+'</div><div class="grid" style="grid-template-columns:1fr 140px; margin-top:8px; align-items:center;"><label>Cantidad verificada</label><input type="number" name="cantidad_verificada_'+idx+'" min="0" value="'+escapeHtml(i.cantidad)+'"></div></div>').join('')+'</div></div>'}function fillNovedadSelectors(movil){const items=inventario.filter(i=>String(i.movil)===String(movil));const comps=Array.from(new Set(items.map(i=>i.compartimiento)));novComp.innerHTML=comps.map(c=>'<option value="'+escapeHtml(c)+'">'+escapeHtml(c)+'</option>').join('');refillMaterials()}function refillMaterials(){const items=inventario.filter(i=>String(i.movil)===String(novMovil.value)&&String(i.compartimiento)===String(novComp.value));novMaterial.innerHTML=items.map(i=>'<option value="'+escapeHtml(i.material)+'">'+escapeHtml(i.material)+'</option>').join('')}renderChecklistItems(checkMovil.value);fillNovedadSelectors(novMovil.value);checkMovil.addEventListener('change',()=>renderChecklistItems(checkMovil.value));novMovil.addEventListener('change',()=>fillNovedadSelectors(novMovil.value));novComp.addEventListener('change',refillMaterials);if(canEditChecklist()){document.getElementById('fcheck').addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(e.target);const items=inventario.filter(i=>String(i.movil)===String(fd.get('movil')));const resumen=items.map((i,idx)=>{const verificada=Number(fd.get('cantidad_verificada_'+idx)||0);return i.compartimiento+' / '+i.material+': esperado '+i.cantidad+', verificado '+verificada}).join(' | ');const res=await sb.from('revisiones').insert({movil:fd.get('movil'),bombero:fd.get('bombero'),fecha_hora:new Date().toISOString(),automotor_resumen:'',equip_resumen:resumen,comentarios:fd.get('comentarios')});if(res.error)return alert(res.error.message);showFlash('Checklist de materiales registrado','ok');checklist()});document.getElementById('fNovedad').addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(e.target);const res=await sb.from('novedades_materiales').insert({movil:fd.get('movil'),compartimiento:fd.get('compartimiento'),material:fd.get('material'),tipo_novedad:fd.get('tipo_novedad'),detalle:fd.get('detalle'),estado:'pendiente',fecha_hora:new Date().toISOString(),reportado_por:canBombero()?'Bomberos':perfilActual});if(res.error)return alert(res.error.message);showFlash('Novedad registrada y enviada al dashboard','ok');checklist()})}if(canEditChecklist()&&!canBombero()){document.querySelectorAll('.del-rev').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar revisión?'))return;await deleteRow('revisiones',Number(btn.dataset.id));showFlash('Revisión eliminada','ok');checklist()}))}if(canManageNovedades()){document.querySelectorAll('.cerrar-nov').forEach(btn=>btn.addEventListener('click',async()=>{await updateRows('novedades_materiales',{estado:'cerrada'},Number(btn.dataset.id));showFlash('Novedad cerrada','ok');checklist()}))}}
-async function repuestos(){els.title.textContent='Repuestos';const rows=await safeSelect('repuestos');let html='';if(canEditRepuestos()){html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de repuesto</strong><form id="fRep" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="nombre" placeholder="Nombre de repuesto" required><input name="stock_actual" type="number" placeholder="Stock actual" required><input name="stock_minimo" type="number" placeholder="Stock mínimo" required><button class="primary" type="submit">Guardar repuesto</button></form></div>'}html+='<div class="card"><table><thead><tr><th>Repuesto</th><th>Stock actual</th><th>Stock mínimo</th><th>Estado</th>'+(canEditRepuestos()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>{const critico=Number(r.stock_actual||0)<=Number(r.stock_minimo||0);return '<tr><td><strong>'+escapeHtml(r.nombre)+'</strong></td><td>'+escapeHtml(r.stock_actual)+'</td><td>'+escapeHtml(r.stock_minimo)+'</td><td>'+(critico?'<span class="pill pill-bad">Alerta de stock</span>':'<span class="pill pill-ok">OK</span>')+'</td>'+(canEditRepuestos()?'<td><button class="secondary edit-rep" data-id="'+r.id+'">Editar</button> <button class="danger del-rep" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>'}).join('')||'<tr><td colspan="5">Sin repuestos cargados.</td></tr>')+'</tbody></table></div>';els.content.innerHTML=html;if(!canEditRepuestos())return;const form=document.getElementById('fRep');form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={nombre:fd.get('nombre'),stock_actual:Number(fd.get('stock_actual')||0),stock_minimo:Number(fd.get('stock_minimo')||0)};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('repuestos',row);showFlash('Repuesto guardado','ok');repuestos()});document.querySelectorAll('.edit-rep').forEach(btn=>btn.addEventListener('click',()=>{const item=rows.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.nombre.value=item.nombre||'';form.elements.stock_actual.value=item.stock_actual||0;form.elements.stock_minimo.value=item.stock_minimo||0}));document.querySelectorAll('.del-rep').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar repuesto?'))return;await deleteRow('repuestos',Number(btn.dataset.id));showFlash('Repuesto eliminado','ok');repuestos()}))}
-async function proveedores(){els.title.textContent='Proveedores';const rows=await safeSelect('proveedores');let html='';if(canEditProveedores()){html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de proveedor</strong><form id="fProv" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="nombre" placeholder="Proveedor / empresa" required><input name="contacto" placeholder="Contacto" required><input name="rubro" placeholder="Rubro" required><input name="descripcion" placeholder="Descripción"><button class="primary" type="submit">Guardar proveedor</button></form></div>'}html+='<div class="card"><table><thead><tr><th>Proveedor</th><th>Contacto</th><th>Rubro</th><th>Descripción</th>'+(canEditProveedores()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td><strong>'+escapeHtml(r.nombre)+'</strong></td><td>'+escapeHtml(r.contacto)+'</td><td>'+escapeHtml(r.rubro)+'</td><td>'+escapeHtml(r.descripcion||'')+'</td>'+(canEditProveedores()?'<td><button class="secondary edit-prov" data-id="'+r.id+'">Editar</button> <button class="danger del-prov" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="5">Sin proveedores cargados.</td></tr>')+'</tbody></table></div>';els.content.innerHTML=html;if(!canEditProveedores())return;const form=document.getElementById('fProv');form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={nombre:fd.get('nombre'),contacto:fd.get('contacto'),rubro:fd.get('rubro'),descripcion:fd.get('descripcion')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('proveedores',row);showFlash('Proveedor guardado','ok');proveedores()});document.querySelectorAll('.edit-prov').forEach(btn=>btn.addEventListener('click',()=>{const item=rows.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.nombre.value=item.nombre||'';form.elements.contacto.value=item.contacto||'';form.elements.rubro.value=item.rubro||'';form.elements.descripcion.value=item.descripcion||''}));document.querySelectorAll('.del-prov').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar proveedor?'))return;await deleteRow('proveedores',Number(btn.dataset.id));showFlash('Proveedor eliminado','ok');proveedores()}))}
-async function mantenimiento(){els.title.textContent='Bitácora';const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('bomberos','apellido',true),safeSelect('mantenimientos')]);const movs=all[0],boms=all[1],rows=all[2];let html='';if(canEditMantenimiento()){html+='<div class="card" style="margin-bottom:12px;"><strong>Registrar mantenimiento</strong><form id="fMan" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><select name="movil">'+movs.map(m=>'<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>').join('')+'</select><select name="responsable">'+boms.map(b=>{const nombre=((b.jerarquia||'')+' '+(b.apellido||'')+' '+(b.nombre||'')).trim();return '<option value="'+escapeHtml(nombre)+'">'+escapeHtml(nombre)+'</option>'}).join('')+'</select><input name="tipo" placeholder="Tipo de mantenimiento" required><input name="km" type="number" placeholder="Kilometraje"><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar mantenimiento</button></form></div>'}html+='<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Responsable</th><th>Tipo</th><th>KM</th><th>Observaciones</th>'+(canEditMantenimiento()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+escapeHtml(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+'</td><td>Móvil '+escapeHtml(r.movil)+'</td><td>'+escapeHtml(r.responsable)+'</td><td>'+escapeHtml(r.tipo)+'</td><td>'+escapeHtml(r.km||'')+'</td><td>'+escapeHtml(r.observaciones||'')+'</td>'+(canEditMantenimiento()?'<td><button class="secondary edit-man" data-id="'+r.id+'">Editar</button> <button class="danger del-man" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin mantenimientos.</td></tr>')+'</tbody></table></div>';els.content.innerHTML=html;if(!canEditMantenimiento())return;const form=document.getElementById('fMan');form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={movil:fd.get('movil'),responsable:fd.get('responsable'),tipo:fd.get('tipo'),km:Number(fd.get('km')||0),observaciones:fd.get('observaciones'),fecha_hora:new Date().toISOString()};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('mantenimientos',row);showFlash('Mantenimiento guardado','ok');mantenimiento()});document.querySelectorAll('.edit-man').forEach(btn=>btn.addEventListener('click',()=>{const item=rows.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.movil.value=item.movil;form.elements.responsable.value=item.responsable;form.elements.tipo.value=item.tipo||'';form.elements.km.value=item.km||0;form.elements.observaciones.value=item.observaciones||''}));document.querySelectorAll('.del-man').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar mantenimiento?'))return;await deleteRow('mantenimientos',Number(btn.dataset.id));showFlash('Mantenimiento eliminado','ok');mantenimiento()}))}
-async function respaldo(){els.title.textContent='Importar / exportar';els.content.innerHTML='<div class="card"><div class="toolbar"><button id="btnExport" class="secondary" '+(canBackup()?'':'disabled')+'>Exportar respaldo JSON</button><input id="fileImport" type="file" accept="application/json" '+(canBackup()?'':'disabled')+'></div><div class="small" style="margin-top:12px;">Solo el perfil Administrador puede importar o exportar respaldos.</div></div>';if(!canBackup())return;document.getElementById('btnExport').addEventListener('click',async()=>{const all=await Promise.all([safeSelect('moviles'),safeSelect('bomberos'),safeSelect('compartimientos'),safeSelect('inventario'),safeSelect('revisiones'),safeSelect('mantenimientos'),safeSelect('fallas'),safeSelect('repuestos'),safeSelect('proveedores'),safeSelect('novedades_materiales')]);const payload={moviles:all[0],bomberos:all[1],compartimientos:all[2],inventario:all[3],revisiones:all[4],mantenimientos:all[5],fallas:all[6],repuestos:all[7],proveedores:all[8],novedades_materiales:all[9],exported_at:new Date().toISOString()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='respaldo_cuartel.json';a.click();URL.revokeObjectURL(url)});document.getElementById('fileImport').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;const data=JSON.parse(await file.text());const tables=['moviles','bomberos','compartimientos','inventario','revisiones','mantenimientos','fallas','repuestos','proveedores','novedades_materiales'];for(let i=0;i<tables.length;i++){const table=tables[i];if(Array.isArray(data[table])&&data[table].length){const res=await sb.from(table).upsert(data[table]);if(res.error)throw res.error}}showFlash('Respaldo importado','ok')})}
-async function estadisticas(){els.title.textContent='Estadísticas';const all=await Promise.all([safeSelect('moviles'),safeSelect('revisiones'),safeSelect('fallas'),safeSelect('repuestos'),safeSelect('novedades_materiales')]);const mov=all[0],rev=all[1],fallas=all[2],repuestos=all[3],novedades=all[4];const fallasCriticas=fallas.filter(f=>String(f.tipo_falla||'').toLowerCase().indexOf('crit')>=0);const fueraServicio=mov.filter(m=>String(m.estado||'').toLowerCase()==='fuera de servicio');const repuestosCriticos=repuestos.filter(r=>Number(r.stock_actual||0)<=Number(r.stock_minimo||0));const faltantes=novedades.filter(n=>String(n.tipo_novedad||'').toLowerCase()==='faltante');const daniados=novedades.filter(n=>String(n.tipo_novedad||'').toLowerCase()==='dañado');const pendientes=novedades.filter(n=>String(n.estado||'').toLowerCase()==='pendiente');const cerradas=novedades.filter(n=>String(n.estado||'').toLowerCase()==='cerrada');els.content.innerHTML='<div class="stat-grid">'+card('Total de checklist',rev.length)+card('Fallas críticas',fallasCriticas.length)+card('Móviles fuera de servicio',fueraServicio.length)+card('Repuestos con alerta',repuestosCriticos.length)+card('Materiales faltantes',faltantes.length)+card('Materiales dañados',daniados.length)+card('Novedades pendientes',pendientes.length)+card('Novedades cerradas',cerradas.length)+'</div>'}
-async function novedades(){els.title.textContent='Novedades de materiales';const rows=await safeSelect('novedades_materiales');const abiertas=rows.filter(r=>String(r.estado||'').toLowerCase()==='pendiente');const cerradas=rows.filter(r=>String(r.estado||'').toLowerCase()==='cerrada');els.content.innerHTML='<div class="stat-grid">'+card('Pendientes',abiertas.length)+card('Cerradas',cerradas.length)+card('Faltantes',rows.filter(r=>String(r.tipo_novedad||'').toLowerCase()==='faltante').length)+card('Dañados',rows.filter(r=>String(r.tipo_novedad||'').toLowerCase()==='dañado').length)+'</div><div class="card" style="margin-top:12px;"><strong>Gestión de novedades</strong><table style="margin-top:12px;"><thead><tr><th>Fecha</th><th>Móvil</th><th>Compartimiento</th><th>Material</th><th>Tipo</th><th>Detalle</th><th>Estado</th>'+(canManageNovedades()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+escapeHtml(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+'</td><td>Móvil '+escapeHtml(r.movil)+'</td><td>'+escapeHtml(r.compartimiento)+'</td><td>'+escapeHtml(r.material)+'</td><td>'+escapeHtml(r.tipo_novedad)+'</td><td>'+escapeHtml(r.detalle||'')+'</td><td>'+(String(r.estado||'').toLowerCase()==='cerrada'?'<span class="pill pill-ok">Cerrada</span>':'<span class="pill pill-bad">Pendiente</span>')+'</td>'+(canManageNovedades()?'<td>'+(String(r.estado||'').toLowerCase()==='pendiente'?'<button class="secondary cerrar-nov-tabla" data-id="'+r.id+'">Cerrar</button>':'<button class="secondary reabrir-nov-tabla" data-id="'+r.id+'">Reabrir</button>')+(canAdmin()?' <button class="danger del-nov-tabla" data-id="'+r.id+'">Borrar</button>':'')+'</td>':'')+'</tr>').join('')||'<tr><td colspan="8">Sin novedades registradas.</td></tr>')+'</tbody></table></div>';if(!canManageNovedades())return;document.querySelectorAll('.cerrar-nov-tabla').forEach(btn=>btn.addEventListener('click',async()=>{await updateRows('novedades_materiales',{estado:'cerrada'},Number(btn.dataset.id));showFlash('Novedad cerrada','ok');novedades()}));document.querySelectorAll('.reabrir-nov-tabla').forEach(btn=>btn.addEventListener('click',async()=>{await updateRows('novedades_materiales',{estado:'pendiente'},Number(btn.dataset.id));showFlash('Novedad reabierta','ok');novedades()}));if(canAdmin()){document.querySelectorAll('.del-nov-tabla').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar novedad?'))return;await deleteRow('novedades_materiales',Number(btn.dataset.id));showFlash('Novedad eliminada','ok');novedades()}))}}
-async function institucional(){
-els.title.textContent='Imagen institucional';
-const logo=getInstitutionalLogo();
-els.content.innerHTML='<div class="card" style="max-width:820px;">'+
-  '<strong>Escudo institucional</strong>'+
-  '<div class="small" style="margin-top:8px;">Cargá el escudo o logo institucional. Se mostrará en la barra lateral y en el encabezado principal del sistema.</div>'+
-  '<div style="display:grid;grid-template-columns:220px 1fr;gap:18px;align-items:start;margin-top:16px;">'+
-    '<div class="card" style="background:#0b1220;">'+
-      '<div class="small" style="margin-bottom:8px;">Vista previa</div>'+
-      '<div style="height:180px;display:flex;align-items:center;justify-content:center;background:#020617;border:1px solid #334155;border-radius:14px;">'+
-        (logo?'<img id="logoPreviewConfig" src="'+logo+'" alt="Logo institucional" style="max-width:160px;max-height:160px;object-fit:contain;background:#fff;padding:6px;border-radius:12px;">':'<div id="logoPreviewConfig" class="small">Todavía no hay imagen cargada.</div>')+
-      '</div>'+
-    '</div>'+
-    '<div class="grid">'+
-      '<input id="logoFileInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml">'+
-      '<div class="toolbar">'+
-        '<button id="saveLogoBtn" class="primary" type="button">Guardar escudo</button>'+
-        '<button id="removeLogoBtn" class="danger" type="button">Quitar escudo</button>'+
-      '</div>'+
-      '<div class="small">Recomendado: imagen cuadrada, fondo transparente o claro, tamaño moderado. Esta configuración queda guardada en el navegador del equipo donde se carga.</div>'+
-    '</div>'+
-  '</div>'+
-'</div>';
-let pendingLogo=logo;
-const fileInput=document.getElementById('logoFileInput');
-const preview=document.getElementById('logoPreviewConfig');
-fileInput.addEventListener('change',function(){const file=fileInput.files&&fileInput.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){pendingLogo=String(ev.target.result||'');if(preview.tagName==='IMG'){preview.src=pendingLogo;}else{preview.outerHTML='<img id="logoPreviewConfig" src="'+pendingLogo+'" alt="Logo institucional" style="max-width:160px;max-height:160px;object-fit:contain;background:#fff;padding:6px;border-radius:12px;">';} };reader.readAsDataURL(file);});
-document.getElementById('saveLogoBtn').addEventListener('click',async function(){if(!pendingLogo){showFlash('Primero seleccioná una imagen','err');return;}await setInstitutionalLogo(pendingLogo);applyInstitutionalLogo();showFlash('Escudo institucional guardado','ok');});
-document.getElementById('removeLogoBtn').addEventListener('click',async function(){await setInstitutionalLogo('');applyInstitutionalLogo();showFlash('Escudo institucional eliminado','ok');applyInstitutionalLogo();institucional();});
-}
+  <script>
+    const SUPABASE_URL = 'https://nksnxiqteqqlngmpzeew.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
+    const PROFILE_EMAILS = {
+      administrador: 'admin@cuartel.com',
+      materiales: 'materiales@cuartel.com',
+      automotores: 'automotores@cuartel.com',
+      jefatura: 'jefatura@cuartel.com'
+    };
+    const VIEW_RULES = {
+      administrador: ['dashboard','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
+      materiales: ['dashboard','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
+      automotores: ['dashboard','inventario_general','inventario_movil','reportes_stock','plano','diagnostico'],
+      jefatura: ['dashboard','inventario_general','asignaciones','mantenimiento_stock','archivo_bajas','inventario_movil','reportes_stock','plano','diagnostico'],
+      bomberos: ['dashboard','inventario_general','inventario_movil','plano','diagnostico']
+    };
 
-async function personalizacion(){
-els.title.textContent='Personalización';
-els.content.innerHTML='<div class="card" style="max-width:920px;">'+
-  '<strong>Identidad visual del cuartel</strong>'+
-  '<div class="small" style="margin-top:8px;">Desde acá podés definir el nombre visible del sistema, color institucional y una imagen de fondo para login y pantallas principales.</div>'+
-  '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:16px; align-items:start;">'+
-    '<div class="grid">'+
-      '<input id="instName" type="text" placeholder="Nombre del cuartel" value="'+escapeHtml(institutionalName)+'">'+
-      '<input id="instAccent" type="color" value="'+escapeHtml(institutionalAccent)+'" style="height:52px;padding:8px;">'+
-      '<input id="bannerFileInput" type="file" accept="image/png,image/jpeg,image/webp">'+
-      '<div class="toolbar">'+
-        '<button id="saveVisualBtn" class="primary" type="button">Guardar personalización</button>'+
-        '<button id="removeBannerBtn" class="danger" type="button">Quitar banner</button>'+
-      '</div>'+
-    '</div>'+
-    '<div class="card" style="background:#0b1220;">'+
-      '<div class="small" style="margin-bottom:8px;">Vista previa</div>'+
-      '<div id="bannerPreviewBox" style="min-height:180px;border:1px solid #334155;border-radius:14px;background:'+ (institutionalBanner?('center/cover no-repeat url('+institutionalBanner+')'):'#020617') +';display:flex;align-items:center;justify-content:center;">'+
-        '<div style="background:rgba(2,6,23,.78);padding:14px 18px;border-radius:12px;border:1px solid #334155;">'+escapeHtml(institutionalName)+'</div>'+
-      '</div>'+
-    '</div>'+
-  '</div>'+
-'</div>';
-let pendingBanner=institutionalBanner||'';
-const bannerInput=document.getElementById('bannerFileInput');
-bannerInput.addEventListener('change',function(){const file=bannerInput.files&&bannerInput.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(ev){pendingBanner=String(ev.target.result||'');const box=document.getElementById('bannerPreviewBox');box.style.background='center/cover no-repeat url('+pendingBanner+')';};reader.readAsDataURL(file);});
-document.getElementById('saveVisualBtn').addEventListener('click',async function(){try{await setInstitutionalName(document.getElementById('instName').value||'CUARTELONLINE');await setInstitutionalAccent(document.getElementById('instAccent').value||'#ef4444');await setInstitutionalBanner(pendingBanner||'');applyInstitutionalBrand();showFlash('Personalización guardada','ok');}catch(err){alert(err&&err.message?err.message:'No se pudo guardar la personalización');}});
-document.getElementById('removeBannerBtn').addEventListener('click',async function(){try{pendingBanner='';await setInstitutionalBanner('');applyInstitutionalBrand();showFlash('Banner eliminado','ok');personalizacion();}catch(err){alert(err&&err.message?err.message:'No se pudo quitar el banner');}});
-}
+    const els = {
+      login: document.getElementById('login'),
+      app: document.getElementById('app'),
+      loginForm: document.getElementById('loginForm'),
+      perfil: document.getElementById('perfil'),
+      email: document.getElementById('email'),
+      password: document.getElementById('password'),
+      bootMsg: document.getElementById('bootMsg'),
+      bootErr: document.getElementById('bootErr'),
+      userInfo: document.getElementById('userInfo'),
+      title: document.getElementById('title'),
+      content: document.getElementById('content'),
+      flash: document.getElementById('flash'),
+      logout: document.getElementById('logout'),
+      logoutTop: document.getElementById('logoutTop')
+    };
 
-async function diagnostico(){els.title.textContent='Diagnóstico';const lines=[];async function run(label,fn){try{const result=await fn();lines.push('OK - '+label+(result?': '+result:''))}catch(err){lines.push('ERROR - '+label+': '+(err&&err.message?err.message:String(err)))}}await run('Auth',async()=>{const res=await sb.auth.getSession();if(res.error)throw res.error;return res.data.session?'sesión activa':'sin sesión'});await run('Moviles',async()=>String((await safeSelect('moviles','id',false,1)).length));await run('Bomberos',async()=>String((await safeSelect('bomberos','id',false,1)).length));await run('Inventario',async()=>String((await safeSelect('inventario','id',false,1)).length));await run('Revisiones',async()=>String((await safeSelect('revisiones','id',false,1)).length));await run('Fallas',async()=>String((await safeSelect('fallas','id',false,1)).length));await run('Repuestos',async()=>String((await safeSelect('repuestos','id',false,1)).length));await run('Proveedores',async()=>String((await safeSelect('proveedores','id',false,1)).length));await run('Novedades materiales',async()=>String((await safeSelect('novedades_materiales','id',false,1)).length));els.content.innerHTML='<div class="err" style="background:#0f172a;border-color:#334155;color:#e2e8f0;">'+escapeHtml(lines.join('\n'))+'</div>'}
-async function guardia(){els.title.textContent='Modo guardia';const all=await Promise.all([safeSelect('moviles'),safeSelect('fallas'),safeSelect('repuestos'),safeSelect('novedades_materiales'),safeSelect('revisiones')]);const mov=all[0],fallas=all[1],repuestos=all[2],novedades=all[3],revisiones=all[4];const enServicio=mov.filter(m=>m.estado==='En servicio').length;const enMantenimiento=mov.filter(m=>m.estado==='En mantenimiento').length;const fueraServicio=mov.filter(m=>m.estado==='Fuera de servicio').length;const criticas=fallas.filter(f=>String(f.tipo_falla||'').toLowerCase().indexOf('crit')>=0);const repuestosCriticos=repuestos.filter(r=>Number(r.stock_actual||0)<=Number(r.stock_minimo||0));const pendientes=novedades.filter(n=>String(n.estado||'').toLowerCase()==='pendiente');const ultimaRevision=revisiones[0]?new Date(revisiones[0].fecha_hora||Date.now()).toLocaleString('es-AR'):'Sin registros';const alertasHtml=(criticas.slice(0,6).map(f=>'<div class="guardia-item"><strong>Móvil '+escapeHtml(f.movil)+'</strong> · '+escapeHtml(f.componente)+' <span class="guardia-badge guardia-danger">Crítica</span></div>').join(''))+(pendientes.slice(0,6).map(n=>'<div class="guardia-item"><strong>Móvil '+escapeHtml(n.movil)+'</strong> · '+escapeHtml(n.material)+' <span class="guardia-badge guardia-danger">'+escapeHtml(n.tipo_novedad)+'</span></div>').join(''))+(repuestosCriticos.slice(0,6).map(r=>'<div class="guardia-item"><strong>'+escapeHtml(r.nombre)+'</strong> · stock '+escapeHtml(r.stock_actual)+'/'+escapeHtml(r.stock_minimo)+' <span class="guardia-badge guardia-warn">Repuesto</span></div>').join(''));const totalAlertas=criticas.length+pendientes.length+repuestosCriticos.length;els.content.innerHTML='<div class="guardia-wrap"><div class="guardia-header"><div><div class="guardia-title">PANEL DE GUARDIA</div><div class="guardia-sub">Monitoreo operativo del cuartel · actualización automática opcional</div></div><div class="toolbar"><button id="refreshGuardia" class="primary" type="button">Actualizar</button><button id="autoGuardia" class="secondary" type="button">Auto 60 s: ON</button></div></div><div class="guardia-grid"><div class="guardia-card status-service"><div class="guardia-label">Móviles en servicio</div><div class="guardia-number">'+enServicio+'</div></div><div class="guardia-card status-maint"><div class="guardia-label">En mantenimiento</div><div class="guardia-number">'+enMantenimiento+'</div></div><div class="guardia-card status-out"><div class="guardia-label">Fuera de servicio</div><div class="guardia-number">'+fueraServicio+'</div></div><div class="guardia-card"><div class="guardia-label">Alertas activas</div><div class="guardia-number">'+totalAlertas+'</div></div></div><div class="guardia-list"><div class="guardia-card"><div class="guardia-label">Alertas prioritarias</div>'+(alertasHtml||'<div class="guardia-item"><span class="guardia-badge guardia-ok">Sin alertas</span></div>')+'</div><div class="guardia-card"><div class="guardia-label">Resumen de guardia</div><div class="guardia-item">Total de móviles: <strong>'+mov.length+'</strong></div><div class="guardia-item">Fallas críticas: <strong>'+criticas.length+'</strong></div><div class="guardia-item">Novedades pendientes: <strong>'+pendientes.length+'</strong></div><div class="guardia-item">Repuestos bajo mínimo: <strong>'+repuestosCriticos.length+'</strong></div><div class="guardia-item">Última revisión: <strong>'+escapeHtml(ultimaRevision)+'</strong></div><div class="guardia-footer">Ideal para TV o monitor de guardia. Podés dejar esta vista abierta permanentemente.</div></div></div></div>';window.__guardiaAuto=window.__guardiaAuto===undefined?true:window.__guardiaAuto;if(window.__guardiaTimer){clearInterval(window.__guardiaTimer);window.__guardiaTimer=null}document.getElementById('refreshGuardia').addEventListener('click',()=>guardia());const autoBtn=document.getElementById('autoGuardia');autoBtn.textContent=window.__guardiaAuto?'Auto 60 s: ON':'Auto 60 s: OFF';autoBtn.addEventListener('click',()=>{window.__guardiaAuto=!window.__guardiaAuto;autoBtn.textContent=window.__guardiaAuto?'Auto 60 s: ON':'Auto 60 s: OFF';if(window.__guardiaTimer){clearInterval(window.__guardiaTimer);window.__guardiaTimer=null}if(window.__guardiaAuto){window.__guardiaTimer=setInterval(()=>{if(els.title.textContent==='Modo guardia')guardia()},60000)}});if(window.__guardiaAuto){window.__guardiaTimer=setInterval(()=>{if(els.title.textContent==='Modo guardia')guardia()},60000)}}
-async function nav(sec){if(!canView(sec)){showFlash('Ese perfil no tiene acceso a esta sección','err');return}activateNav(sec);if(sec==='dashboard')return dashboard();if(sec==='moviles')return moviles();if(sec==='bomberos')return bomberos();if(sec==='inventario')return inventario();if(sec==='plano')return plano();if(sec==='fallas')return fallas();if(sec==='checklist')return checklist();if(sec==='repuestos')return repuestos();if(sec==='proveedores')return proveedores();if(sec==='mantenimiento')return mantenimiento();if(sec==='respaldo')return respaldo();if(sec==='estadisticas')return estadisticas();if(sec==='novedades')return novedades();if(sec==='diagnostico')return diagnostico();if(sec==='guardia')return guardia();if(sec==='institucional')return institucional();if(sec==='personalizacion')return personalizacion()}
-async function init(){try{if(!window.supabase||typeof window.supabase.createClient!=='function')throw new Error('No cargó la librería de Supabase.');sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);await loadInstitutionalLogo();applyInstitutionalLogo();applyInstitutionalBrand();els.bootMsg.textContent='Sistema listo.';authInputs();els.perfil.addEventListener('change',authInputs);els.logout.addEventListener('click',logout);els.logoutTop.addEventListener('click',logout);document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>nav(btn.dataset.sec)));els.loginForm.addEventListener('submit',async e=>{e.preventDefault();perfilActual=els.perfil.value;try{if(perfilActual==='bomberos'){await loginBomberos()}else{await loginAdmin(els.email.value,els.password.value,perfilActual)}els.login.classList.add('hidden');els.app.classList.remove('hidden');els.userInfo.textContent=canBombero()?'Bomberos · dashboard, plano del móvil y checklist de materiales':perfilActual+' · permisos según rol';updateNavVisibility();nav(canBombero()?'checklist':'dashboard')}catch(err){alert(err&&err.message?err.message:'No se pudo iniciar sesión.')}})}catch(err){els.bootMsg.textContent='Error de inicialización.';showBootError(err&&err.message?err.message:String(err))}}
-window.addEventListener('error',event=>showBootError(event&&event.message?event.message:'Script error'));window.addEventListener('unhandledrejection',event=>showBootError(event&&event.reason&&event.reason.message?event.reason.message:String((event&&event.reason)||'Promise error')));init();
-</script>
+    let sb = null;
+    let perfilActual = null;
+    let userActual = null;
+
+    function canView(section) {
+      return (VIEW_RULES[perfilActual] || []).includes(section);
+    }
+    function canEditStockGeneral() {
+      return perfilActual === 'administrador' || perfilActual === 'materiales';
+    }
+    function canManageMaintenanceStock() {
+      return perfilActual === 'administrador' || perfilActual === 'materiales';
+    }
+    function canManageDecommissions() {
+      return perfilActual === 'administrador' || perfilActual === 'materiales';
+    }
+    function canDeleteCompartments() {
+      return perfilActual === 'administrador' || perfilActual === 'materiales';
+    }
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    function showBootError(message) {
+      els.bootErr.textContent = message;
+      els.bootErr.classList.remove('hidden');
+    }
+    function showFlash(message, type) {
+      els.flash.className = type === 'ok' ? 'ok' : 'err';
+      els.flash.textContent = message;
+      els.flash.classList.remove('hidden');
+      setTimeout(function () {
+        els.flash.classList.add('hidden');
+      }, 3200);
+    }
+    function authInputs() {
+      const isBombero = els.perfil.value === 'bomberos';
+      els.email.classList.toggle('hidden', isBombero);
+      els.password.classList.toggle('hidden', isBombero);
+    }
+    function activateNav(section) {
+      document.querySelectorAll('.nav').forEach(function (btn) {
+        btn.classList.remove('active');
+      });
+      const btn = document.querySelector('.nav[data-sec="' + section + '"]');
+      if (btn) btn.classList.add('active');
+    }
+    function updateNavVisibility() {
+      document.querySelectorAll('.nav').forEach(function (btn) {
+        btn.classList.toggle('hidden', !canView(btn.dataset.sec));
+      });
+    }
+    function card(label, value) {
+      return '<div class="card"><div class="small">' + escapeHtml(label) + '</div><div style="font-size:28px;font-weight:800;">' + escapeHtml(value) + '</div></div>';
+    }
+    async function safeSelect(table, orderBy, ascending, limit) {
+      let q = sb.from(table).select('*');
+      if (orderBy) q = q.order(orderBy, { ascending: !!ascending });
+      if (limit) q = q.limit(limit);
+      const res = await q;
+      if (res.error) throw res.error;
+      return res.data || [];
+    }
+    async function upsertRow(table, row) {
+      const res = await sb.from(table).upsert(row);
+      if (res.error) throw res.error;
+    }
+    async function updateRows(table, values, id) {
+      const res = await sb.from(table).update(values).eq('id', id);
+      if (res.error) throw res.error;
+    }
+    async function loginAdmin(email, password, profile) {
+      const expected = PROFILE_EMAILS[profile];
+      if (String(email || '').trim().toLowerCase() !== expected.toLowerCase()) {
+        throw new Error('Para el perfil ' + profile + ' debés usar el email ' + expected);
+      }
+      const authRes = await sb.auth.signInWithPassword({ email: email, password: password });
+      if (authRes.error) throw authRes.error;
+      userActual = authRes.data.user;
+      const roleRes = await sb.from('user_profiles').select('*').eq('user_id', userActual.id).eq('profile_name', profile).limit(1);
+      if (roleRes.error) throw roleRes.error;
+      if (!roleRes.data || !roleRes.data.length) throw new Error('Ese usuario no tiene asignado el perfil seleccionado.');
+    }
+    async function loginBomberos() {
+      userActual = null;
+    }
+    async function logout() {
+      try {
+        if (userActual) await sb.auth.signOut();
+      } catch (e) {}
+      location.reload();
+    }
+    function downloadTextFile(filename, content, type) {
+      const blob = new Blob([content], { type: type || 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    function toCsv(rows) {
+      if (!rows || !rows.length) return '';
+      const headers = Object.keys(rows[0]);
+      const esc = function (v) {
+        return '"' + String(v ?? '').replace(/"/g, '""') + '"';
+      };
+      return [headers.join(','), ...rows.map(function (r) {
+        return headers.map(function (h) { return esc(r[h]); }).join(',');
+      })].join('\n');
+    }
+
+    async function dashboard() {
+      els.title.textContent = 'Dashboard';
+      const all = await Promise.all([
+        safeSelect('moviles', 'numero', true),
+        safeSelect('fallas', 'fecha_hora', false),
+        safeSelect('repuestos', 'nombre', true),
+        safeSelect('novedades_materiales', 'fecha_hora', false),
+        safeSelect('v_stock_general', 'nombre', true)
+      ]);
+      const mov = all[0];
+      const fallas = all[1];
+      const repuestos = all[2];
+      const novedades = all[3];
+      const stock = all[4];
+      const enServicio = mov.filter(function (x) { return x.estado === 'En servicio'; }).length;
+      const enMantenimiento = mov.filter(function (x) { return x.estado === 'En mantenimiento'; }).length;
+      const fueraServicio = mov.filter(function (x) { return x.estado === 'Fuera de servicio'; }).length;
+      const fallasCriticas = fallas.filter(function (f) { return String(f.tipo_falla || '').toLowerCase().indexOf('crit') >= 0; });
+      const repuestosCriticos = repuestos.filter(function (r) { return Number(r.stock_actual || 0) <= Number(r.stock_minimo || 0); });
+      const alertasMateriales = novedades.filter(function (n) { return String(n.estado || '').toLowerCase() === 'pendiente'; });
+      const alertasStockGeneral = stock.filter(function (s) { return s.alerta_minimo === true; });
+      els.content.innerHTML =
+        '<div class="hero-grid">' +
+          '<div class="hero-card service"><div class="hero-label">Móviles en servicio</div><div class="hero-number">' + enServicio + '</div></div>' +
+          '<div class="hero-card maint"><div class="hero-label">En mantenimiento</div><div class="hero-number">' + enMantenimiento + '</div></div>' +
+          '<div class="hero-card out"><div class="hero-label">Fuera de servicio</div><div class="hero-number">' + fueraServicio + '</div></div>' +
+        '</div>' +
+        '<div class="stat-grid" style="margin-top:14px;">' +
+          card('Fallas críticas', fallasCriticas.length) +
+          card('Repuestos críticos', repuestosCriticos.length) +
+          card('Alertas materiales', alertasMateriales.length) +
+          card('Alertas stock general', alertasStockGeneral.length) +
+        '</div>' +
+        '<div class="card" style="margin-top:14px;"><strong>Alertas de stock general</strong><div style="margin-top:10px;">' +
+          ((alertasStockGeneral.map(function (s) {
+            return '<div class="list-row"><strong>' + escapeHtml(s.nombre) + '</strong> · disponible ' + escapeHtml(s.disponible_real) + ' / mínimo ' + escapeHtml(s.stock_minimo) + '</div>';
+          }).join('')) || 'Sin alertas de stock general.') +
+        '</div></div>';
+    }
+
+    async function inventario_general() {
+      els.title.textContent = 'Inventario general';
+      const vista = await safeSelect('v_stock_general', 'nombre', true);
+      const maestro = await safeSelect('stock_items', 'nombre', true);
+      let html = '';
+      if (canEditStockGeneral()) {
+        html += '<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de stock maestro</strong><form id="fStockMaster" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="codigo_interno" placeholder="Código interno"><input name="nombre" placeholder="Nombre" required><input name="categoria" placeholder="Categoría"><input name="marca" placeholder="Marca"><input name="modelo" placeholder="Modelo"><input name="numero_serie" placeholder="N° serie"><input name="cantidad_total" type="number" min="0" placeholder="Cantidad total" required><input name="stock_minimo" type="number" min="0" placeholder="Stock mínimo" required><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar ítem</button></form></div>';
+      }
+      html += '<div class="card"><table><thead><tr><th>Código</th><th>Ítem</th><th>Total</th><th>Asignado</th><th>Stock central</th><th>Reparación</th><th>Baja</th><th>Mínimo</th><th>Alerta</th>' + (canEditStockGeneral() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
+        (vista.map(function (r) {
+          return '<tr>' +
+            '<td>' + escapeHtml(r.codigo_interno || '') + '</td>' +
+            '<td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml([r.categoria, r.marca, r.modelo].filter(Boolean).join(' · ')) + '</div></td>' +
+            '<td>' + escapeHtml(r.cantidad_total) + '</td>' +
+            '<td>' + escapeHtml(r.asignado_moviles) + '</td>' +
+            '<td><strong>' + escapeHtml(r.disponible_real) + '</strong></td>' +
+            '<td>' + escapeHtml(r.en_reparacion) + '</td>' +
+            '<td>' + escapeHtml(r.en_baja) + '</td>' +
+            '<td>' + escapeHtml(r.stock_minimo) + '</td>' +
+            '<td>' + (r.alerta_minimo ? '<span class="pill pill-bad">Bajo mínimo</span>' : '<span class="pill pill-ok">OK</span>') + '</td>' +
+            (canEditStockGeneral() ? '<td><button class="secondary edit-stock" data-id="' + r.id + '">Editar</button> <button class="secondary maint-stock" data-id="' + r.id + '">Reparación</button> <button class="danger baja-stock" data-id="' + r.id + '">Baja</button></td>' : '') +
+          '</tr>';
+        }).join('') || '<tr><td colspan="10">Sin stock cargado.</td></tr>') +
+        '</tbody></table></div>';
+      els.content.innerHTML = html;
+      if (!canEditStockGeneral()) return;
+      const form = document.getElementById('fStockMaster');
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const fd = new FormData(form);
+        const row = {
+          codigo_interno: fd.get('codigo_interno'),
+          nombre: fd.get('nombre'),
+          categoria: fd.get('categoria'),
+          marca: fd.get('marca'),
+          modelo: fd.get('modelo'),
+          numero_serie: fd.get('numero_serie'),
+          cantidad_total: Number(fd.get('cantidad_total') || 0),
+          stock_minimo: Number(fd.get('stock_minimo') || 0),
+          observaciones: fd.get('observaciones')
+        };
+        if (fd.get('id')) row.id = Number(fd.get('id'));
+        await upsertRow('stock_items', row);
+        showFlash('Stock maestro guardado', 'ok');
+        inventario_general();
+      });
+      document.querySelectorAll('.edit-stock').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const item = maestro.find(function (x) { return String(x.id) === btn.dataset.id; });
+          if (!item) return;
+          form.elements.id.value = item.id;
+          form.elements.codigo_interno.value = item.codigo_interno || '';
+          form.elements.nombre.value = item.nombre || '';
+          form.elements.categoria.value = item.categoria || '';
+          form.elements.marca.value = item.marca || '';
+          form.elements.modelo.value = item.modelo || '';
+          form.elements.numero_serie.value = item.numero_serie || '';
+          form.elements.cantidad_total.value = item.cantidad_total || 0;
+          form.elements.stock_minimo.value = item.stock_minimo || 0;
+          form.elements.observaciones.value = item.observaciones || '';
+        });
+      });
+      document.querySelectorAll('.maint-stock').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          const motivo = prompt('Motivo de reparación / mantenimiento:');
+          if (!motivo) return;
+          const cantidad = Number(prompt('Cantidad a enviar a reparación:', '1') || 0);
+          if (cantidad < 1) return;
+          const res = await sb.rpc('send_item_to_maintenance', {
+            p_stock_item_id: Number(btn.dataset.id),
+            p_cantidad: cantidad,
+            p_motivo: motivo,
+            p_usuario: perfilActual,
+            p_movil: null
+          });
+          if (res.error) {
+            alert(res.error.message);
+            return;
+          }
+          showFlash('Ítem enviado a reparación', 'ok');
+          inventario_general();
+        });
+      });
+      document.querySelectorAll('.baja-stock').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          const motivo = prompt('Motivo de baja:');
+          if (!motivo) return;
+          const cantidad = Number(prompt('Cantidad a dar de baja:', '1') || 0);
+          if (cantidad < 1) return;
+          const res = await sb.rpc('decommission_item', {
+            p_stock_item_id: Number(btn.dataset.id),
+            p_cantidad: cantidad,
+            p_motivo: motivo,
+            p_usuario: perfilActual
+          });
+          if (res.error) {
+            alert(res.error.message);
+            return;
+          }
+          showFlash('Ítem dado de baja', 'ok');
+          inventario_general();
+        });
+      });
+    }
+
+    async function asignaciones() {
+      els.title.textContent = 'Asignaciones';
+      const all = await Promise.all([
+        safeSelect('v_stock_general', 'nombre', true),
+        safeSelect('v_stock_assignments_detail', 'fecha_hora', false),
+        safeSelect('moviles', 'numero', true),
+        safeSelect('stock_compartments', 'movil', true)
+      ]);
+      const stock = all[0];
+      const assigns = all[1];
+      const movs = all[2];
+      const comps = all[3];
+      let html = '';
+      if (canEditStockGeneral()) {
+        html += '<div class="card" style="margin-bottom:12px;"><strong>Asignar stock</strong><form id="fAssign" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="stock_item_id">' + stock.map(function (s) {
+          return '<option value="' + s.id + '">' + escapeHtml(s.nombre) + ' · disponible ' + escapeHtml(s.disponible_real) + '</option>';
+        }).join('') + '</select><select name="movil" id="assignMovil">' + movs.map(function (m) {
+          return '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>';
+        }).join('') + '</select><select name="compartimiento" id="assignComp"></select><input name="nuevoCompartimiento" placeholder="Nuevo compartimiento (opcional)"><input name="cantidad" type="number" min="1" placeholder="Cantidad" required><button class="primary" type="submit">Asignar</button></form></div>';
+      }
+      html += '<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Compartimiento</th><th>Ítem</th><th>Cantidad</th><th>Estado</th>' + (canEditStockGeneral() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
+        (assigns.map(function (a) {
+          return '<tr><td>' + escapeHtml(new Date(a.fecha_hora || Date.now()).toLocaleString('es-AR')) + '</td><td>Móvil ' + escapeHtml(a.movil) + '</td><td>' + escapeHtml(a.compartimiento || '') + '</td><td><strong>' + escapeHtml(a.nombre) + '</strong><div class="small">' + escapeHtml(a.codigo_interno || '') + '</div></td><td>' + escapeHtml(a.cantidad) + '</td><td>' + escapeHtml(a.estado_asignacion) + '</td>' + (canEditStockGeneral() ? '<td><button class="secondary devolver-assign" data-id="' + a.id + '">Devolver</button></td>' : '') + '</tr>';
+        }).join('') || '<tr><td colspan="7">Sin asignaciones.</td></tr>') +
+        '</tbody></table></div>';
+      els.content.innerHTML = html;
+      if (!canEditStockGeneral()) return;
+      const form = document.getElementById('fAssign');
+      const assignMovil = document.getElementById('assignMovil');
+      const assignComp = document.getElementById('assignComp');
+      function fillAssignComp(movil) {
+        const list = comps.filter(function (c) {
+          return String(c.movil) === String(movil) && c.activo !== false;
+        });
+        assignComp.innerHTML = list.map(function (c) {
+          return '<option value="' + escapeHtml(c.nombre) + '">' + escapeHtml(c.nombre) + '</option>';
+        }).join('');
+      }
+      fillAssignComp(assignMovil.value);
+      assignMovil.addEventListener('change', function () { fillAssignComp(assignMovil.value); });
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const fd = new FormData(form);
+        let comp = fd.get('compartimiento');
+        const nuevo = String(fd.get('nuevoCompartimiento') || '').trim();
+        if (nuevo) {
+          comp = nuevo;
+          const exists = comps.find(function (c) {
+            return String(c.movil) === String(fd.get('movil')) && String(c.nombre).toLowerCase() === nuevo.toLowerCase();
+          });
+          if (!exists && canDeleteCompartments()) {
+            const r = await sb.from('stock_compartments').insert({ movil: fd.get('movil'), nombre: nuevo, activo: true });
+            if (r.error) {
+              alert(r.error.message);
+              return;
+            }
+          }
+        }
+        const res = await sb.rpc('assign_item_to_mobile', {
+          p_stock_item_id: Number(fd.get('stock_item_id')),
+          p_movil: fd.get('movil'),
+          p_compartimiento: comp || '',
+          p_cantidad: Number(fd.get('cantidad') || 0),
+          p_usuario: perfilActual
+        });
+        if (res.error) {
+          alert(res.error.message);
+          return;
+        }
+        showFlash('Asignación realizada', 'ok');
+        asignaciones();
+      });
+      document.querySelectorAll('.devolver-assign').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          const id = Number(btn.dataset.id);
+          const item = assigns.find(function (a) { return a.id === id; });
+          if (!item) return;
+          await updateRows('stock_assignments', { estado_asignacion: 'DEVUELTA' }, id);
+          const r2 = await sb.from('stock_movements').insert({
+            stock_item_id: item.stock_item_id,
+            tipo_movimiento: 'devolucion',
+            cantidad: item.cantidad,
+            origen: 'MOVIL',
+            destino: 'STOCK_CENTRAL',
+            movil_origen: item.movil,
+            usuario: perfilActual
+          });
+          if (r2.error) {
+            alert(r2.error.message);
+            return;
+          }
+          showFlash('Ítem devuelto a stock central', 'ok');
+          asignaciones();
+        });
+      });
+    }
+
+    async function mantenimiento_stock() {
+      els.title.textContent = 'Control de mantenimiento';
+      const rows = await safeSelect('v_maintenance_control_detail', 'fecha_ingreso', false);
+      const items = await safeSelect('stock_items', 'nombre', true);
+      let html = '';
+      if (canManageMaintenanceStock()) {
+        html += '<div class="card" style="margin-bottom:12px;"><strong>Ingreso manual a mantenimiento</strong><form id="fMaintStock" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="stock_item_id">' + items.map(function (i) {
+          return '<option value="' + i.id + '">' + escapeHtml(i.nombre) + '</option>';
+        }).join('') + '</select><input name="cantidad" type="number" min="1" placeholder="Cantidad" required><input name="motivo" placeholder="Motivo" required><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Enviar a mantenimiento</button></form></div>';
+      }
+      html += '<div class="card"><table><thead><tr><th>Fecha ingreso</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Estado</th><th>Observaciones</th>' + (canManageMaintenanceStock() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
+        (rows.map(function (r) {
+          return '<tr><td>' + escapeHtml(new Date(r.fecha_ingreso || Date.now()).toLocaleString('es-AR')) + '</td><td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml(r.codigo_interno || '') + '</div></td><td>' + escapeHtml(r.cantidad) + '</td><td>' + escapeHtml(r.motivo || '') + '</td><td>' + (String(r.estado || '').toUpperCase() === 'DISPONIBLE' ? '<span class="pill pill-ok">Disponible</span>' : '<span class="pill pill-warn">' + escapeHtml(r.estado || 'REPARACION') + '</span>') + '</td><td>' + escapeHtml(r.observaciones || '') + '</td>' + (canManageMaintenanceStock() ? '<td>' + (String(r.estado || '').toUpperCase() !== 'DISPONIBLE' ? '<button class="secondary return-maint" data-id="' + r.id + '">Retornar a stock</button>' : '') + '</td>' : '') + '</tr>';
+        }).join('') || '<tr><td colspan="7">Sin registros de mantenimiento.</td></tr>') +
+        '</tbody></table></div>';
+      els.content.innerHTML = html;
+      if (!canManageMaintenanceStock()) return;
+      const form = document.getElementById('fMaintStock');
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const fd = new FormData(form);
+        const res = await sb.from('maintenance_control').insert({
+          stock_item_id: Number(fd.get('stock_item_id')),
+          cantidad: Number(fd.get('cantidad') || 0),
+          motivo: fd.get('motivo'),
+          estado: 'REPARACION',
+          observaciones: fd.get('observaciones')
+        });
+        if (res.error) {
+          alert(res.error.message);
+          return;
+        }
+        const mv = await sb.from('stock_movements').insert({
+          stock_item_id: Number(fd.get('stock_item_id')),
+          tipo_movimiento: 'reparacion',
+          cantidad: Number(fd.get('cantidad') || 0),
+          origen: 'STOCK_CENTRAL',
+          destino: 'MANTENIMIENTO',
+          motivo: fd.get('motivo'),
+          usuario: perfilActual
+        });
+        if (mv.error) {
+          alert(mv.error.message);
+          return;
+        }
+        showFlash('Ítem enviado a mantenimiento', 'ok');
+        mantenimiento_stock();
+      });
+      document.querySelectorAll('.return-maint').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          const res = await sb.rpc('return_item_from_maintenance', {
+            p_maintenance_id: Number(btn.dataset.id),
+            p_usuario: perfilActual
+          });
+          if (res.error) {
+            alert(res.error.message);
+            return;
+          }
+          showFlash('Ítem retornado a stock central', 'ok');
+          mantenimiento_stock();
+        });
+      });
+    }
+
+    async function archivo_bajas() {
+      els.title.textContent = 'Archivo / bajas';
+      const rows = await safeSelect('v_stock_decommissions_detail', 'fecha_baja', false);
+      let html = '<div class="card"><table><thead><tr><th>Fecha</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Usuario</th><th>Observaciones</th><th>Revertible</th>' + (canManageDecommissions() ? '<th>Acciones</th>' : '') + '</tr></thead><tbody>' +
+        (rows.map(function (r) {
+          return '<tr><td>' + escapeHtml(new Date(r.fecha_baja || Date.now()).toLocaleString('es-AR')) + '</td><td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml(r.codigo_interno || '') + '</div></td><td>' + escapeHtml(r.cantidad) + '</td><td>' + escapeHtml(r.motivo || '') + '</td><td>' + escapeHtml(r.usuario || '') + '</td><td>' + escapeHtml(r.observaciones || '') + '</td><td>' + (r.revertible ? '<span class="pill pill-ok">Sí</span>' : '<span class="pill pill-bad">No</span>') + '</td>' + (canManageDecommissions() ? '<td>' + (r.revertible ? '<button class="secondary revert-baja" data-id="' + r.id + '">Revertir</button>' : '') + '</td>' : '') + '</tr>';
+        }).join('') || '<tr><td colspan="8">Sin bajas registradas.</td></tr>') +
+        '</tbody></table></div>';
+      els.content.innerHTML = html;
+      if (!canManageDecommissions()) return;
+      document.querySelectorAll('.revert-baja').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          const id = Number(btn.dataset.id);
+          const item = rows.find(function (x) { return x.id === id; });
+          if (!item) return;
+          const del = await sb.from('stock_decommissions').delete().eq('id', id);
+          if (del.error) {
+            alert(del.error.message);
+            return;
+          }
+          const mv = await sb.from('stock_movements').insert({
+            stock_item_id: item.stock_item_id,
+            tipo_movimiento: 'reversa_baja',
+            cantidad: item.cantidad,
+            origen: 'ARCHIVO_BAJAS',
+            destino: 'STOCK_CENTRAL',
+            motivo: 'Reversión de baja',
+            usuario: perfilActual
+          });
+          if (mv.error) {
+            alert(mv.error.message);
+            return;
+          }
+          showFlash('Baja revertida, vuelve a stock central', 'ok');
+          archivo_bajas();
+        });
+      });
+    }
+
+    async function inventario_movil() {
+      els.title.textContent = 'Inventario por móvil';
+      const rows = await safeSelect('v_stock_assignments_detail', 'movil', true);
+      els.content.innerHTML = '<div class="card"><table><thead><tr><th>Móvil</th><th>Compartimiento</th><th>Ítem</th><th>Cantidad</th><th>Estado</th></tr></thead><tbody>' +
+        (rows.map(function (r) {
+          return '<tr><td>Móvil ' + escapeHtml(r.movil) + '</td><td>' + escapeHtml(r.compartimiento || '') + '</td><td><strong>' + escapeHtml(r.nombre) + '</strong><div class="small">' + escapeHtml(r.codigo_interno || '') + '</div></td><td>' + escapeHtml(r.cantidad) + '</td><td>' + escapeHtml(r.estado_asignacion) + '</td></tr>';
+        }).join('') || '<tr><td colspan="5">Sin asignaciones.</td></tr>') +
+        '</tbody></table></div>';
+    }
+
+    async function reportes_stock() {
+      els.title.textContent = 'Reportes de stock';
+      const all = await Promise.all([
+        safeSelect('v_stock_general', 'nombre', true),
+        safeSelect('v_stock_assignments_detail', 'movil', true),
+        safeSelect('v_maintenance_control_detail', 'fecha_ingreso', false),
+        safeSelect('v_stock_decommissions_detail', 'fecha_baja', false)
+      ]);
+      const stock = all[0];
+      const assignments = all[1];
+      const maint = all[2];
+      const bajas = all[3];
+      els.content.innerHTML = '<div class="card"><strong>Exportación de reportes</strong><div class="small" style="margin-top:8px;">Descargá reportes del stock maestro, stock asignado a móviles, mantenimiento y bajas.</div><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); margin-top:16px;">' +
+        '<button id="expStockCsv" class="primary" type="button">Exportar stock general CSV</button>' +
+        '<button id="expStockJson" class="secondary" type="button">Exportar stock general JSON</button>' +
+        '<button id="expAsignCsv" class="primary" type="button">Exportar stock por móvil CSV</button>' +
+        '<button id="expAsignJson" class="secondary" type="button">Exportar stock por móvil JSON</button>' +
+        '<button id="expMaintCsv" class="primary" type="button">Exportar mantenimiento CSV</button>' +
+        '<button id="expBajasCsv" class="secondary" type="button">Exportar bajas CSV</button>' +
+        '</div></div>';
+      const stockRows = stock.map(function (r) {
+        return {
+          codigo_interno: r.codigo_interno || '',
+          nombre: r.nombre,
+          categoria: r.categoria || '',
+          marca: r.marca || '',
+          modelo: r.modelo || '',
+          numero_serie: r.numero_serie || '',
+          cantidad_total: r.cantidad_total,
+          asignado_moviles: r.asignado_moviles,
+          en_reparacion: r.en_reparacion,
+          en_baja: r.en_baja,
+          disponible_real: r.disponible_real,
+          stock_minimo: r.stock_minimo,
+          alerta_minimo: r.alerta_minimo
+        };
+      });
+      const assignRows = assignments.map(function (a) {
+        return {
+          fecha_hora: a.fecha_hora,
+          movil: a.movil,
+          compartimiento: a.compartimiento || '',
+          codigo_interno: a.codigo_interno || '',
+          nombre: a.nombre || '',
+          cantidad: a.cantidad,
+          estado_asignacion: a.estado_asignacion
+        };
+      });
+      const maintRows = maint.map(function (m) {
+        return {
+          fecha_ingreso: m.fecha_ingreso,
+          codigo_interno: m.codigo_interno || '',
+          nombre: m.nombre || '',
+          cantidad: m.cantidad,
+          motivo: m.motivo || '',
+          estado: m.estado || '',
+          fecha_retorno: m.fecha_retorno || '',
+          observaciones: m.observaciones || ''
+        };
+      });
+      const bajaRows = bajas.map(function (b) {
+        return {
+          fecha_baja: b.fecha_baja,
+          codigo_interno: b.codigo_interno || '',
+          nombre: b.nombre || '',
+          cantidad: b.cantidad,
+          motivo: b.motivo || '',
+          usuario: b.usuario || '',
+          observaciones: b.observaciones || '',
+          revertible: b.revertible
+        };
+      });
+      document.getElementById('expStockCsv').addEventListener('click', function () {
+        downloadTextFile('stock_general.csv', toCsv(stockRows), 'text/csv;charset=utf-8');
+      });
+      document.getElementById('expStockJson').addEventListener('click', function () {
+        downloadTextFile('stock_general.json', JSON.stringify(stockRows, null, 2), 'application/json');
+      });
+      document.getElementById('expAsignCsv').addEventListener('click', function () {
+        downloadTextFile('stock_por_movil.csv', toCsv(assignRows), 'text/csv;charset=utf-8');
+      });
+      document.getElementById('expAsignJson').addEventListener('click', function () {
+        downloadTextFile('stock_por_movil.json', JSON.stringify(assignRows, null, 2), 'application/json');
+      });
+      document.getElementById('expMaintCsv').addEventListener('click', function () {
+        downloadTextFile('control_mantenimiento.csv', toCsv(maintRows), 'text/csv;charset=utf-8');
+      });
+      document.getElementById('expBajasCsv').addEventListener('click', function () {
+        downloadTextFile('archivo_bajas.csv', toCsv(bajaRows), 'text/csv;charset=utf-8');
+      });
+    }
+
+    async function plano() {
+      els.title.textContent = 'Plano del móvil';
+      const all = await Promise.all([
+        safeSelect('moviles', 'numero', true),
+        safeSelect('v_stock_assignments_detail', 'movil', true),
+        safeSelect('novedades_materiales', 'fecha_hora', false)
+      ]);
+      const movs = all[0];
+      const items = all[1];
+      const novedades = all[2];
+      els.content.innerHTML = '<div class="card"><label class="small">Seleccionar móvil</label><select id="mapMovil" style="margin-top:8px; max-width:240px;">' + movs.map(function (m) {
+        return '<option value="' + escapeHtml(m.numero) + '">Móvil ' + escapeHtml(m.numero) + '</option>';
+      }).join('') + '</select></div><div id="mapWrap" class="mobile-map" style="margin-top:12px;"></div>';
+      const sel = document.getElementById('mapMovil');
+      function renderMap(movil) {
+        const byComp = {};
+        items.filter(function (i) {
+          return String(i.movil) === String(movil) && i.estado_asignacion === 'ACTIVA';
+        }).forEach(function (i) {
+          const comp = i.compartimiento || 'Sin compartimiento';
+          if (!byComp[comp]) byComp[comp] = [];
+          byComp[comp].push(i);
+        });
+        const keys = Object.keys(byComp);
+        document.getElementById('mapWrap').innerHTML = keys.map(function (c) {
+          return '<div class="comp-box"><strong>' + escapeHtml(c) + '</strong><div style="margin-top:8px;">' + byComp[c].map(function (i) {
+            const alerta = novedades.find(function (n) {
+              return String(n.estado || '').toLowerCase() === 'pendiente' && String(n.movil) === String(movil) && String(n.material) === String(i.nombre);
+            });
+            return '<div class="list-row">' + escapeHtml(i.nombre) + ' · Cantidad ' + escapeHtml(i.cantidad) + (alerta ? ' <span class="pill pill-bad">ALERTA</span>' : '') + '</div>';
+          }).join('') + '</div></div>';
+        }).join('') || '<div class="card">Ese móvil no tiene materiales asignados.</div>';
+      }
+      sel.addEventListener('change', function () {
+        renderMap(sel.value);
+      });
+      if (sel.value) renderMap(sel.value);
+    }
+
+    async function diagnostico() {
+      els.title.textContent = 'Diagnóstico';
+      const lines = [];
+      async function run(label, fn) {
+        try {
+          const result = await fn();
+          lines.push('OK - ' + label + (result ? ': ' + result : ''));
+        } catch (err) {
+          lines.push('ERROR - ' + label + ': ' + (err && err.message ? err.message : String(err)));
+        }
+      }
+      await run('Auth', async function () {
+        const res = await sb.auth.getSession();
+        if (res.error) throw res.error;
+        return res.data.session ? 'sesión activa' : 'sin sesión';
+      });
+      await run('v_stock_general', async function () { return String((await safeSelect('v_stock_general', 'id', false, 1)).length); });
+      await run('v_stock_assignments_detail', async function () { return String((await safeSelect('v_stock_assignments_detail', 'id', false, 1)).length); });
+      await run('v_maintenance_control_detail', async function () { return String((await safeSelect('v_maintenance_control_detail', 'id', false, 1)).length); });
+      await run('v_stock_decommissions_detail', async function () { return String((await safeSelect('v_stock_decommissions_detail', 'id', false, 1)).length); });
+      els.content.innerHTML = '<div class="err" style="background:#0f172a;border-color:#334155;color:#e2e8f0;">' + escapeHtml(lines.join('\n')) + '</div>';
+    }
+
+    async function nav(section) {
+      if (!canView(section)) {
+        showFlash('Ese perfil no tiene acceso a esta sección', 'err');
+        return;
+      }
+      activateNav(section);
+      if (section === 'dashboard') return dashboard();
+      if (section === 'inventario_general') return inventario_general();
+      if (section === 'asignaciones') return asignaciones();
+      if (section === 'mantenimiento_stock') return mantenimiento_stock();
+      if (section === 'archivo_bajas') return archivo_bajas();
+      if (section === 'inventario_movil') return inventario_movil();
+      if (section === 'reportes_stock') return reportes_stock();
+      if (section === 'plano') return plano();
+      if (section === 'diagnostico') return diagnostico();
+    }
+
+    async function init() {
+      try {
+        if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+          throw new Error('No cargó la librería de Supabase.');
+        }
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        els.bootMsg.textContent = 'Sistema listo.';
+        authInputs();
+        els.perfil.addEventListener('change', authInputs);
+        els.logout.addEventListener('click', logout);
+        els.logoutTop.addEventListener('click', logout);
+        document.querySelectorAll('.nav').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            nav(btn.dataset.sec);
+          });
+        });
+        els.loginForm.addEventListener('submit', async function (e) {
+          e.preventDefault();
+          perfilActual = els.perfil.value;
+          try {
+            if (perfilActual === 'bomberos') {
+              await loginBomberos();
+            } else {
+              await loginAdmin(els.email.value, els.password.value, perfilActual);
+            }
+            els.login.classList.add('hidden');
+            els.app.classList.remove('hidden');
+            els.userInfo.textContent = perfilActual + ' · permisos según rol';
+            updateNavVisibility();
+            nav('dashboard');
+          } catch (err) {
+            alert(err && err.message ? err.message : 'No se pudo iniciar sesión.');
+          }
+        });
+      } catch (err) {
+        els.bootMsg.textContent = 'Error de inicialización.';
+        showBootError(err && err.message ? err.message : String(err));
+      }
+    }
+
+    window.addEventListener('error', function (event) {
+      showBootError(event && event.message ? event.message : 'Script error');
+    });
+    window.addEventListener('unhandledrejection', function (event) {
+      showBootError(event && event.reason && event.reason.message ? event.reason.message : String((event && event.reason) || 'Promise error'));
+    });
+
+    init();
+  </script>
 </body>
 </html>
