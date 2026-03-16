@@ -3,10 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cuartel Online</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
+  <div id="brandEscudoWrap" class="hidden" style="text-align:center;margin-bottom:10px;">
+<img id="brandEscudo" style="max-height:80px">
+</div>
+
+<div style="font-weight:800;font-size:22px;">
+CUARTEL<span style="color:#ef4444;">ONLINE</span>
+</div>
     body{font-family:Arial,sans-serif;background:#020617;color:#e2e8f0;margin:0}
     .card{background:#0f172a;border:1px solid #334155;border-radius:16px;padding:16px}
     input,select,textarea{width:100%;box-sizing:border-box;background:#1e293b;border:1px solid #334155;color:#fff;border-radius:12px;padding:12px}
@@ -81,6 +84,7 @@
           <button class="nav" data-sec="reportes_stock" type="button">Reportes de stock</button>
           <button class="nav" data-sec="diagnostico" type="button">Diagnóstico</button>
           <button class="nav" data-sec="guardia" type="button">Modo guardia</button>
+          <button class="nav" data-sec="identidad">Identidad institucional</button>
         </div>
         <button id="logout" class="secondary" style="margin-top:20px;width:100%;" type="button">Cerrar sesión</button>
       </aside>
@@ -100,7 +104,7 @@ const SUPABASE_URL='https://nksnxiqteqqlngmpzeew.supabase.co';
 const SUPABASE_KEY='sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
 const PROFILE_EMAILS={administrador:'admin@cuartel.com',materiales:'materiales@cuartel.com',automotores:'automotores@cuartel.com',jefatura:'jefatura@cuartel.com'};
 const VIEW_RULES={
-  administrador:['dashboard','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','respaldo','estadisticas','novedades','reportes_stock','diagnostico','guardia'],
+  administrador:['dashboard','identidad', 'moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','respaldo','estadisticas','novedades','reportes_stock','diagnostico','guardia'],
   materiales:['dashboard','inventario_general','asignaciones','inventario','plano','checklist_materiales','mantenimiento_stock','archivo_bajas','novedades','reportes_stock','estadisticas','diagnostico','guardia'],
   automotores:['dashboard','moviles','plano','fallas','checklist_diario','repuestos','proveedores','estadisticas','diagnostico','guardia'],
   jefatura:['dashboard','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','estadisticas','novedades','reportes_stock','diagnostico','guardia'],
@@ -144,18 +148,92 @@ async function updateRows(table,values,id){const res=await sb.from(table).update
 async function loginAdmin(email,password,profile){const expected=PROFILE_EMAILS[profile];if(!expected)throw new Error('Perfil inválido.');if(String(email||'').trim().toLowerCase()!==expected.toLowerCase())throw new Error('Para el perfil '+profile+' debés usar el email '+expected);const authRes=await sb.auth.signInWithPassword({email:email,password:password});if(authRes.error)throw authRes.error;userActual=authRes.data.user;const roleRes=await sb.from('user_profiles').select('*').eq('user_id',userActual.id).eq('profile_name',profile).limit(1);if(roleRes.error)throw roleRes.error;if(!roleRes.data||!roleRes.data.length)throw new Error('Ese usuario no tiene asignado el perfil seleccionado.')}
 async function loginBomberos(){userActual=null}
 async function logout(){try{if(userActual)await sb.auth.signOut()}catch(e){}location.reload()}
+async function cargarEscudo(){
 
+const wrap = document.getElementById('brandEscudoWrap');
+const img = document.getElementById('brandEscudo');
+
+const res = await sb
+.from('configuracion_cuartel')
+.select('*')
+.eq('clave','escudo_url')
+.limit(1);
+
+const url = res.data?.[0]?.valor;
+
+if(url){
+img.src = url;
+wrap.classList.remove('hidden');
+}
+
+}
+  async function identidad(){
+
+els.title.textContent='Identidad institucional';
+
+const res = await sb
+.from('configuracion_cuartel')
+.select('*')
+.eq('clave','escudo_url')
+.limit(1);
+
+const actual = res.data?.[0]?.valor || '';
+
+els.content.innerHTML = `
+<div class="card">
+
+<strong>Escudo institucional</strong>
+
+<div style="margin-top:10px">
+${actual ? `<img src="${actual}" style="max-height:160px">` : ''}
+</div>
+
+<form id="fEscudo" class="grid" style="margin-top:12px">
+
+<input name="escudo_url"
+placeholder="URL del escudo"
+value="${actual}">
+
+<button class="primary">
+Guardar escudo
+</button>
+
+</form>
+
+</div>
+`;
+
+document.getElementById('fEscudo')
+.addEventListener('submit', async e => {
+
+e.preventDefault();
+
+const fd = new FormData(e.target);
+
+await sb
+.from('configuracion_cuartel')
+.upsert({
+clave:'escudo_url',
+valor:fd.get('escudo_url')
+},{onConflict:'clave'});
+
+showFlash('Escudo guardado','ok');
+
+identidad();
+
+});
+}
 async function dashboard(){
   els.title.textContent='Dashboard';
-  const all=await Promise.all([
-safeSelect('moviles'),
-safeSelect('v_stock_assignments_detail'),
-safeSelect('fallas'),
-safeSelect('repuestos'),
-safeSelect('novedades_materiales'),
-safeSelect('revisiones'),
-safeSelect('controles_materiales'),
-safeSelect('v_stock_general')
+  const all = await Promise.all([
+  safeSelect('moviles'),
+  safeSelect('v_stock_assignments_detail'),
+  safeSelect('fallas'),
+  safeSelect('repuestos'),
+  safeSelect('novedades_materiales'),
+  safeSelect('revisiones'),
+  safeSelect('controles_materiales'),
+  safeSelect('v_stock_general')
 ]);
   const mov=all[0],inv=all[1],fallas=all[2],repuestos=all[3],novedades=all[4],revisiones=all[5],controles=all[6],stockGeneral=all[7];
   const hoy=(new Date()).toDateString();
@@ -457,7 +535,7 @@ async function respaldo(){
   els.title.textContent='Importar / exportar';
   els.content.innerHTML='<div class="card"><div class="toolbar"><button id="btnExport" class="secondary" '+(canBackup()?'':'disabled')+'>Exportar respaldo JSON</button><input id="fileImport" type="file" accept="application/json" '+(canBackup()?'':'disabled')+'></div><div class="small" style="margin-top:12px;">Solo el perfil Administrador puede importar o exportar respaldos.</div></div>';
   if(!canBackup())return;
-  document.getElementById('btnExport').addEventListener('click',async()=>{const all=await Promise.all([safeSelect('moviles'),safeSelect('bomberos'),safeSelect('inventario'),safeSelect('revisiones'),safeSelect('mantenimientos'),safeSelect('fallas'),safeSelect('repuestos'),safeSelect('proveedores'),safeSelect('novedades_materiales'),safeSelect('stock_items'),safeSelect('stock_assignments'),safeSelect('maintenance_control'),safeSelect('stock_decommissions')]);const payload={moviles:all[0],bomberos:all[1],inventario:all[2],revisiones:all[3],mantenimientos:all[4],fallas:all[5],repuestos:all[6],proveedores:all[7],novedades_materiales:all[8],stock_items:all[9],stock_assignments:all[10],maintenance_control:all[11],stock_decommissions:all[12],exported_at:new Date().toISOString()};downloadText('respaldo_cuartel.json',JSON.stringify(payload,null,2),'application/json')});
+  document.getElementById('btnExport').addEventListener('click',async()=>{const all=await Promise.all([safeSelect('moviles'),safeSelect('bomberos'),safeSelect('v_stock_assignments_detail'),safeSelect('revisiones'),safeSelect('mantenimientos'),safeSelect('fallas'),safeSelect('repuestos'),safeSelect('proveedores'),safeSelect('novedades_materiales'),safeSelect('stock_items'),safeSelect('stock_assignments'),safeSelect('maintenance_control'),safeSelect('stock_decommissions')]);const payload={moviles:all[0],bomberos:all[1],inventario:all[2],revisiones:all[3],mantenimientos:all[4],fallas:all[5],repuestos:all[6],proveedores:all[7],novedades_materiales:all[8],stock_items:all[9],stock_assignments:all[10],maintenance_control:all[11],stock_decommissions:all[12],exported_at:new Date().toISOString()};downloadText('respaldo_cuartel.json',JSON.stringify(payload,null,2),'application/json')});
   document.getElementById('fileImport').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;const data=JSON.parse(await file.text());const tables=['moviles','bomberos','inventario','revisiones','mantenimientos','fallas','repuestos','proveedores','novedades_materiales','stock_items','stock_assignments','maintenance_control','stock_decommissions'];for(const table of tables){if(Array.isArray(data[table])&&data[table].length){const res=await sb.from(table).upsert(data[table]);if(res.error)throw res.error}}showFlash('Respaldo importado','ok')});
 }
 
@@ -583,6 +661,7 @@ async function nav(sec){
   if(sec==='reportes_stock')return reportes_stock();
   if(sec==='diagnostico')return diagnostico();
   if(sec==='guardia')return guardia();
+  if(sec==='identidad') return identidad();
 }
 
 function init(){
@@ -600,11 +679,23 @@ function init(){
       perfilActual=els.perfil.value;
       try{
         if(perfilActual==='bomberos'){await loginBomberos()}else{await loginAdmin(els.email.value,els.password.value,perfilActual)}
-        els.login.classList.add('hidden');
+       els.login.classList.add('hidden');
         els.app.classList.remove('hidden');
-        els.userInfo.textContent=canBombero()?'Bomberos · plano del móvil y control diario de materiales':perfilActual+' · permisos según rol';
-        updateNavVisibility();
-        nav(canBombero()?'checklist_materiales':'dashboard')
+
+els.userInfo.textContent =
+canBombero()
+?'Bomberos · plano del móvil y control diario de materiales'
+:perfilActual+' · permisos según rol';
+
+updateNavVisibility();
+
+await cargarEscudo();
+
+nav(
+canBombero()
+?'checklist_materiales'
+:'dashboard'
+);
       }catch(err){alert(err&&err.message?err.message:'No se pudo iniciar sesión.')}
     })
   }catch(err){
