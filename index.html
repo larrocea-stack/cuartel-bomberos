@@ -147,7 +147,16 @@ async function logout(){try{if(userActual)await sb.auth.signOut()}catch(e){}loca
 
 async function dashboard(){
   els.title.textContent='Dashboard';
-  const all=await Promise.all([safeSelect('moviles'),safeSelect('inventario'),safeSelect('fallas'),safeSelect('repuestos'),safeSelect('novedades_materiales'),safeSelect('revisiones'),safeSelect('controles_materiales'),safeSelect('v_stock_general')]);
+  const all=await Promise.all([
+safeSelect('moviles'),
+safeSelect('v_stock_assignments_detail'),
+safeSelect('fallas'),
+safeSelect('repuestos'),
+safeSelect('novedades_materiales'),
+safeSelect('revisiones'),
+safeSelect('controles_materiales'),
+safeSelect('v_stock_general')
+]);
   const mov=all[0],inv=all[1],fallas=all[2],repuestos=all[3],novedades=all[4],revisiones=all[5],controles=all[6],stockGeneral=all[7];
   const hoy=(new Date()).toDateString();
   const enServicio=mov.filter(x=>x.estado==='En servicio').length;
