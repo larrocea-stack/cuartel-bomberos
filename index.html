@@ -106,7 +106,16 @@ const PROFILE_EMAILS={administrador:'admin@cuartel.com',materiales:'materiales@c
 const VIEW_RULES={
   administrador:['dashboard','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','roperia','mantenimiento','respaldo','estadisticas','novedades','reportes_stock','diagnostico','guardia'],
   materiales:['dashboard','inventario_general','asignaciones','inventario','plano','checklist_materiales','mantenimiento_stock','archivo_bajas','novedades','reportes_stock','estadisticas','diagnostico','guardia'],
-  automotores:['dashboard','moviles','fallas','checklist_diario','repuestos','proveedores','mantenimiento','estadisticas','diagnostico','guardia'],
+  automotores:['dashboard',
+  'moviles',
+  'fallas',
+  'checklist_diario',
+  'repuestos',
+  'proveedores',
+  'mantenimiento',
+  'estadisticas',
+  'diagnostico',
+  'guardia'],
   jefatura:['dashboard','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','estadisticas','novedades','reportes_stock','diagnostico','guardia'],
   roperia:['dashboard','roperia','diagnostico'],
   bomberos:['dashboard','inventario','plano','checklist_materiales','diagnostico','guardia']
@@ -125,7 +134,9 @@ function canEditChecklistDiario(){return perfilActual==='administrador'||perfilA
 function canEditChecklistMateriales(){return perfilActual==='administrador'||perfilActual==='materiales'||perfilActual==='bomberos'||perfilActual==='jefatura'}
 function canEditRepuestos(){return perfilActual==='administrador'||perfilActual==='automotores'}
 function canEditProveedores(){return perfilActual==='administrador'||perfilActual==='automotores'}
-function canEditMantenimiento(){return perfilActual==='administrador'}
+function canEditMantenimiento(){
+  return perfilActual==='administrador' || perfilActual==='automotores';
+}
 function canBackup(){return perfilActual==='administrador'}
 function canManageNovedades(){return perfilActual==='administrador'||perfilActual==='materiales'}
 function canEditStockGeneral(){return perfilActual==='administrador'||perfilActual==='materiales'}
