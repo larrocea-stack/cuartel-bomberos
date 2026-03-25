@@ -3,46 +3,54 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cuartel Online - Ezeiza</title>
+  <title>Cuartel Online</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <style>
     body{font-family:Arial,sans-serif;background:#020617;color:#e2e8f0;margin:0}
     .card{background:#0f172a;border:1px solid #334155;border-radius:16px;padding:16px}
     input,select,textarea{width:100%;box-sizing:border-box;background:#1e293b;border:1px solid #334155;color:#fff;border-radius:12px;padding:12px}
+    textarea{min-height:100px;resize:vertical}
     button{cursor:pointer;border:none}
     .primary{background:#b91c1c;color:#fff;padding:12px;border-radius:12px;font-weight:700}
     .secondary{background:#1e293b;color:#fff;padding:10px 12px;border-radius:10px}
     .danger{background:#7f1d1d;color:#fff;padding:10px 12px;border-radius:10px}
-    .nav{background:#111827;color:#e2e8f0;padding:10px 12px;border-radius:10px;text-align:left;margin-bottom:4px;width:100%}
+    .nav{background:#111827;color:#e2e8f0;padding:10px 12px;border-radius:10px;text-align:left}
     .nav.active{background:#991b1b;color:#fff}
     .hidden{display:none!important}.grid{display:grid;gap:12px}.small{font-size:12px;color:#94a3b8}
-    .list-row{padding:10px 0;border-bottom:1px solid #334155}
-    .ok{background:#052e16;border:1px solid #166534;color:#bbf7d0;border-radius:12px;padding:12px}
-    .err{background:#450a0a;border:1px solid #7f1d1d;color:#fecaca;border-radius:12px;padding:12px}
-    .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px}
-    .pill-ok{background:#052e16;color:#bbf7d0}.pill-warn{background:#78350f;color:#fde68a}.pill-bad{background:#450a0a;color:#fecaca}
-    table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #334155;text-align:left}th{color:#94a3b8;font-size:12px;text-transform:uppercase}
-    .status-big{border-radius:18px;padding:18px;border:1px solid #334155}
-    .status-service{background:#052e16;border-color:#166534}.status-maint{background:#3b2a05;border-color:#92400e}.status-out{background:#450a0a;border-color:#7f1d1d}
-    @media (max-width:900px){.layout{display:block!important}aside{width:auto!important;border-right:none!important}}
+    .list-row{padding:10px 0;border-bottom:1px solid #334155}.err{background:#450a0a;border:1px solid #7f1d1d;color:#fecaca;border-radius:12px;padding:12px;white-space:pre-wrap}
+    .ok{background:#052e16;border:1px solid #166534;color:#bbf7d0;border-radius:12px;padding:12px}.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px}
+    .pill-ok{background:#052e16;color:#bbf7d0}.pill-warn{background:#78350f;color:#fde68a}.pill-bad{background:#450a0a;color:#fecaca}.pill-info{background:#172554;color:#bfdbfe}
+    table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #334155;text-align:left;vertical-align:top}th{color:#94a3b8;font-size:12px;text-transform:uppercase}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap}.mobile-map{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.comp-box{background:#111827;border:1px solid #334155;border-radius:14px;padding:12px}
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.hero-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+    .hero-number{font-size:34px;font-weight:800;line-height:1;margin-top:8px}.hero-label{font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
+    .status-big,.guardia-card{border-radius:18px;padding:18px;border:1px solid #334155}.status-service{background:#052e16;border-color:#166534}.status-maint{background:#3b2a05;border-color:#92400e}.status-out{background:#450a0a;border-color:#7f1d1d}
+    .guardia-wrap{min-height:100vh;background:#020617;color:#e2e8f0;padding:20px}.guardia-header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}.guardia-title{font-size:34px;font-weight:800;letter-spacing:.04em}.guardia-sub{color:#94a3b8;font-size:14px}
+    .guardia-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}.guardia-number{font-size:56px;font-weight:900;line-height:1;margin-top:10px}.guardia-label{font-size:13px;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em}
+    .guardia-list{margin-top:18px;display:grid;grid-template-columns:1.1fr .9fr;gap:16px}.guardia-item{padding:12px 0;border-bottom:1px solid #334155;font-size:18px}.guardia-item:last-child{border-bottom:none}.guardia-badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}.guardia-danger{background:#7f1d1d;color:#fecaca}.guardia-warn{background:#92400e;color:#fde68a}.guardia-ok{background:#166534;color:#bbf7d0}.guardia-footer{margin-top:16px;color:#94a3b8;font-size:13px}
+    @media (max-width:900px){.layout{display:block!important}aside{width:auto!important;border-right:none!important;border-bottom:1px solid #334155!important}.guardia-list{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <div id="login" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
     <div class="card" style="width:100%;max-width:420px;">
       <h1 style="font-size:32px;font-weight:800;margin:0 0 8px 0;">CUARTEL<span style="color:#ef4444;">ONLINE</span></h1>
+      <p class="small" style="margin:0 0 16px 0;">Sistema con perfiles y control operativo</p>
+      <div id="bootMsg" class="small" style="margin-bottom:12px;">Cargando sistema…</div>
+      <div id="bootErr" class="err hidden" style="margin-bottom:12px;"></div>
       <form id="loginForm" class="grid">
         <select id="perfil">
           <option value="administrador">Administrador</option>
           <option value="materiales">Encargado de materiales</option>
           <option value="automotores">Encargado de automotores</option>
-          <option value="roperia">Ropería</option>
           <option value="jefatura">Jefatura</option>
+          <option value="roperia">Ropería</option>
+          <option value="bomberos">Bomberos</option>
         </select>
-        <input id="email" type="email" placeholder="Email" required />
-        <input id="password" type="password" placeholder="Contraseña" required />
+        <input id="email" type="email" placeholder="Email" />
+        <input id="password" type="password" placeholder="Contraseña" />
         <button type="submit" class="primary">Ingresar</button>
       </form>
     </div>
@@ -50,257 +58,677 @@
 
   <div id="app" class="hidden">
     <div class="layout" style="display:flex;min-height:100vh;">
-      <aside style="width:280px;background:#020617;border-right:1px solid #334155;padding:16px;">
-        <div style="font-weight:800;font-size:22px;margin-bottom:20px;">CUARTEL<span style="color:#ef4444;">ONLINE</span></div>
+      <aside style="width:300px;background:#020617;border-right:1px solid #334155;padding:16px;box-sizing:border-box;">
+<div style="font-weight:800;font-size:22px;margin-bottom:8px;">CUARTEL<span style="color:#ef4444;">ONLINE</span></div>
         <div id="userInfo" class="small" style="margin-bottom:16px;"></div>
-        <nav class="grid" id="navContainer"></nav>
-        <button id="logout" class="secondary" style="margin-top:20px;width:100%;">Cerrar sesión</button>
+        <div class="grid">
+          <button class="nav active" data-sec="dashboard" type="button">Dashboard</button>
+          <button class="nav" data-sec="moviles" type="button">Móviles</button>
+          <button class="nav" data-sec="bomberos" type="button">Bomberos</button>
+          <button class="nav" data-sec="inventario_general" type="button">Inventario general</button>
+          <button class="nav" data-sec="asignaciones" type="button">Asignaciones</button>
+          <button class="nav" data-sec="inventario" type="button">Inventario por móvil</button>
+          <button class="nav" data-sec="plano" type="button">Plano del móvil</button>
+          <button class="nav" data-sec="fallas" type="button">Reporte de fallas</button>
+          <button class="nav" data-sec="checklist_diario" type="button">Checklist diario</button>
+          <button class="nav" data-sec="checklist_materiales" type="button">Control diario materiales</button>
+          <button class="nav" data-sec="mantenimiento_stock" type="button">Control de mantenimiento</button>
+          <button class="nav" data-sec="archivo_bajas" type="button">Archivo / bajas</button>
+          <button class="nav" data-sec="repuestos" type="button">Repuestos</button>
+          <button class="nav" data-sec="proveedores" type="button">Proveedores</button>
+          <button class="nav" data-sec="roperia" type="button">Ropería</button>
+          <button class="nav" data-sec="mantenimiento" type="button">Bitácora</button>
+          <button class="nav" data-sec="respaldo" type="button">Importar / exportar</button>
+          <button class="nav" data-sec="estadisticas" type="button">Estadísticas</button>
+          <button class="nav" data-sec="novedades" type="button">Novedades de materiales</button>
+          <button class="nav" data-sec="reportes_stock" type="button">Reportes de stock</button>
+          <button class="nav" data-sec="diagnostico" type="button">Diagnóstico</button>
+          <button class="nav" data-sec="guardia" type="button">Modo guardia</button>
+        </div>
+        <button id="logout" class="secondary" style="margin-top:20px;width:100%;" type="button">Cerrar sesión</button>
       </aside>
 
-      <main style="flex:1;padding:20px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+      <main style="flex:1;padding:20px;box-sizing:border-box;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
           <h2 id="title" style="margin:0;">Dashboard</h2>
+          <button id="logoutTop" class="secondary" type="button">Salir</button>
         </div>
         <div id="flash" class="hidden" style="margin-top:12px;"></div>
-        <div id="content" style="margin-top:20px;"></div>
+        <div id="content" style="margin-top:16px;"></div>
       </main>
     </div>
   </div>
 
 <script>
-// CONFIGURACIÓN SUPABASE
 const SUPABASE_URL='https://nksnxiqteqqlngmpzeew.supabase.co';
 const SUPABASE_KEY='sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// REGLAS DE VISTA SEGÚN TU PEDIDO
-const VIEW_RULES = {
-  administrador: ['dashboard','moviles','bomberos','inventario_general','asignaciones','mantenimiento','reportes_stock'],
-  materiales: ['dashboard','inventario_general','asignaciones','reportes_stock'],
-  automotores: ['dashboard','moviles','mantenimiento'], // Se agregó Bitácora (mantenimiento)
-  roperia: ['dashboard','inventario_roperia'],
-  jefatura: ['dashboard','moviles','bomberos','inventario_general','asignaciones','mantenimiento','reportes_stock']
+const PROFILE_EMAILS={administrador:'admin@cuartel.com',materiales:'materiales@cuartel.com',automotores:'automotores@cuartel.com',jefatura:'jefatura@cuartel.com'};
+const VIEW_RULES={
+  administrador:['dashboard','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','roperia','mantenimiento','respaldo','estadisticas','novedades','reportes_stock','diagnostico','guardia'],
+  materiales:['dashboard','inventario_general','asignaciones','inventario','plano','checklist_materiales','mantenimiento_stock','archivo_bajas','novedades','reportes_stock','estadisticas','diagnostico','guardia'],
+  automotores:['dashboard','moviles','fallas','checklist_diario','repuestos','proveedores','mantenimiento','estadisticas','diagnostico','guardia'],
+  jefatura:['dashboard','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','estadisticas','novedades','reportes_stock','diagnostico','guardia'],
+  roperia:['dashboard','roperia','diagnostico'],
+  bomberos:['dashboard','inventario','plano','checklist_materiales','diagnostico','guardia']
 };
 
-let perfilActual = null;
-const els = {
-  login: document.getElementById('login'),
-  app: document.getElementById('app'),
-  content: document.getElementById('content'),
-  title: document.getElementById('title'),
-  flash: document.getElementById('flash'),
-  nav: document.getElementById('navContainer')
-};
+const els={login:document.getElementById('login'),app:document.getElementById('app'),loginForm:document.getElementById('loginForm'),perfil:document.getElementById('perfil'),email:document.getElementById('email'),password:document.getElementById('password'),bootMsg:document.getElementById('bootMsg'),bootErr:document.getElementById('bootErr'),userInfo:document.getElementById('userInfo'),title:document.getElementById('title'),content:document.getElementById('content'),flash:document.getElementById('flash'),logout:document.getElementById('logout'),logoutTop:document.getElementById('logoutTop')};
+let sb=null,perfilActual=null,userActual=null;
 
-// --- UTILIDADES ---
-function showFlash(msg,type){
-  els.flash.className = type==='ok'?'ok':'err';
-  els.flash.textContent = msg;
-  els.flash.classList.remove('hidden');
-  setTimeout(()=>els.flash.classList.add('hidden'),3000);
-}
+function canView(s){return (VIEW_RULES[perfilActual]||[]).includes(s)}
+function canAdmin(){return perfilActual==='administrador'}
+function canBombero(){return perfilActual==='bomberos'}
+function canEditMoviles(){return perfilActual==='administrador'||perfilActual==='automotores'}
+function canEditBomberos(){return perfilActual==='administrador'}
+function canEditFallas(){return perfilActual==='administrador'||perfilActual==='automotores'}
+function canEditChecklistDiario(){return perfilActual==='administrador'||perfilActual==='automotores'||perfilActual==='jefatura'}
+function canEditChecklistMateriales(){return perfilActual==='administrador'||perfilActual==='materiales'||perfilActual==='bomberos'||perfilActual==='jefatura'}
+function canEditRepuestos(){return perfilActual==='administrador'||perfilActual==='automotores'}
+function canEditProveedores(){return perfilActual==='administrador'||perfilActual==='automotores'}
+function canEditMantenimiento(){return perfilActual==='administrador'}
+function canBackup(){return perfilActual==='administrador'}
+function canManageNovedades(){return perfilActual==='administrador'||perfilActual==='materiales'}
+function canEditStockGeneral(){return perfilActual==='administrador'||perfilActual==='materiales'}
+function canEditRoperia(){return perfilActual==='administrador'||perfilActual==='roperia'}
 
-function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+function showBootError(msg){els.bootErr.textContent=msg;els.bootErr.classList.remove('hidden')}
+function showFlash(msg,type){els.flash.className=type==='ok'?'ok':'err';els.flash.textContent=msg;els.flash.classList.remove('hidden');setTimeout(()=>els.flash.classList.add('hidden'),3200)}
+function authInputs(){const b=els.perfil.value==='bomberos';els.email.classList.toggle('hidden',b);els.password.classList.toggle('hidden',b)}
+function activateNav(sec){document.querySelectorAll('.nav').forEach(btn=>btn.classList.remove('active'));const btn=document.querySelector('.nav[data-sec="'+sec+'"]');if(btn)btn.classList.add('active')}
+function updateNavVisibility(){document.querySelectorAll('.nav').forEach(btn=>btn.classList.toggle('hidden',!canView(btn.dataset.sec)))}
+function card(label,value){return '<div class="card"><div class="small">'+escapeHtml(label)+'</div><div style="font-size:28px;font-weight:800;">'+escapeHtml(value)+'</div></div>'}
+function statusPill(status){const s=String(status||'').trim().toLowerCase();if(s==='en servicio')return '<span class="pill pill-ok">En servicio</span>';if(s==='en mantenimiento')return '<span class="pill pill-warn">En mantenimiento</span>';if(s==='fuera de servicio')return '<span class="pill pill-bad">Fuera de servicio</span>';return '<span class="pill pill-bad">'+escapeHtml(status||'Sin estado')+'</span>'}
+function severityPill(sev){const s=String(sev||'').trim().toLowerCase();if(s==='leve')return '<span class="pill pill-ok">Leve</span>';if(s==='moderada')return '<span class="pill pill-warn">Moderada</span>';return '<span class="pill pill-bad">'+escapeHtml(sev||'Crítica')+'</span>'}
+function csv(rows){if(!rows||!rows.length)return '';const headers=Object.keys(rows[0]);const esc=(v)=>'"'+String(v??'').replace(/"/g,'""')+'"';return [headers.join(',')].concat(rows.map(r=>headers.map(k=>esc(r[k])).join(','))).join('\n')}
+function downloadText(filename,content,type){const blob=new Blob([content],{type:type||'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)}
 
-async function safeSelect(table){
-  const {data, error} = await sb.from(table).select('*');
-  if(error) { console.error(error); return []; }
-  return data;
-}
+async function safeSelect(table,orderBy,ascending,limit){let q=sb.from(table).select('*');if(orderBy)q=q.order(orderBy,{ascending:!!ascending});if(limit)q=q.limit(limit);const res=await q;if(res.error)throw res.error;return res.data||[]}
+async function upsertRow(table,row){const res=await sb.from(table).upsert(row);if(res.error)throw res.error}
+async function insertRow(table,row){const res=await sb.from(table).insert(row);if(res.error)throw res.error}
+async function deleteRow(table,id){const res=await sb.from(table).delete().eq('id',id);if(res.error)throw res.error}
+async function updateRows(table,values,id){const res=await sb.from(table).update(values).eq('id',id);if(res.error)throw res.error}
+async function loginAdmin(email,password,profile){const expected=PROFILE_EMAILS[profile];if(!expected)throw new Error('Perfil inválido.');if(String(email||'').trim().toLowerCase()!==expected.toLowerCase())throw new Error('Para el perfil '+profile+' debés usar el email '+expected);const authRes=await sb.auth.signInWithPassword({email:email,password:password});if(authRes.error)throw authRes.error;userActual=authRes.data.user;const roleRes=await sb.from('user_profiles').select('*').eq('user_id',userActual.id).eq('profile_name',profile).limit(1);if(roleRes.error)throw roleRes.error;if(!roleRes.data||!roleRes.data.length)throw new Error('Ese usuario no tiene asignado el perfil seleccionado.')}
+async function loginBomberos(){userActual=null}
+async function logout(){try{if(userActual)await sb.auth.signOut()}catch(e){}location.reload()}
 
-// --- NAVEGACIÓN DINÁMICA ---
-function renderNav(){
-  const rules = VIEW_RULES[perfilActual] || [];
-  const links = [
-    {id:'dashboard', label:'Dashboard'},
-    {id:'moviles', label:'Móviles'},
-    {id:'bomberos', label:'Bomberos'},
-    {id:'inventario_general', label:'Inventario Materiales'},
-    {id:'asignaciones', label:'Asignaciones'},
-    {id:'inventario_roperia', label:'Inventario Ropería'},
-    {id:'mantenimiento', label:'Bitácora'},
-    {id:'reportes_stock', label:'Reportes Excel'}
-  ];
-  
-  els.nav.innerHTML = links
-    .filter(l => rules.includes(l.id))
-    .map(l => `<button class="nav" onclick="navigate('${l.id}')" data-sec="${l.id}">${l.label}</button>`)
-    .join('');
-}
+async function cargarEscudo(){return;}
 
-function navigate(sec){
-  document.querySelectorAll('.nav').forEach(b => b.classList.toggle('active', b.dataset.sec === sec));
-  if(sec === 'dashboard') renderDashboard();
-  else if(sec === 'moviles') renderMoviles();
-  else if(sec === 'inventario_general') renderInventarioGeneral();
-  else if(sec === 'asignaciones') renderAsignaciones();
-  else if(sec === 'reportes_stock') renderReportes();
-  else if(sec === 'inventario_roperia') els.content.innerHTML = '<div class="card">Módulo de Ropería (En desarrollo)</div>';
-  else els.content.innerHTML = '<div class="card">Sección: ' + sec + '</div>';
-}
+async function dashboard(){
+  els.title.textContent='Dashboard';
+  const all=await Promise.all([safeSelect('moviles'),safeSelect('v_stock_assignments_detail'),safeSelect('fallas'),safeSelect('repuestos'),safeSelect('novedades_materiales'),safeSelect('revisiones'),safeSelect('controles_materiales'),safeSelect('v_stock_general')]);
+  const mov=all[0],inv=all[1],fallas=all[2],repuestos=all[3],novedades=all[4],revisiones=all[5],controles=all[6],stockGeneral=all[7];
+  const hoy=(new Date()).toDateString();
+  const enServicio=mov.filter(x=>x.estado==='En servicio').length;
+  const enMantenimiento=mov.filter(x=>x.estado==='En mantenimiento').length;
+  const fueraServicio=mov.filter(x=>x.estado==='Fuera de servicio').length;
+  const fallasCriticas=fallas.filter(f=>String(f.tipo_falla||'').toLowerCase().indexOf('crit')>=0);
+  const repuestosCriticos=repuestos.filter(r=>Number(r.stock_actual||0)<=Number(r.stock_minimo||0));
+  const alertasMateriales=novedades.filter(n=>String(n.estado||'').toLowerCase()==='pendiente');
+  const alertasStock=stockGeneral.filter(s=>s.alerta_minimo===true && !s.sin_stock_minimo);
+  const checklistHoy=revisiones.filter(r=>r.fecha_hora&&new Date(r.fecha_hora).toDateString()===hoy).length;
+  const controlesHoy=controles.filter(r=>r.fecha_hora&&new Date(r.fecha_hora).toDateString()===hoy).length;
+  const movilesNoOperativos=mov.filter(x=>x.estado==='En mantenimiento'||x.estado==='Fuera de servicio');
 
-// --- VISTAS ---
+  let alertHtml='';
+  alertHtml+=alertasMateriales.slice(0,6).map(n=>'<div class="list-row"><strong>Móvil '+escapeHtml(n.movil||'')+'</strong> · '+escapeHtml(n.material||'')+' · <span class="pill pill-bad">'+escapeHtml(n.tipo_novedad||'Novedad')+'</span></div>').join('');
+  alertHtml+=fallasCriticas.slice(0,4).map(f=>'<div class="list-row"><strong>Móvil '+escapeHtml(f.movil||'')+'</strong> · '+escapeHtml(f.componente||'')+' · <span class="pill pill-bad">Crítica</span></div>').join('');
+  alertHtml+=alertasStock.slice(0,4).map(s=>'<div class="list-row"><strong>'+escapeHtml(s.nombre||'')+'</strong> · disponible '+escapeHtml(s.disponible_real)+' / mínimo '+escapeHtml(s.stock_minimo)+' <span class="pill pill-bad">Stock bajo</span></div>').join('');
+  if(!alertHtml)alertHtml='<div class="list-row">Sin alertas activas.</div>';
 
-async function renderDashboard(){
-  els.title.textContent = 'Dashboard';
-  const moviles = await safeSelect('moviles');
-  const novedades = await safeSelect('novedades_materiales');
-
-  // CASO AUTOMOTORES: Solo móviles fuera de servicio
-  if(perfilActual === 'automotores'){
-    const rotos = moviles.filter(m => m.estado !== 'En servicio');
-    els.content.innerHTML = `
-      <div class="card">
-        <h3 style="margin-bottom:12px">Móviles Fuera de Servicio / Mantenimiento</h3>
-        <table>
-          <thead><tr><th>Móvil</th><th>Estado</th></tr></thead>
-          <tbody>
-            ${rotos.map(m => `<tr><td><strong>${m.numero}</strong></td><td><span class="pill pill-bad">${m.estado}</span></td></tr>`).join('') || '<tr><td>Todos operativos</td></tr>'}
-          </tbody>
-        </table>
-      </div>`;
-    return;
+  let bottomHtml='';
+  if(perfilActual==='automotores'){
+    bottomHtml='<div class="card"><strong>Móviles fuera de servicio o en mantenimiento</strong><table style="margin-top:12px;"><thead><tr><th>Móvil</th><th>Patente</th><th>Tipo</th><th>Estado</th></tr></thead><tbody>'+(
+      movilesNoOperativos.map(m=>'<tr><td><strong>'+escapeHtml(m.numero)+'</strong></td><td>'+escapeHtml(m.patente||'')+'</td><td>'+escapeHtml(m.tipo||'')+'</td><td>'+statusPill(m.estado)+'</td></tr>').join('')||'<tr><td colspan="4">No hay móviles en mantenimiento o fuera de servicio.</td></tr>'
+    )+'</tbody></table></div>';
+  }else if(perfilActual==='materiales'){
+    bottomHtml='<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:14px; align-items:start;">'+
+      '<div class="card"><strong>Novedades pendientes de materiales</strong><div style="margin-top:10px;">'+(
+        alertasMateriales.map(n=>'<div class="list-row"><strong>'+escapeHtml(n.material||'')+'</strong><div class="small">Móvil: '+escapeHtml(n.movil||'')+' · Ubicación: '+escapeHtml(n.compartimiento||'')+'</div><div class="small">'+escapeHtml(n.detalle||'')+'</div></div>').join('')||'Sin novedades pendientes.'
+      )+'</div></div>'+
+      '<div class="card"><strong>Resumen operativo</strong><div style="margin-top:10px;">'+
+      '<div class="list-row">Inventario asignado: <strong>'+inv.length+'</strong></div>'+
+      '<div class="list-row">Novedades pendientes: <strong>'+alertasMateriales.length+'</strong></div>'+
+      '<div class="list-row">Alertas stock general: <strong>'+alertasStock.length+'</strong></div>'+
+      '<div class="list-row">Controles de materiales hoy: <strong>'+controlesHoy+'</strong></div>'+
+      '</div></div></div>';
+  }else{
+    bottomHtml='<div class="grid" style="grid-template-columns:1.1fr .9fr; margin-top:14px; align-items:start;">'+
+      '<div class="card"><strong>Centro de alertas</strong><div style="margin-top:10px;">'+alertHtml+'</div></div>'+
+      '<div class="card"><strong>Resumen operativo</strong><div style="margin-top:10px;">'+
+        '<div class="list-row">Total de móviles: <strong>'+mov.length+'</strong></div>'+
+        '<div class="list-row">Móviles operativos: <strong>'+enServicio+'</strong></div>'+
+        '<div class="list-row">Materiales observados: <strong>'+alertasMateriales.length+'</strong></div>'+
+        '<div class="list-row">Fallas registradas: <strong>'+fallas.length+'</strong></div>'+
+        '<div class="list-row">Repuestos bajo mínimo: <strong>'+repuestosCriticos.length+'</strong></div>'+
+        '<div class="list-row">Último checklist diario: <strong>'+(revisiones[0]?escapeHtml(new Date(revisiones[0].fecha_hora||Date.now()).toLocaleString('es-AR')):'Sin datos')+'</strong></div>'+
+      '</div></div>'+
+    '</div>';
   }
 
-  // CASO GENERAL / MATERIALES
-  const pendientes = novedades.filter(n => n.estado === 'Pendiente');
-  els.content.innerHTML = `
-    <div class="grid" style="grid-template-columns: repeat(3, 1fr)">
-      <div class="status-big status-service">Servicio: ${moviles.filter(m=>m.estado==='En servicio').length}</div>
-      <div class="status-big status-maint">Mantenimiento: ${moviles.filter(m=>m.estado==='En mantenimiento').length}</div>
-      <div class="status-big status-out">Fuera de Servicio: ${moviles.filter(m=>m.estado==='Fuera de servicio').length}</div>
-    </div>
-    <div class="card" style="margin-top:20px">
-      <h3 style="margin-bottom:12px">Novedades Críticas (Materiales)</h3>
-      ${pendientes.map(n => `
-        <div class="list-row">
-          <strong>${n.material}</strong> - Móvil: ${n.movil || 'Gral'} - Ubicación: ${n.ubicacion || '-'}
-          <span class="pill pill-bad">${n.tipo_novedad}</span>
-        </div>
-      `).join('') || 'Sin novedades pendientes'}
-    </div>`;
+  els.content.innerHTML='<div class="hero-grid">'+
+    '<div class="status-big status-service"><div class="hero-label">Móviles en servicio</div><div class="hero-number">'+enServicio+'</div><div class="small">Operativos para salida</div></div>'+
+    '<div class="status-big status-maint"><div class="hero-label">En mantenimiento</div><div class="hero-number">'+enMantenimiento+'</div><div class="small">Requieren intervención</div></div>'+
+    '<div class="status-big status-out"><div class="hero-label">Fuera de servicio</div><div class="hero-number">'+fueraServicio+'</div><div class="small">No disponibles</div></div>'+
+  '</div>'+
+  '<div class="stat-grid" style="margin-top:14px;">'+
+    card('Inventario por móvil',inv.length)+
+    card('Fallas críticas',fallasCriticas.length)+
+    card('Repuestos críticos',repuestosCriticos.length)+
+    card('Alertas materiales',alertasMateriales.length)+
+    card('Alertas stock general',alertasStock.length)+
+    card('Checklist hoy',checklistHoy)+
+    card('Controles materiales hoy',controlesHoy)+
+  '</div>'+bottomHtml;
 }
 
-async function renderMoviles(){
-  els.title.textContent = 'Gestión de Móviles';
-  const data = await safeSelect('moviles');
-  const canEdit = (perfilActual === 'administrador' || perfilActual === 'automotores');
-
-  let html = '';
-  if(canEdit){
-    html += `
-    <div class="card" style="margin-bottom:20px">
-      <form id="fMovil" class="grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr))">
-        <input type="hidden" name="id">
-        <input name="numero" placeholder="N° Móvil" required>
-        <select name="estado">
-          <option value="En servicio">En servicio</option>
-          <option value="En mantenimiento">En mantenimiento</option>
-          <option value="Fuera de servicio">Fuera de servicio</option>
-        </select>
-        <button class="primary" type="submit">Guardar</button>
-      </form>
-    </div>`;
+async function moviles(){
+  els.title.textContent='Móviles';
+  const data=await safeSelect('moviles');
+  let html='';
+  if(canEditMoviles()){
+    html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de móvil</strong><form id="fMovil" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="numero" placeholder="Número de móvil" required><input name="patente" placeholder="Patente" required><input name="modelo" placeholder="Modelo" required><input name="tipo" placeholder="Tipo" required><input name="agua" type="number" placeholder="Capacidad de agua"><select name="estado"><option>En servicio</option><option>En mantenimiento</option><option>Fuera de servicio</option></select><button class="primary" type="submit">Guardar móvil</button></form></div>'
   }
+  html+='<div class="card"><table><thead><tr><th>Móvil</th><th>Patente</th><th>Modelo</th><th>Tipo</th><th>Agua</th><th>Estado</th>'+(canEditMoviles()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(data.map(x=>'<tr><td><strong>'+escapeHtml(x.numero)+'</strong></td><td>'+escapeHtml(x.patente)+'</td><td>'+escapeHtml(x.modelo)+'</td><td>'+escapeHtml(x.tipo)+'</td><td>'+escapeHtml(x.agua||0)+' L</td><td>'+statusPill(x.estado)+'</td>'+(canEditMoviles()?'<td><button class="secondary edit-movil" data-id="'+x.id+'">Editar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin móviles cargados.</td></tr>')+'</tbody></table></div>';
+  els.content.innerHTML=html;
+  if(!canEditMoviles())return;
+  const form=document.getElementById('fMovil');
+  form.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const fd=new FormData(form);
+    const id=fd.get('id');
+    const row={numero:fd.get('numero'),patente:fd.get('patente'),modelo:fd.get('modelo'),tipo:fd.get('tipo'),agua:Number(fd.get('agua')||0),estado:fd.get('estado')};
+    let res;
+    if(id){
+      res=await sb.from('moviles').update(row).eq('id',Number(id));
+    }else{
+      res=await sb.from('moviles').insert(row);
+    }
+    if(res.error){alert(res.error.message);return;}
+    showFlash('Móvil guardado','ok');
+    moviles();
+  });
+  document.querySelectorAll('.edit-movil').forEach(btn=>btn.addEventListener('click',()=>{
+    const item=data.find(x=>String(x.id)===btn.dataset.id);
+    form.elements.id.value=item.id;
+    form.elements.numero.value=item.numero||'';
+    form.elements.patente.value=item.patente||'';
+    form.elements.modelo.value=item.modelo||'';
+    form.elements.tipo.value=item.tipo||'';
+    form.elements.agua.value=item.agua||0;
+    form.elements.estado.value=item.estado||'En servicio';
+  }));
+}
 
-  html += `<div class="card"><table><thead><tr><th>Móvil</th><th>Estado</th>${canEdit?'<th>Acción</th>':''}</tr></thead><tbody>`;
-  html += data.map(m => `
-    <tr>
-      <td><strong>${m.numero}</strong></td>
-      <td><span class="pill ${m.estado==='En servicio'?'pill-ok':'pill-bad'}">${m.estado}</span></td>
-      ${canEdit ? `<td><button class="secondary" onclick="editMovil(${m.id}, '${m.numero}', '${m.estado}')">Editar</button></td>` : ''}
-    </tr>`).join('');
-  html += `</tbody></table></div>`;
-  
-  els.content.innerHTML = html;
+async function bomberos(){
+  els.title.textContent='Bomberos';
+  const data=await safeSelect('bomberos');
+  let html='';
+  if(canEditBomberos()){
+    html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de bombero</strong><form id="fBombero" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="jerarquia" placeholder="Jerarquía" required><input name="nombre" placeholder="Nombre" required><input name="apellido" placeholder="Apellido" required><input name="legajo" placeholder="Legajo" required><button class="primary" type="submit">Guardar bombero</button></form></div>'
+  }
+  html+='<div class="card"><table><thead><tr><th>Jerarquía</th><th>Apellido y nombre</th><th>Legajo</th>'+(canEditBomberos()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(data.map(x=>'<tr><td>'+escapeHtml(x.jerarquia)+'</td><td><strong>'+escapeHtml(x.apellido)+', '+escapeHtml(x.nombre)+'</strong></td><td>'+escapeHtml(x.legajo)+'</td>'+(canEditBomberos()?'<td><button class="secondary edit-bombero" data-id="'+x.id+'">Editar</button> <button class="danger del-bombero" data-id="'+x.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="4">Sin bomberos cargados.</td></tr>')+'</tbody></table></div>';
+  els.content.innerHTML=html;
+  if(!canEditBomberos())return;
+  const form=document.getElementById('fBombero');
+  form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={jerarquia:fd.get('jerarquia'),nombre:fd.get('nombre'),apellido:fd.get('apellido'),legajo:fd.get('legajo')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('bomberos',row);showFlash('Bombero guardado','ok');bomberos()});
+  document.querySelectorAll('.edit-bombero').forEach(btn=>btn.addEventListener('click',()=>{const item=data.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.jerarquia.value=item.jerarquia||'';form.elements.nombre.value=item.nombre||'';form.elements.apellido.value=item.apellido||'';form.elements.legajo.value=item.legajo||''}));
+  document.querySelectorAll('.del-bombero').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar bombero?'))return;await deleteRow('bomberos',Number(btn.dataset.id));showFlash('Bombero eliminado','ok');bomberos()}));
+}
 
-  if(canEdit){
-    document.getElementById('fMovil').onsubmit = async (e) => {
+async function inventario_general(){
+  els.title.textContent='Inventario general';
+  const vista=await safeSelect('v_stock_general','nombre',true);
+  const maestro=await safeSelect('stock_items','nombre',true);
+  let html='';
+  if(canEditStockGeneral()){
+    html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de stock maestro</strong><form id="fStockMaster" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="codigo_interno" placeholder="Código interno"><input name="nombre" placeholder="Nombre" required><input name="categoria" placeholder="Categoría"><input name="marca" placeholder="Marca"><input name="modelo" placeholder="Modelo"><input name="numero_serie" placeholder="N° serie"><input name="cantidad_total" type="number" min="0" placeholder="Cantidad total" required><input name="stock_minimo" type="number" min="0" placeholder="Stock mínimo"><label style="display:flex;align-items:center;gap:8px;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:12px;"><input name="sin_stock_minimo" type="checkbox" style="width:auto;"> Sin stock mínimo</label><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar ítem</button></form></div>'
+  }
+  html+='<div class="card"><table><thead><tr><th>Código</th><th>Ítem</th><th>Total</th><th>Asignado</th><th>Disponible</th><th>Reparación</th><th>Baja</th><th>Mínimo</th><th>Alerta</th>'+(canEditStockGeneral()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(vista.map(r=>'<tr><td>'+escapeHtml(r.codigo_interno||'')+'</td><td><strong>'+escapeHtml(r.nombre)+'</strong><div class="small">'+escapeHtml([r.categoria,r.marca,r.modelo].filter(Boolean).join(' · '))+'</div></td><td>'+escapeHtml(r.cantidad_total)+'</td><td>'+escapeHtml(r.asignado_moviles)+'</td><td><strong>'+escapeHtml(r.disponible_real)+'</strong></td><td>'+escapeHtml(r.en_reparacion)+'</td><td>'+escapeHtml(r.en_baja)+'</td><td>'+(r.sin_stock_minimo?'<span class="pill pill-info">Sin mínimo</span>':escapeHtml(r.stock_minimo))+'</td><td>'+((r.sin_stock_minimo||!r.alerta_minimo)?'<span class="pill pill-ok">OK</span>':'<span class="pill pill-bad">Bajo mínimo</span>')+'</td>'+(canEditStockGeneral()?'<td><button class="secondary edit-stock" data-id="'+r.id+'">Editar</button> <button class="secondary maint-stock" data-id="'+r.id+'">Reparación</button> <button class="danger baja-stock" data-id="'+r.id+'">Baja</button></td>':'')+'</tr>').join('')||'<tr><td colspan="10">Sin stock cargado.</td></tr>')+'</tbody></table></div>';
+  els.content.innerHTML=html;
+  if(!canEditStockGeneral())return;
+  const form=document.getElementById('fStockMaster');
+  form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={codigo_interno:fd.get('codigo_interno'),nombre:fd.get('nombre'),categoria:fd.get('categoria'),marca:fd.get('marca'),modelo:fd.get('modelo'),numero_serie:fd.get('numero_serie'),cantidad_total:Number(fd.get('cantidad_total')||0),stock_minimo:fd.get('sin_stock_minimo')?0:Number(fd.get('stock_minimo')||0),sin_stock_minimo:fd.get('sin_stock_minimo')==='on',observaciones:fd.get('observaciones')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('stock_items',row);showFlash('Stock maestro guardado','ok');inventario_general()});
+  document.querySelectorAll('.edit-stock').forEach(btn=>btn.addEventListener('click',()=>{const item=maestro.find(x=>String(x.id)===btn.dataset.id);if(!item)return;form.elements.id.value=item.id;form.elements.codigo_interno.value=item.codigo_interno||'';form.elements.nombre.value=item.nombre||'';form.elements.categoria.value=item.categoria||'';form.elements.marca.value=item.marca||'';form.elements.modelo.value=item.modelo||'';form.elements.numero_serie.value=item.numero_serie||'';form.elements.cantidad_total.value=item.cantidad_total||0;form.elements.stock_minimo.value=item.stock_minimo||0;form.elements.sin_stock_minimo.checked=!!item.sin_stock_minimo;form.elements.observaciones.value=item.observaciones||''}));
+  document.querySelectorAll('.maint-stock').forEach(btn=>btn.addEventListener('click',async()=>{const motivo=prompt('Motivo de reparación / mantenimiento:');if(!motivo)return;const cantidad=Number(prompt('Cantidad a enviar a reparación:','1')||0);if(cantidad<1)return;const res=await sb.rpc('send_item_to_maintenance',{p_stock_item_id:Number(btn.dataset.id),p_cantidad:cantidad,p_motivo:motivo,p_usuario:perfilActual,p_movil:null});if(res.error){alert(res.error.message);return;}showFlash('Ítem enviado a reparación','ok');inventario_general()}));
+  document.querySelectorAll('.baja-stock').forEach(btn=>btn.addEventListener('click',async()=>{const motivo=prompt('Motivo de baja:');if(!motivo)return;const cantidad=Number(prompt('Cantidad a dar de baja:','1')||0);if(cantidad<1)return;const res=await sb.rpc('decommission_item',{p_stock_item_id:Number(btn.dataset.id),p_cantidad:cantidad,p_motivo:motivo,p_usuario:perfilActual});if(res.error){alert(res.error.message);return;}showFlash('Ítem dado de baja','ok');inventario_general()}));
+}
+
+async function asignaciones(){
+  els.title.textContent='Asignaciones';
+  const all=await Promise.all([safeSelect('v_stock_general','nombre',true),safeSelect('v_stock_assignments_detail','fecha_hora',false),safeSelect('moviles','numero',true),safeSelect('stock_compartments','movil',true)]);
+  const stock=all[0],assigns=all[1].filter(a=>!['DEVUELTA','DADA_DE_BAJA','BAJA'].includes(String(a.estado_asignacion||'').toUpperCase())),movs=all[2],comps=all[3];
+  let html='';
+  if(canEditStockGeneral()){
+    html+='<div class="card" style="margin-bottom:12px;"><strong>Asignar stock</strong><form id="fAssign" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="stock_item_id">'+stock.map(s=>'<option value="'+s.id+'">'+escapeHtml(s.nombre)+' · disponible '+escapeHtml(s.disponible_real)+'</option>').join('')+'</select><select name="movil" id="assignMovil">'+movs.map(m=>'<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>').join('')+'</select><select name="compartimiento" id="assignComp"></select><input name="nuevoCompartimiento" placeholder="Nuevo compartimiento (opcional)"><input name="cantidad" type="number" min="1" placeholder="Cantidad" required><button class="primary" type="submit">Asignar</button></form></div>'
+  }
+  html+='<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Compartimiento</th><th>Ítem</th><th>Cantidad</th><th>Estado</th>'+(canEditStockGeneral()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(assigns.map(a=>'<tr><td>'+escapeHtml(new Date(a.fecha_hora||Date.now()).toLocaleString('es-AR'))+'</td><td>Móvil '+escapeHtml(a.movil)+'</td><td>'+escapeHtml(a.compartimiento||'')+'</td><td><strong>'+escapeHtml(a.nombre)+'</strong><div class="small">'+escapeHtml(a.codigo_interno||'')+'</div></td><td>'+escapeHtml(a.cantidad)+'</td><td>'+escapeHtml(a.estado_asignacion)+'</td>'+(canEditStockGeneral()?'<td><button class="secondary devolver-assign" data-id="'+a.id+'">Devolver</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin asignaciones.</td></tr>')+'</tbody></table></div>';
+  els.content.innerHTML=html;
+  if(!canEditStockGeneral())return;
+  const form=document.getElementById('fAssign');
+  const assignMovil=document.getElementById('assignMovil');
+  const assignComp=document.getElementById('assignComp');
+  function fillAssignComp(movil){const list=comps.filter(c=>String(c.movil)===String(movil)&&c.activo!==false);assignComp.innerHTML=list.map(c=>'<option value="'+escapeHtml(c.nombre)+'">'+escapeHtml(c.nombre)+'</option>').join('')}
+  fillAssignComp(assignMovil.value);
+  assignMovil.addEventListener('change',()=>fillAssignComp(assignMovil.value));
+  form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);let comp=fd.get('compartimiento');const nuevo=String(fd.get('nuevoCompartimiento')||'').trim();if(nuevo){comp=nuevo;const exists=comps.find(c=>String(c.movil)===String(fd.get('movil'))&&String(c.nombre).toLowerCase()===nuevo.toLowerCase());if(!exists){await insertRow('stock_compartments',{movil:fd.get('movil'),nombre:nuevo,activo:true})}}const res=await sb.rpc('assign_item_to_mobile',{p_stock_item_id:Number(fd.get('stock_item_id')),p_movil:fd.get('movil'),p_compartimiento:comp||'',p_cantidad:Number(fd.get('cantidad')||0),p_usuario:perfilActual});if(res.error){alert(res.error.message);return;}showFlash('Asignación realizada','ok');asignaciones()});
+  document.querySelectorAll('.devolver-assign').forEach(btn=>btn.addEventListener('click',async()=>{const id=Number(btn.dataset.id);const item=assigns.find(a=>a.id===id);if(!item)return;await updateRows('stock_assignments',{estado_asignacion:'DEVUELTA'},id);await insertRow('stock_movements',{stock_item_id:item.stock_item_id,tipo_movimiento:'devolucion',cantidad:item.cantidad,origen:'MOVIL',destino:'STOCK_CENTRAL',movil_origen:item.movil,usuario:perfilActual});showFlash('Ítem devuelto a stock central','ok');asignaciones()}));
+}
+
+async function inventario(){
+  els.title.textContent='Inventario por móvil';
+  const items=await safeSelect('v_stock_assignments_detail','movil',true);
+  els.content.innerHTML='<div class="card"><table><thead><tr><th>Móvil</th><th>Compartimiento</th><th>Ítem</th><th>Cantidad</th><th>Estado</th></tr></thead><tbody>'+(items.map(x=>'<tr><td>Móvil '+escapeHtml(x.movil)+'</td><td>'+escapeHtml(x.compartimiento||'')+'</td><td><strong>'+escapeHtml(x.nombre)+'</strong><div class="small">'+escapeHtml(x.codigo_interno||'')+'</div></td><td>'+escapeHtml(x.cantidad)+'</td><td>'+escapeHtml(x.estado_asignacion)+'</td></tr>').join('')||'<tr><td colspan="5">Sin inventario asignado.</td></tr>')+'</tbody></table></div>';
+}
+
+async function plano(){
+  els.title.textContent='Plano del móvil';
+  const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('v_stock_assignments_detail','movil',true),safeSelect('novedades_materiales')]);
+  const movs=all[0],items=all[1],novedades=all[2];
+  els.content.innerHTML='<div class="card"><label class="small">Seleccionar móvil</label><select id="mapMovil" style="margin-top:8px; max-width:240px;">'+movs.map(m=>'<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>').join('')+'</select></div><div id="mapWrap" class="mobile-map" style="margin-top:12px;"></div>';
+  const sel=document.getElementById('mapMovil');
+  function renderMap(movil){const byComp={};items.filter(i=>String(i.movil)===String(movil)&&i.estado_asignacion==='ACTIVA').forEach(i=>{const comp=i.compartimiento||'Sin compartimiento';if(!byComp[comp])byComp[comp]=[];byComp[comp].push(i)});const keys=Object.keys(byComp);document.getElementById('mapWrap').innerHTML=keys.map(c=>'<div class="comp-box"><strong>'+escapeHtml(c)+'</strong><div style="margin-top:8px;">'+byComp[c].map(i=>{const alerta=novedades.find(n=>String(n.estado||'').toLowerCase()==='pendiente'&&String(n.movil)===String(movil)&&String(n.compartimiento)===String(i.compartimiento)&&String(n.material)===String(i.nombre));return '<div class="list-row">'+escapeHtml(i.nombre)+' · Cantidad '+escapeHtml(i.cantidad)+(alerta?' <span class="pill pill-bad">ALERTA</span>':'')+'</div>'}).join('')+'</div></div>').join('')||'<div class="card">Ese móvil no tiene materiales asignados.</div>'}
+  sel.addEventListener('change',()=>renderMap(sel.value));
+  if(sel.value)renderMap(sel.value)
+}
+
+async function fallas(){
+  els.title.textContent='Reporte de fallas';
+  const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('fallas')]);
+  const movs=all[0],rows=all[1];
+  let html='';
+  if(canEditFallas()){
+    html+='<div class="card" style="margin-bottom:12px;"><strong>Registrar falla</strong><form id="fFalla" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><select name="movil">'+movs.map(m=>'<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>').join('')+'</select><select name="tipo_falla"><option>Leve</option><option>Moderada</option><option>Critica (FS)</option></select><input name="componente" placeholder="Componente (ej: frenos)" required><textarea name="descripcion" placeholder="Descripción detallada de la falla" required></textarea><button class="primary" type="submit">Guardar falla</button></form></div>'
+  }
+  html+='<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Gravedad</th><th>Componente</th><th>Descripción</th>'+(canEditFallas()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+escapeHtml(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+'</td><td>Móvil '+escapeHtml(r.movil)+'</td><td>'+severityPill(r.tipo_falla)+'</td><td>'+escapeHtml(r.componente)+'</td><td>'+escapeHtml(r.descripcion)+'</td>'+(canEditFallas()?'<td><button class="secondary edit-falla" data-id="'+r.id+'">Editar</button> <button class="danger del-falla" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="6">Sin fallas cargadas.</td></tr>')+'</tbody></table></div>';
+  els.content.innerHTML=html;
+  if(!canEditFallas())return;
+  const form=document.getElementById('fFalla');
+  form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={movil:fd.get('movil'),tipo_falla:fd.get('tipo_falla'),componente:fd.get('componente'),descripcion:fd.get('descripcion'),fecha_hora:new Date().toISOString()};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('fallas',row);showFlash('Falla guardada','ok');fallas()});
+  document.querySelectorAll('.edit-falla').forEach(btn=>btn.addEventListener('click',()=>{const item=rows.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.movil.value=item.movil;form.elements.tipo_falla.value=item.tipo_falla||'Leve';form.elements.componente.value=item.componente||'';form.elements.descripcion.value=item.descripcion||''}));
+  document.querySelectorAll('.del-falla').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar falla?'))return;await deleteRow('fallas',Number(btn.dataset.id));showFlash('Falla eliminada','ok');fallas()}));
+}
+
+async function checklist_diario(){
+  els.title.textContent='Checklist diario';
+  const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('revisiones','fecha_hora',false,20)]);
+  const movs=all[0],rows=all[1];
+  let html='<div class="card"><strong>Checklist diario de móviles</strong><div class="small" style="margin-top:8px;">Control para luces, sirena, aceite, agua, neumáticos, radio y combustible.</div>';
+  if(canEditChecklistDiario()){
+    html+='<form id="fChecklistDiario" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); margin-top:12px;"><select name="movil">'+movs.map(m=>'<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>').join('')+'</select><input name="responsable" placeholder="Responsable / legajo" required><select name="luces"><option value="OK">Luces OK</option><option value="FALLA">Luces FALLA</option></select><select name="sirena"><option value="OK">Sirena y bocina OK</option><option value="FALLA">Sirena y bocina FALLA</option></select><select name="aceite"><option value="OK">Aceite OK</option><option value="FALLA">Aceite FALLA</option></select><select name="agua"><option value="OK">Agua OK</option><option value="FALLA">Agua FALLA</option></select><select name="neumaticos"><option value="OK">Neumáticos OK</option><option value="FALLA">Neumáticos FALLA</option></select><select name="radio"><option value="OK">Radio OK</option><option value="FALLA">Radio FALLA</option></select><select name="combustible"><option value="OK">Combustible > 3/4</option><option value="FALLA">Combustible bajo</option></select><textarea name="observaciones" placeholder="Observaciones"></textarea><button class="primary" type="submit">Guardar checklist diario</button></form>'
+  } else {
+    html+='<div class="err" style="margin-top:12px;">Este perfil no tiene permiso para registrar checklist diario.</div>'
+  }
+  html+='</div><div class="card" style="margin-top:12px;"><strong>Últimos checklist diarios</strong><div style="margin-top:8px;">'+(rows.map(r=>'<div class="list-row"><strong>Móvil '+escapeHtml(r.movil||'')+'</strong> · '+escapeHtml(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+' · '+escapeHtml(r.responsable||r.bombero||'')+'<div class="small">Luces: '+escapeHtml(r.luces||'')+' | Sirena: '+escapeHtml(r.sirena||'')+' | Aceite: '+escapeHtml(r.aceite||'')+' | Agua: '+escapeHtml(r.agua||'')+' | Neumáticos: '+escapeHtml(r.neumaticos||'')+' | Radio: '+escapeHtml(r.radio||'')+' | Combustible: '+escapeHtml(r.combustible||'')+'</div></div>').join('')||'Sin checklist diarios.')+'</div></div>';
+  els.content.innerHTML=html;
+  if(!canEditChecklistDiario())return;
+  const form=document.getElementById('fChecklistDiario');
+  form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={movil:fd.get('movil'),responsable:fd.get('responsable'),luces:fd.get('luces'),sirena:fd.get('sirena'),aceite:fd.get('aceite'),agua:fd.get('agua'),neumaticos:fd.get('neumaticos'),radio:fd.get('radio'),combustible:fd.get('combustible'),observaciones:fd.get('observaciones'),fecha_hora:new Date().toISOString()};await insertRow('revisiones',row);showFlash('Checklist diario registrado','ok');checklist_diario()});
+}
+
+async function checklist_materiales(){
+  els.title.textContent='Control diario materiales';
+  const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('bomberos','apellido',true),safeSelect('v_stock_assignments_detail','movil',true),safeSelect('controles_materiales','fecha_hora',false,10),safeSelect('novedades_materiales','id',false,10)]);
+  const movs=all[0],boms=all[1],inventario=all[2],controles=all[3],novedades=all[4];
+  let html='<div class="card"><form id="fcheckMat" class="grid"><select name="movil" id="checkMovil">'+movs.map(m=>'<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>').join('')+'</select><select name="bombero">'+boms.map(b=>{const nombre=((b.jerarquia||'')+' '+(b.apellido||'')+' '+(b.nombre||'')).trim();return '<option value="'+escapeHtml(nombre)+'">'+escapeHtml(nombre)+'</option>'}).join('')+'</select><div id="checkItems"></div><textarea name="comentarios" placeholder="Observaciones generales del control"></textarea><button class="primary" type="submit">Registrar control de materiales</button></form></div><div class="card" style="margin-top:12px;"><strong>Reportar material faltante o dañado</strong><form id="fNovedad" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="movil" id="novMovil">'+movs.map(m=>'<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>').join('')+'</select><select name="compartimiento" id="novComp"></select><select name="material" id="novMaterial"></select><input name="cantidad" type="number" min="1" value="1" placeholder="Cantidad" required><select name="tipo_novedad"><option>Faltante</option><option>Dañado</option></select><textarea name="detalle" placeholder="Detalle de la novedad" required></textarea><button class="primary" type="submit">Registrar novedad</button></form></div><div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;"><div class="card"><strong>Últimos controles</strong><div style="margin-top:8px;">'+(controles.map(r=>'<div class="list-row">Móvil '+escapeHtml(r.movil)+' · '+escapeHtml(r.responsable||r.bombero||'')+' · '+escapeHtml(r.resumen||r.equip_resumen||r.comentarios||'Sin novedades')+'</div>').join('')||'Sin controles.')+'</div></div><div class="card"><strong>Últimas novedades</strong><div style="margin-top:8px;">'+(novedades.map(n=>'<div class="list-row">Móvil '+escapeHtml(n.movil)+' · '+escapeHtml(n.compartimiento)+' · '+escapeHtml(n.material)+' · '+escapeHtml(n.tipo_novedad)+' · '+escapeHtml(n.detalle||'')+' <span class="pill '+(String(n.estado||'').toLowerCase()==='cerrada'?'pill-ok':'pill-bad')+'">'+escapeHtml(n.estado||'pendiente')+'</span>'+(canManageNovedades()?'<button class="secondary cerrar-nov" data-id="'+n.id+'" style="margin-left:8px;">'+(String(n.estado||'').toLowerCase()==='cerrada'?'Reabrir':'Cerrar')+'</button>':'')+'</div>').join('')||'Sin novedades.')+'</div></div></div>';
+  els.content.innerHTML=html;
+  const checkMovil=document.getElementById('checkMovil');
+  const novMovil=document.getElementById('novMovil');
+  const novComp=document.getElementById('novComp');
+  const novMaterial=document.getElementById('novMaterial');
+  const checkItems=document.getElementById('checkItems');
+  function renderChecklistItems(movil){const items=inventario.filter(i=>String(i.movil)===String(movil)&&i.estado_asignacion==='ACTIVA');if(!items.length){checkItems.innerHTML='<div class="card">Ese móvil no tiene materiales asignados.</div>';return;}checkItems.innerHTML='<div class="card"><strong>Control por material y cantidad</strong><div style="margin-top:12px;">'+items.map((i,idx)=>'<div class="list-row"><div><strong>'+escapeHtml(i.compartimiento||'Sin compartimiento')+'</strong> · '+escapeHtml(i.nombre)+' · Cantidad esperada: '+escapeHtml(i.cantidad)+'</div><div class="grid" style="grid-template-columns:1fr 140px; margin-top:8px; align-items:center;"><label>Cantidad verificada</label><input type="number" name="cantidad_verificada_'+idx+'" min="0" value="'+escapeHtml(i.cantidad)+'"></div></div>').join('')+'</div></div>'}
+  function fillNovedadSelectors(movil){const items=inventario.filter(i=>String(i.movil)===String(movil)&&i.estado_asignacion==='ACTIVA');const comps=Array.from(new Set(items.map(i=>i.compartimiento||'Sin compartimiento')));novComp.innerHTML=comps.map(c=>'<option value="'+escapeHtml(c)+'">'+escapeHtml(c)+'</option>').join('');refillMaterials()}
+  function refillMaterials(){const items=inventario.filter(i=>String(i.movil)===String(novMovil.value)&&String(i.compartimiento||'Sin compartimiento')===String(novComp.value)&&i.estado_asignacion==='ACTIVA');novMaterial.innerHTML=items.map(i=>'<option value="'+escapeHtml(i.nombre)+'" data-stock="'+escapeHtml(i.stock_item_id||'')+'">'+escapeHtml(i.nombre)+'</option>').join('')}
+  renderChecklistItems(checkMovil.value);fillNovedadSelectors(novMovil.value);
+  checkMovil.addEventListener('change',()=>renderChecklistItems(checkMovil.value));
+  novMovil.addEventListener('change',()=>fillNovedadSelectors(novMovil.value));
+  novComp.addEventListener('change',refillMaterials);
+  if(canEditChecklistMateriales()){
+    document.getElementById('fcheckMat').addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(e.target);const items=inventario.filter(i=>String(i.movil)===String(fd.get('movil'))&&i.estado_asignacion==='ACTIVA');const resumen=items.map((i,idx)=>{const verificada=Number(fd.get('cantidad_verificada_'+idx)||0);return (i.compartimiento||'Sin compartimiento')+' / '+i.nombre+': esperado '+i.cantidad+', verificado '+verificada}).join(' | ');const res=await sb.from('controles_materiales').insert({movil:fd.get('movil'),responsable:fd.get('bombero'),resumen:resumen,observaciones:fd.get('comentarios'),fecha_hora:new Date().toISOString()});if(res.error)return alert(res.error.message);showFlash('Control de materiales registrado','ok');checklist_materiales()});
+
+    document.getElementById('fNovedad').addEventListener('submit',async e=>{
       e.preventDefault();
-      const fd = new FormData(e.target);
-      const row = { numero: fd.get('numero'), estado: fd.get('estado') };
-      if(fd.get('id')) row.id = fd.get('id');
-      const {error} = await sb.from('moviles').upsert(row);
-      if(error) alert(error.message);
-      else { showFlash('Móvil actualizado','ok'); renderMoviles(); }
-    };
+      const fd=new FormData(e.target);
+      const cantidad=Number(fd.get('cantidad')||0);
+      const row=inventario.find(i=>String(i.movil)===String(fd.get('movil'))&&String(i.compartimiento||'Sin compartimiento')===String(fd.get('compartimiento'))&&String(i.nombre)===String(fd.get('material'))&&i.estado_asignacion==='ACTIVA');
+      if(!row){alert('No se encontró el material activo en ese móvil/compartimiento.');return;}
+      if(cantidad<1||cantidad>Number(row.cantidad||0)){alert('La cantidad reportada no es válida.');return;}
+
+      const detalleBase=fd.get('detalle')+' | Cantidad: '+cantidad;
+      const novRes=await sb.from('novedades_materiales').insert({movil:fd.get('movil'),compartimiento:fd.get('compartimiento'),material:fd.get('material'),tipo_novedad:fd.get('tipo_novedad'),detalle:detalleBase,estado:'pendiente',fecha_hora:new Date().toISOString(),reportado_por:canBombero()?'Bomberos':perfilActual,cantidad:cantidad});
+      if(novRes.error)return alert(novRes.error.message);
+
+      const restante=Number(row.cantidad||0)-cantidad;
+      let upd;
+      if(restante>0){
+        upd=await sb.from('stock_assignments').update({cantidad:restante}).eq('id',row.id);
+      }else{
+        upd=await sb.from('stock_assignments').update({cantidad:0,estado_asignacion:'PENDIENTE'}).eq('id',row.id);
+      }
+      if(upd.error)return alert(upd.error.message);
+
+      const pendRes=await sb.from('stock_assignments').insert({stock_item_id:row.stock_item_id,movil:row.movil,compartimiento:row.compartimiento,cantidad:cantidad,estado_asignacion:'PENDIENTE',fecha_hora:new Date().toISOString()});
+      if(pendRes.error)return alert(pendRes.error.message);
+
+      showFlash('Novedad registrada y material movido a estado pendiente','ok');
+      checklist_materiales();
+    });
+  }
+  if(canManageNovedades()){
+    document.querySelectorAll('.cerrar-nov').forEach(btn=>btn.addEventListener('click',async()=>{
+      const item=novedades.find(n=>String(n.id)===btn.dataset.id);
+      const nuevoEstado=String(item.estado||'').toLowerCase()==='cerrada'?'pendiente':'cerrada';
+      const upd=await sb.from('novedades_materiales').update({estado:nuevoEstado}).eq('id',Number(btn.dataset.id));
+      if(upd.error){alert(upd.error.message);return;}
+      if(nuevoEstado==='cerrada' && perfilActual==='materiales'){
+        const pend=await sb.from('stock_assignments').select('*').eq('movil',item.movil).eq('compartimiento',item.compartimiento).eq('estado_asignacion','PENDIENTE');
+        if(!pend.error && pend.data && pend.data.length){
+          const candidate=pend.data.find(p=>p.cantidad>0);
+          if(candidate){
+            const active=await sb.from('stock_assignments').select('*').eq('stock_item_id',candidate.stock_item_id).eq('movil',candidate.movil).eq('compartimiento',candidate.compartimiento).eq('estado_asignacion','ACTIVA').limit(1);
+            if(!active.error && active.data && active.data.length){
+              const a=active.data[0];
+              await sb.from('stock_assignments').update({cantidad:Number(a.cantidad||0)+Number(candidate.cantidad||0)}).eq('id',a.id);
+              await sb.from('stock_assignments').delete().eq('id',candidate.id);
+            }else{
+              await sb.from('stock_assignments').update({estado_asignacion:'ACTIVA'}).eq('id',candidate.id);
+            }
+          }
+        }
+      }
+      showFlash('Novedad actualizada','ok');
+      checklist_materiales();
+    }));
   }
 }
 
-window.editMovil = (id, num, est) => {
-  const f = document.getElementById('fMovil');
-  f.id.value = id;
-  f.numero.value = num;
-  f.estado.value = est;
-};
-
-async function renderInventarioGeneral(){
-  els.title.textContent = 'Inventario General';
-  const data = await safeSelect('stock_items');
-  
-  let html = `<div class="card" style="margin-bottom:20px">
-    <h3>Configuración de Ítem</h3>
-    <form id="fStock" class="grid" style="grid-template-columns: 1fr 1fr 1fr">
-      <input name="nombre" placeholder="Nombre Material" required>
-      <input type="number" name="stock_minimo" id="minVal" placeholder="Stock Mínimo">
-      <label class="small"><input type="checkbox" onchange="document.getElementById('minVal').disabled = this.checked"> Sin stock mínimo</label>
-      <button class="primary" type="submit">Guardar Material</button>
-    </form>
-  </div>`;
-  
-  html += `<div class="card"><table><thead><tr><th>Material</th><th>Mínimo</th></tr></thead><tbody>`;
-  html += data.map(i => `<tr><td>${i.nombre}</td><td>${i.stock_minimo || 'N/A'}</td></tr>`).join('');
-  html += `</tbody></table></div>`;
-  els.content.innerHTML = html;
+async function mantenimiento_stock(){
+  els.title.textContent='Control de mantenimiento';
+  const all=await Promise.all([safeSelect('v_maintenance_control_detail','fecha_ingreso',false),safeSelect('stock_items','nombre',true)]);
+  const rows=all[0],items=all[1];
+  let html='';
+  if(canEditStockGeneral()){
+    html+='<div class="card" style="margin-bottom:12px;"><strong>Ingreso manual a mantenimiento</strong><form id="fMaintStock" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="stock_item_id">'+items.map(i=>'<option value="'+i.id+'">'+escapeHtml(i.nombre)+'</option>').join('')+'</select><input name="cantidad" type="number" min="1" placeholder="Cantidad" required><input name="motivo" placeholder="Motivo" required><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Enviar a mantenimiento</button></form></div>'
+  }
+  html+='<div class="card"><table><thead><tr><th>Fecha ingreso</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Estado</th><th>Observaciones</th><th>Acciones</th></tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+escapeHtml(new Date(r.fecha_ingreso||Date.now()).toLocaleString('es-AR'))+'</td><td><strong>'+escapeHtml(r.nombre)+'</strong><div class="small">'+escapeHtml(r.codigo_interno||'')+'</div></td><td>'+escapeHtml(r.cantidad)+'</td><td>'+escapeHtml(r.motivo||'')+'</td><td>'+(String(r.estado||'').toUpperCase()==='DISPONIBLE'?'<span class="pill pill-ok">Disponible</span>':'<span class="pill pill-warn">'+escapeHtml(r.estado||'REPARACION')+'</span>')+'</td><td>'+escapeHtml(r.observaciones||'')+'</td><td>'+(canEditStockGeneral()&&String(r.estado||'').toUpperCase()!=='DISPONIBLE'?'<button class="secondary return-maint" data-id="'+r.id+'">Retornar a stock</button>':'')+'</td></tr>').join('')||'<tr><td colspan="7">Sin registros de mantenimiento.</td></tr>')+'</tbody></table></div>';
+  els.content.innerHTML=html;
+  if(!canEditStockGeneral())return;
+  const form=document.getElementById('fMaintStock');
+  form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const res=await sb.from('maintenance_control').insert({stock_item_id:Number(fd.get('stock_item_id')),cantidad:Number(fd.get('cantidad')||0),motivo:fd.get('motivo'),estado:'REPARACION',observaciones:fd.get('observaciones')});if(res.error){alert(res.error.message);return;}await insertRow('stock_movements',{stock_item_id:Number(fd.get('stock_item_id')),tipo_movimiento:'reparacion',cantidad:Number(fd.get('cantidad')||0),origen:'STOCK_CENTRAL',destino:'MANTENIMIENTO',motivo:fd.get('motivo'),usuario:perfilActual});showFlash('Ítem enviado a mantenimiento','ok');mantenimiento_stock()});
+  document.querySelectorAll('.return-maint').forEach(btn=>btn.addEventListener('click',async()=>{const res=await sb.rpc('return_item_from_maintenance',{p_maintenance_id:Number(btn.dataset.id),p_usuario:perfilActual});if(res.error){alert(res.error.message);return;}showFlash('Ítem retornado a stock central','ok');mantenimiento_stock()}));
 }
 
-async function renderAsignaciones(){
-  els.title.textContent = 'Asignaciones de Material';
-  const {data} = await sb.from('v_stock_assignments_detail').select('*');
-  // FILTRO: No mostrar devueltos o dados de baja
-  const activos = (data || []).filter(a => a.estado !== 'Devuelto' && a.estado !== 'Dado de baja');
-
-  els.content.innerHTML = `
-    <div class="card">
-      <table>
-        <thead><tr><th>Material</th><th>Móvil/Destino</th><th>Estado</th></tr></thead>
-        <tbody>
-          ${activos.map(a => `<tr><td>${a.nombre}</td><td>${a.destino || 'Gral'}</td><td>${a.estado}</td></tr>`).join('') || 'Sin asignaciones activas'}
-        </tbody>
-      </table>
-    </div>`;
+async function archivo_bajas(){
+  els.title.textContent='Archivo / bajas';
+  const rows=await safeSelect('v_stock_decommissions_detail','fecha_baja',false);
+  let html='<div class="card"><table><thead><tr><th>Fecha</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Usuario</th><th>Observaciones</th><th>Revertible</th><th>Acciones</th></tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+escapeHtml(new Date(r.fecha_baja||Date.now()).toLocaleString('es-AR'))+'</td><td><strong>'+escapeHtml(r.nombre)+'</strong><div class="small">'+escapeHtml(r.codigo_interno||'')+'</div></td><td>'+escapeHtml(r.cantidad)+'</td><td>'+escapeHtml(r.motivo||'')+'</td><td>'+escapeHtml(r.usuario||'')+'</td><td>'+escapeHtml(r.observaciones||'')+'</td><td>'+(r.revertible?'<span class="pill pill-ok">Sí</span>':'<span class="pill pill-bad">No</span>')+'</td><td>'+(canEditStockGeneral()&&r.revertible?'<button class="secondary revert-baja" data-id="'+r.id+'">Revertir</button>':'')+'</td></tr>').join('')||'<tr><td colspan="8">Sin bajas registradas.</td></tr>')+'</tbody></table></div>';
+  els.content.innerHTML=html;
+  if(!canEditStockGeneral())return;
+  document.querySelectorAll('.revert-baja').forEach(btn=>btn.addEventListener('click',async()=>{const id=Number(btn.dataset.id);const item=rows.find(x=>x.id===id);if(!item)return;await sb.from('stock_decommissions').delete().eq('id',id);await insertRow('stock_movements',{stock_item_id:item.stock_item_id,tipo_movimiento:'reversa_baja',cantidad:item.cantidad,origen:'ARCHIVO_BAJAS',destino:'STOCK_CENTRAL',motivo:'Reversión de baja',usuario:perfilActual});showFlash('Baja revertida','ok');archivo_bajas()}));
 }
 
-async function renderReportes(){
-  els.title.textContent = 'Reportes';
-  els.content.innerHTML = `
-    <div class="card" style="text-align:center">
-      <p>Generar reporte consolidado de stock actual</p>
-      <button class="primary" onclick="exportarExcel()">Descargar Excel (.xlsx)</button>
-    </div>`;
+async function repuestos(){
+  els.title.textContent='Repuestos';
+  const rows=await safeSelect('repuestos');
+  let html='';
+  if(canEditRepuestos()){
+    html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de repuesto</strong><form id="fRep" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="nombre" placeholder="Nombre de repuesto" required><input name="stock_actual" type="number" placeholder="Stock actual" required><input name="stock_minimo" type="number" placeholder="Stock mínimo" required><button class="primary" type="submit">Guardar repuesto</button></form></div>'
+  }
+  html+='<div class="card"><table><thead><tr><th>Repuesto</th><th>Stock actual</th><th>Stock mínimo</th><th>Estado</th>'+(canEditRepuestos()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>{const critico=Number(r.stock_actual||0)<=Number(r.stock_minimo||0);return '<tr><td><strong>'+escapeHtml(r.nombre)+'</strong></td><td>'+escapeHtml(r.stock_actual)+'</td><td>'+escapeHtml(r.stock_minimo)+'</td><td>'+(critico?'<span class="pill pill-bad">Alerta de stock</span>':'<span class="pill pill-ok">OK</span>')+'</td>'+(canEditRepuestos()?'<td><button class="secondary edit-rep" data-id="'+r.id+'">Editar</button> <button class="danger del-rep" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>'}).join('')||'<tr><td colspan="5">Sin repuestos cargados.</td></tr>')+'</tbody></table></div>';
+  els.content.innerHTML=html;
+  if(!canEditRepuestos())return;
+  const form=document.getElementById('fRep');
+  form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={nombre:fd.get('nombre'),stock_actual:Number(fd.get('stock_actual')||0),stock_minimo:Number(fd.get('stock_minimo')||0)};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('repuestos',row);showFlash('Repuesto guardado','ok');repuestos()});
+  document.querySelectorAll('.edit-rep').forEach(btn=>btn.addEventListener('click',()=>{const item=rows.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.nombre.value=item.nombre||'';form.elements.stock_actual.value=item.stock_actual||0;form.elements.stock_minimo.value=item.stock_minimo||0}));
+  document.querySelectorAll('.del-rep').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar repuesto?'))return;await deleteRow('repuestos',Number(btn.dataset.id));showFlash('Repuesto eliminado','ok');repuestos()}));
 }
 
-async function exportarExcel(){
-  const data = await safeSelect('stock_items');
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Stock");
-  XLSX.writeFile(wb, "Reporte_Stock_Ezeiza.xlsx");
+async function proveedores(){
+  els.title.textContent='Proveedores';
+  const rows=await safeSelect('proveedores');
+  let html='';
+  if(canEditProveedores()){
+    html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de proveedor</strong><form id="fProv" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="nombre" placeholder="Proveedor / empresa" required><input name="contacto" placeholder="Contacto" required><input name="rubro" placeholder="Rubro" required><input name="descripcion" placeholder="Descripción"><button class="primary" type="submit">Guardar proveedor</button></form></div>'
+  }
+  html+='<div class="card"><table><thead><tr><th>Proveedor</th><th>Contacto</th><th>Rubro</th><th>Descripción</th>'+(canEditProveedores()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td><strong>'+escapeHtml(r.nombre)+'</strong></td><td>'+escapeHtml(r.contacto)+'</td><td>'+escapeHtml(r.rubro)+'</td><td>'+escapeHtml(r.descripcion||'')+'</td>'+(canEditProveedores()?'<td><button class="secondary edit-prov" data-id="'+r.id+'">Editar</button> <button class="danger del-prov" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="5">Sin proveedores cargados.</td></tr>')+'</tbody></table></div>';
+  els.content.innerHTML=html;
+  if(!canEditProveedores())return;
+  const form=document.getElementById('fProv');
+  form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={nombre:fd.get('nombre'),contacto:fd.get('contacto'),rubro:fd.get('rubro'),descripcion:fd.get('descripcion')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('proveedores',row);showFlash('Proveedor guardado','ok');proveedores()});
+  document.querySelectorAll('.edit-prov').forEach(btn=>btn.addEventListener('click',()=>{const item=rows.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.nombre.value=item.nombre||'';form.elements.contacto.value=item.contacto||'';form.elements.rubro.value=item.rubro||'';form.elements.descripcion.value=item.descripcion||''}));
+  document.querySelectorAll('.del-prov').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar proveedor?'))return;await deleteRow('proveedores',Number(btn.dataset.id));showFlash('Proveedor eliminado','ok');proveedores()}));
 }
 
-// --- AUTH SIMULADO ---
-document.getElementById('loginForm').onsubmit = (e) => {
-  e.preventDefault();
-  perfilActual = document.getElementById('perfil').value;
-  els.login.classList.add('hidden');
-  els.app.classList.remove('hidden');
-  document.getElementById('userInfo').textContent = `Usuario: ${perfilActual.toUpperCase()}`;
-  renderNav();
-  navigate('dashboard');
-};
 
-document.getElementById('logout').onclick = () => location.reload();
+async function roperia(){
+  els.title.textContent='Ropería';
+  const rows=await safeSelect('roperia_items','tipo_prenda',true);
+  let html='';
+  if(canEditRoperia()){
+    html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de indumentaria</strong><form id="fRoperia" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="tipo_prenda" placeholder="Tipo de prenda" required><input name="talle" placeholder="Talle" required><input name="cantidad" type="number" min="0" placeholder="Cantidad" required><input name="asignado_a" placeholder="Asignado a"><select name="estado"><option>Disponible</option><option>Asignado</option><option>Baja</option></select><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar prenda</button></form></div>';
+  }
+  html+='<div class="card"><table><thead><tr><th>Prenda</th><th>Talle</th><th>Cantidad</th><th>Asignado a</th><th>Estado</th><th>Observaciones</th>'+(canEditRoperia()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td><strong>'+escapeHtml(r.tipo_prenda)+'</strong></td><td>'+escapeHtml(r.talle)+'</td><td>'+escapeHtml(r.cantidad)+'</td><td>'+escapeHtml(r.asignado_a||'')+'</td><td>'+escapeHtml(r.estado||'Disponible')+'</td><td>'+escapeHtml(r.observaciones||'')+'</td>'+(canEditRoperia()?'<td><button class="secondary edit-roperia" data-id="'+r.id+'">Editar</button> <button class="danger del-roperia" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin prendas cargadas.</td></tr>')+'</tbody></table></div>';
+  els.content.innerHTML=html;
+  if(!canEditRoperia())return;
+  const form=document.getElementById('fRoperia');
+  form.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const fd=new FormData(form);
+    const row={tipo_prenda:fd.get('tipo_prenda'),talle:fd.get('talle'),cantidad:Number(fd.get('cantidad')||0),asignado_a:fd.get('asignado_a'),estado:fd.get('estado'),observaciones:fd.get('observaciones')};
+    if(fd.get('id')) row.id=Number(fd.get('id'));
+    await upsertRow('roperia_items',row);
+    showFlash('Prenda guardada','ok');
+    roperia();
+  });
+  document.querySelectorAll('.edit-roperia').forEach(btn=>btn.addEventListener('click',()=>{
+    const item=rows.find(x=>String(x.id)===btn.dataset.id);
+    form.elements.id.value=item.id;
+    form.elements.tipo_prenda.value=item.tipo_prenda||'';
+    form.elements.talle.value=item.talle||'';
+    form.elements.cantidad.value=item.cantidad||0;
+    form.elements.asignado_a.value=item.asignado_a||'';
+    form.elements.estado.value=item.estado||'Disponible';
+    form.elements.observaciones.value=item.observaciones||'';
+  }));
+  document.querySelectorAll('.del-roperia').forEach(btn=>btn.addEventListener('click',async()=>{
+    if(!confirm('¿Eliminar prenda?')) return;
+    await deleteRow('roperia_items',Number(btn.dataset.id));
+    showFlash('Prenda eliminada','ok');
+    roperia();
+  }));
+}
 
+async function mantenimiento(){
+  els.title.textContent='Bitácora';
+  const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('bomberos','apellido',true),safeSelect('mantenimientos')]);
+  const movs=all[0],boms=all[1],rows=all[2];
+  let html='';
+  if(canEditMantenimiento()){
+    html+='<div class="card" style="margin-bottom:12px;"><strong>Registrar mantenimiento</strong><form id="fMan" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><select name="movil">'+movs.map(m=>'<option value="'+escapeHtml(m.numero)+'">Móvil '+escapeHtml(m.numero)+'</option>').join('')+'</select><select name="responsable">'+boms.map(b=>{const nombre=((b.jerarquia||'')+' '+(b.apellido||'')+' '+(b.nombre||'')).trim();return '<option value="'+escapeHtml(nombre)+'">'+escapeHtml(nombre)+'</option>'}).join('')+'</select><input name="tipo" placeholder="Tipo de mantenimiento" required><input name="km" type="number" placeholder="Kilometraje"><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar mantenimiento</button></form></div>'
+  }
+  html+='<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Responsable</th><th>Tipo</th><th>KM</th><th>Observaciones</th>'+(canEditMantenimiento()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+escapeHtml(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+'</td><td>Móvil '+escapeHtml(r.movil)+'</td><td>'+escapeHtml(r.responsable)+'</td><td>'+escapeHtml(r.tipo)+'</td><td>'+escapeHtml(r.km||'')+'</td><td>'+escapeHtml(r.observaciones||'')+'</td>'+(canEditMantenimiento()?'<td><button class="secondary edit-man" data-id="'+r.id+'">Editar</button> <button class="danger del-man" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin mantenimientos.</td></tr>')+'</tbody></table></div>';
+  els.content.innerHTML=html;
+  if(!canEditMantenimiento())return;
+  const form=document.getElementById('fMan');
+  form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={movil:fd.get('movil'),responsable:fd.get('responsable'),tipo:fd.get('tipo'),km:Number(fd.get('km')||0),observaciones:fd.get('observaciones'),fecha_hora:new Date().toISOString()};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('mantenimientos',row);showFlash('Mantenimiento guardado','ok');mantenimiento()});
+  document.querySelectorAll('.edit-man').forEach(btn=>btn.addEventListener('click',()=>{const item=rows.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.movil.value=item.movil;form.elements.responsable.value=item.responsable;form.elements.tipo.value=item.tipo||'';form.elements.km.value=item.km||0;form.elements.observaciones.value=item.observaciones||''}));
+  document.querySelectorAll('.del-man').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar mantenimiento?'))return;await deleteRow('mantenimientos',Number(btn.dataset.id));showFlash('Mantenimiento eliminado','ok');mantenimiento()}));
+}
+
+async function respaldo(){
+  els.title.textContent='Importar / exportar';
+  els.content.innerHTML='<div class="card"><div class="toolbar"><button id="btnExport" class="secondary" '+(canBackup()?'':'disabled')+'>Exportar respaldo JSON</button><input id="fileImport" type="file" accept="application/json" '+(canBackup()?'':'disabled')+'></div><div class="small" style="margin-top:12px;">Solo el perfil Administrador puede importar o exportar respaldos.</div></div>';
+  if(!canBackup())return;
+  document.getElementById('btnExport').addEventListener('click',async()=>{const all=await Promise.all([safeSelect('moviles'),safeSelect('bomberos'),safeSelect('revisiones'),safeSelect('controles_materiales'),safeSelect('mantenimientos'),safeSelect('fallas'),safeSelect('repuestos'),safeSelect('proveedores'),safeSelect('novedades_materiales'),safeSelect('stock_items'),safeSelect('stock_compartments'),safeSelect('stock_assignments'),safeSelect('stock_movements'),safeSelect('maintenance_control'),safeSelect('stock_decommissions'),safeSelect('configuracion_cuartel')]);const payload={moviles:all[0],bomberos:all[1],revisiones:all[2],controles_materiales:all[3],mantenimientos:all[4],fallas:all[5],repuestos:all[6],proveedores:all[7],novedades_materiales:all[8],stock_items:all[9],stock_compartments:all[10],stock_assignments:all[11],stock_movements:all[12],maintenance_control:all[13],stock_decommissions:all[14],configuracion_cuartel:all[15],exported_at:new Date().toISOString()};downloadText('respaldo_cuartel.json',JSON.stringify(payload,null,2),'application/json')});
+  document.getElementById('fileImport').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;const data=JSON.parse(await file.text());const tables=['moviles','bomberos','revisiones','controles_materiales','mantenimientos','fallas','repuestos','proveedores','novedades_materiales','stock_items','stock_compartments','stock_assignments','stock_movements','maintenance_control','stock_decommissions','configuracion_cuartel'];for(const table of tables){if(Array.isArray(data[table])&&data[table].length){const res=await sb.from(table).upsert(data[table]);if(res.error)throw res.error}}showFlash('Respaldo importado','ok')});
+}
+
+async function estadisticas(){
+  els.title.textContent='Estadísticas';
+  const all=await Promise.all([safeSelect('moviles'),safeSelect('revisiones'),safeSelect('fallas'),safeSelect('repuestos'),safeSelect('novedades_materiales'),safeSelect('v_stock_general')]);
+  const mov=all[0],rev=all[1],fallas=all[2],repuestos=all[3],novedades=all[4],stockGeneral=all[5];
+  const fallasCriticas=fallas.filter(f=>String(f.tipo_falla||'').toLowerCase().indexOf('crit')>=0);
+  const fueraServicio=mov.filter(m=>String(m.estado||'').toLowerCase()==='fuera de servicio');
+  const repuestosCriticos=repuestos.filter(r=>Number(r.stock_actual||0)<=Number(r.stock_minimo||0));
+  const faltantes=novedades.filter(n=>String(n.tipo_novedad||'').toLowerCase()==='faltante');
+  const daniados=novedades.filter(n=>String(n.tipo_novedad||'').toLowerCase()==='dañado');
+  const pendientes=novedades.filter(n=>String(n.estado||'').toLowerCase()==='pendiente');
+  const cerradas=novedades.filter(n=>String(n.estado||'').toLowerCase()==='cerrada');
+  const alertasStock=stockGeneral.filter(s=>s.alerta_minimo===true);
+  els.content.innerHTML='<div class="stat-grid">'+card('Total de checklist',rev.length)+card('Fallas críticas',fallasCriticas.length)+card('Móviles fuera de servicio',fueraServicio.length)+card('Repuestos con alerta',repuestosCriticos.length)+card('Materiales faltantes',faltantes.length)+card('Materiales dañados',daniados.length)+card('Novedades pendientes',pendientes.length)+card('Novedades cerradas',cerradas.length)+card('Alertas stock general',alertasStock.length)+'</div>'
+}
+
+async function novedades(){
+  els.title.textContent='Novedades de materiales';
+  const rows=await safeSelect('novedades_materiales');
+  const abiertas=rows.filter(r=>String(r.estado||'').toLowerCase()==='pendiente');
+  const cerradas=rows.filter(r=>String(r.estado||'').toLowerCase()==='cerrada');
+  els.content.innerHTML='<div class="stat-grid">'+card('Pendientes',abiertas.length)+card('Cerradas',cerradas.length)+card('Faltantes',rows.filter(r=>String(r.tipo_novedad||'').toLowerCase()==='faltante').length)+card('Dañados',rows.filter(r=>String(r.tipo_novedad||'').toLowerCase()==='dañado').length)+'</div><div class="card" style="margin-top:12px;"><strong>Gestión de novedades</strong><table style="margin-top:12px;"><thead><tr><th>Fecha</th><th>Móvil</th><th>Compartimiento</th><th>Material</th><th>Tipo</th><th>Detalle</th><th>Estado</th>'+(canManageNovedades()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+escapeHtml(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+'</td><td>Móvil '+escapeHtml(r.movil)+'</td><td>'+escapeHtml(r.compartimiento)+'</td><td>'+escapeHtml(r.material)+'</td><td>'+escapeHtml(r.tipo_novedad)+'</td><td>'+escapeHtml(r.detalle||'')+'</td><td>'+(String(r.estado||'').toLowerCase()==='cerrada'?'<span class="pill pill-ok">Cerrada</span>':'<span class="pill pill-bad">Pendiente</span>')+'</td>'+(canManageNovedades()?'<td>'+(String(r.estado||'').toLowerCase()==='pendiente'?'<button class="secondary cerrar-nov-tabla" data-id="'+r.id+'">Cerrar</button>':'<button class="secondary reabrir-nov-tabla" data-id="'+r.id+'">Reabrir</button>')+(canAdmin()?' <button class="danger del-nov-tabla" data-id="'+r.id+'">Borrar</button>':'')+'</td>':'')+'</tr>').join('')||'<tr><td colspan="8">Sin novedades registradas.</td></tr>')+'</tbody></table></div>';
+  if(!canManageNovedades())return;
+  document.querySelectorAll('.cerrar-nov-tabla').forEach(btn=>btn.addEventListener('click',async()=>{await updateRows('novedades_materiales',{estado:'cerrada'},Number(btn.dataset.id));showFlash('Novedad cerrada','ok');novedades()}));
+  document.querySelectorAll('.reabrir-nov-tabla').forEach(btn=>btn.addEventListener('click',async()=>{await updateRows('novedades_materiales',{estado:'pendiente'},Number(btn.dataset.id));showFlash('Novedad reabierta','ok');novedades()}));
+  if(canAdmin()){document.querySelectorAll('.del-nov-tabla').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar novedad?'))return;await deleteRow('novedades_materiales',Number(btn.dataset.id));showFlash('Novedad eliminada','ok');novedades()}))}
+}
+
+async function reportes_stock(){
+  els.title.textContent='Reportes de stock';
+  const all=await Promise.all([safeSelect('v_stock_general','nombre',true),safeSelect('v_stock_assignments_detail','movil',true),safeSelect('v_maintenance_control_detail','fecha_ingreso',false),safeSelect('v_stock_decommissions_detail','fecha_baja',false)]);
+  const stock=all[0],assignments=all[1],maint=all[2],bajas=all[3];
+  els.content.innerHTML='<div class="card"><strong>Exportación de reportes</strong><div class="small" style="margin-top:8px;">Descargá reportes del stock maestro, stock asignado a móviles, mantenimiento y bajas en formato Excel.</div><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); margin-top:16px;">'+
+    '<button id="expStockXlsx" class="primary" type="button">Exportar stock general XLSX</button>'+
+    '<button id="expAsignXlsx" class="secondary" type="button">Exportar stock por móvil XLSX</button>'+
+    '<button id="expMaintXlsx" class="primary" type="button">Exportar mantenimiento XLSX</button>'+
+    '<button id="expBajasXlsx" class="secondary" type="button">Exportar bajas XLSX</button>'+
+    '<button id="expTodoXlsx" class="secondary" type="button">Exportar libro completo XLSX</button>'+
+  '</div></div>';
+
+  const stockRows=stock.map(r=>({codigo_interno:r.codigo_interno||'',nombre:r.nombre,categoria:r.categoria||'',marca:r.marca||'',modelo:r.modelo||'',numero_serie:r.numero_serie||'',cantidad_total:r.cantidad_total,asignado_moviles:r.asignado_moviles,en_reparacion:r.en_reparacion,en_baja:r.en_baja,disponible_real:r.disponible_real,stock_minimo:r.sin_stock_minimo?'SIN MINIMO':r.stock_minimo,alerta_minimo:r.sin_stock_minimo?false:r.alerta_minimo}));
+  const assignRows=assignments.filter(a=>!['DEVUELTA','DADA_DE_BAJA','BAJA'].includes(String(a.estado_asignacion||'').toUpperCase())).map(a=>({fecha_hora:a.fecha_hora,movil:a.movil,compartimiento:a.compartimiento||'',codigo_interno:a.codigo_interno||'',nombre:a.nombre||'',cantidad:a.cantidad,estado_asignacion:a.estado_asignacion}));
+  const maintRows=maint.map(m=>({fecha_ingreso:m.fecha_ingreso,codigo_interno:m.codigo_interno||'',nombre:m.nombre||'',cantidad:m.cantidad,motivo:m.motivo||'',estado:m.estado||'',fecha_retorno:m.fecha_retorno||'',observaciones:m.observaciones||''}));
+  const bajaRows=bajas.map(b=>({fecha_baja:b.fecha_baja,codigo_interno:b.codigo_interno||'',nombre:b.nombre||'',cantidad:b.cantidad,motivo:b.motivo||'',usuario:b.usuario||'',observaciones:b.observaciones||'',revertible:b.revertible}));
+
+  function exportOne(name, rows){
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{}]);
+    XLSX.utils.book_append_sheet(wb, ws, 'Datos');
+    XLSX.writeFile(wb, name);
+  }
+  document.getElementById('expStockXlsx').addEventListener('click',()=>exportOne('stock_general.xlsx',stockRows));
+  document.getElementById('expAsignXlsx').addEventListener('click',()=>exportOne('stock_por_movil.xlsx',assignRows));
+  document.getElementById('expMaintXlsx').addEventListener('click',()=>exportOne('control_mantenimiento.xlsx',maintRows));
+  document.getElementById('expBajasXlsx').addEventListener('click',()=>exportOne('archivo_bajas.xlsx',bajaRows));
+  document.getElementById('expTodoXlsx').addEventListener('click',()=>{
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(stockRows.length?stockRows:[{}]),'Stock general');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(assignRows.length?assignRows:[{}]),'Stock moviles');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(maintRows.length?maintRows:[{}]),'Mantenimiento');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(bajaRows.length?bajaRows:[{}]),'Bajas');
+    XLSX.writeFile(wb,'reportes_stock_completo.xlsx');
+  });
+}
+
+async function diagnostico(){
+  els.title.textContent='Diagnóstico';
+  const lines=[];
+  async function run(label,fn){try{const result=await fn();lines.push('OK - '+label+(result?': '+result:''))}catch(err){lines.push('ERROR - '+label+': '+(err&&err.message?err.message:String(err)))}}
+  await run('Auth',async()=>{const res=await sb.auth.getSession();if(res.error)throw res.error;return res.data.session?'sesión activa':'sin sesión'});
+  await run('Moviles',async()=>String((await safeSelect('moviles','id',false,1)).length));
+  await run('Bomberos',async()=>String((await safeSelect('bomberos','id',false,1)).length));
+  await run('Revisiones',async()=>String((await safeSelect('revisiones','id',false,1)).length));
+  await run('Controles materiales',async()=>String((await safeSelect('controles_materiales','id',false,1)).length));
+  await run('Fallas',async()=>String((await safeSelect('fallas','id',false,1)).length));
+  await run('Repuestos',async()=>String((await safeSelect('repuestos','id',false,1)).length));
+  await run('Proveedores',async()=>String((await safeSelect('proveedores','id',false,1)).length));
+  await run('Novedades materiales',async()=>String((await safeSelect('novedades_materiales','id',false,1)).length));
+  await run('v_stock_general',async()=>String((await safeSelect('v_stock_general','id',false,1)).length));
+  await run('v_stock_assignments_detail',async()=>String((await safeSelect('v_stock_assignments_detail','id',false,1)).length));
+  await run('v_maintenance_control_detail',async()=>String((await safeSelect('v_maintenance_control_detail','id',false,1)).length));
+  await run('v_stock_decommissions_detail',async()=>String((await safeSelect('v_stock_decommissions_detail','id',false,1)).length));
+  els.content.innerHTML='<div class="err" style="background:#0f172a;border-color:#334155;color:#e2e8f0;">'+escapeHtml(lines.join('\n'))+'</div>';
+}
+
+async function guardia(){
+  els.title.textContent='Modo guardia';
+  const all=await Promise.all([safeSelect('moviles'),safeSelect('fallas'),safeSelect('repuestos'),safeSelect('novedades_materiales'),safeSelect('revisiones'),safeSelect('v_stock_general')]);
+  const mov=all[0],fallas=all[1],repuestos=all[2],novedades=all[3],revisiones=all[4],stockGeneral=all[5];
+  const enServicio=mov.filter(m=>m.estado==='En servicio').length;
+  const enMantenimiento=mov.filter(m=>m.estado==='En mantenimiento').length;
+  const fueraServicio=mov.filter(m=>m.estado==='Fuera de servicio').length;
+  const criticas=fallas.filter(f=>String(f.tipo_falla||'').toLowerCase().indexOf('crit')>=0);
+  const repuestosCriticos=repuestos.filter(r=>Number(r.stock_actual||0)<=Number(r.stock_minimo||0));
+  const pendientes=novedades.filter(n=>String(n.estado||'').toLowerCase()==='pendiente');
+  const stockCritico=stockGeneral.filter(s=>s.alerta_minimo===true);
+  const ultimaRevision=revisiones[0]?new Date(revisiones[0].fecha_hora||Date.now()).toLocaleString('es-AR'):'Sin registros';
+  const alertasHtml=(criticas.slice(0,6).map(f=>'<div class="guardia-item"><strong>Móvil '+escapeHtml(f.movil)+'</strong> · '+escapeHtml(f.componente)+' <span class="guardia-badge guardia-danger">Crítica</span></div>').join(''))+(pendientes.slice(0,6).map(n=>'<div class="guardia-item"><strong>Móvil '+escapeHtml(n.movil)+'</strong> · '+escapeHtml(n.material)+' <span class="guardia-badge guardia-danger">'+escapeHtml(n.tipo_novedad)+'</span></div>').join(''))+(repuestosCriticos.slice(0,4).map(r=>'<div class="guardia-item"><strong>'+escapeHtml(r.nombre)+'</strong> · stock '+escapeHtml(r.stock_actual)+'/'+escapeHtml(r.stock_minimo)+' <span class="guardia-badge guardia-warn">Repuesto</span></div>').join(''))+(stockCritico.slice(0,4).map(s=>'<div class="guardia-item"><strong>'+escapeHtml(s.nombre)+'</strong> · stock general bajo mínimo <span class="guardia-badge guardia-danger">Stock</span></div>').join(''));
+  const totalAlertas=criticas.length+pendientes.length+repuestosCriticos.length+stockCritico.length;
+  els.content.innerHTML='<div class="guardia-wrap"><div class="guardia-header"><div><div class="guardia-title">PANEL DE GUARDIA</div><div class="guardia-sub">Monitoreo operativo del cuartel · actualización automática opcional</div></div><div class="toolbar"><button id="refreshGuardia" class="primary" type="button">Actualizar</button><button id="autoGuardia" class="secondary" type="button">Auto 60 s: ON</button></div></div><div class="guardia-grid"><div class="guardia-card status-service"><div class="guardia-label">Móviles en servicio</div><div class="guardia-number">'+enServicio+'</div></div><div class="guardia-card status-maint"><div class="guardia-label">En mantenimiento</div><div class="guardia-number">'+enMantenimiento+'</div></div><div class="guardia-card status-out"><div class="guardia-label">Fuera de servicio</div><div class="guardia-number">'+fueraServicio+'</div></div><div class="guardia-card"><div class="guardia-label">Alertas activas</div><div class="guardia-number">'+totalAlertas+'</div></div></div><div class="guardia-list"><div class="guardia-card"><div class="guardia-label">Alertas prioritarias</div>'+(alertasHtml||'<div class="guardia-item"><span class="guardia-badge guardia-ok">Sin alertas</span></div>')+'</div><div class="guardia-card"><div class="guardia-label">Resumen de guardia</div><div class="guardia-item">Total de móviles: <strong>'+mov.length+'</strong></div><div class="guardia-item">Fallas críticas: <strong>'+criticas.length+'</strong></div><div class="guardia-item">Novedades pendientes: <strong>'+pendientes.length+'</strong></div><div class="guardia-item">Repuestos bajo mínimo: <strong>'+repuestosCriticos.length+'</strong></div><div class="guardia-item">Stock general bajo mínimo: <strong>'+stockCritico.length+'</strong></div><div class="guardia-item">Última revisión: <strong>'+escapeHtml(ultimaRevision)+'</strong></div><div class="guardia-footer">Ideal para TV o monitor de guardia. Podés dejar esta vista abierta permanentemente.</div></div></div></div>';
+  window.__guardiaAuto=window.__guardiaAuto===undefined?true:window.__guardiaAuto;
+  if(window.__guardiaTimer){clearInterval(window.__guardiaTimer);window.__guardiaTimer=null}
+  document.getElementById('refreshGuardia').addEventListener('click',()=>guardia());
+  const autoBtn=document.getElementById('autoGuardia');
+  autoBtn.textContent=window.__guardiaAuto?'Auto 60 s: ON':'Auto 60 s: OFF';
+  autoBtn.addEventListener('click',()=>{window.__guardiaAuto=!window.__guardiaAuto;autoBtn.textContent=window.__guardiaAuto?'Auto 60 s: ON':'Auto 60 s: OFF';if(window.__guardiaTimer){clearInterval(window.__guardiaTimer);window.__guardiaTimer=null}if(window.__guardiaAuto){window.__guardiaTimer=setInterval(()=>{if(els.title.textContent==='Modo guardia')guardia()},60000)}});
+  if(window.__guardiaAuto){window.__guardiaTimer=setInterval(()=>{if(els.title.textContent==='Modo guardia')guardia()},60000)}
+}
+
+async function nav(sec){
+  if(!canView(sec)){showFlash('Ese perfil no tiene acceso a esta sección','err');return}
+  activateNav(sec);
+  if(sec==='dashboard')return dashboard();
+  if(sec==='moviles')return moviles();
+  if(sec==='bomberos')return bomberos();
+  if(sec==='inventario_general')return inventario_general();
+  if(sec==='asignaciones')return asignaciones();
+  if(sec==='inventario')return inventario();
+  if(sec==='plano')return plano();
+  if(sec==='fallas')return fallas();
+  if(sec==='checklist_diario')return checklist_diario();
+  if(sec==='checklist_materiales')return checklist_materiales();
+  if(sec==='mantenimiento_stock')return mantenimiento_stock();
+  if(sec==='archivo_bajas')return archivo_bajas();
+  if(sec==='repuestos')return repuestos();
+  if(sec==='proveedores')return proveedores();
+  if(sec==='roperia')return roperia();
+  if(sec==='mantenimiento')return mantenimiento();
+  if(sec==='respaldo')return respaldo();
+  if(sec==='estadisticas')return estadisticas();
+  if(sec==='novedades')return novedades();
+  if(sec==='reportes_stock')return reportes_stock();
+  if(sec==='diagnostico')return diagnostico();
+  if(sec==='guardia')return guardia();
+}
+
+function init(){
+  try{
+    if(!window.supabase||typeof window.supabase.createClient!=='function')throw new Error('No cargó la librería de Supabase.');
+    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    els.bootMsg.textContent='Sistema listo.';
+    authInputs();
+    els.perfil.addEventListener('change',authInputs);
+    els.logout.addEventListener('click',logout);
+    els.logoutTop.addEventListener('click',logout);
+    document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>nav(btn.dataset.sec)));
+    els.loginForm.addEventListener('submit',async e=>{
+      e.preventDefault();
+      perfilActual=els.perfil.value;
+      try{
+        if(perfilActual==='bomberos'){await loginBomberos()}else{await loginAdmin(els.email.value,els.password.value,perfilActual)}
+        els.login.classList.add('hidden');
+        els.app.classList.remove('hidden');
+        els.userInfo.textContent=canBombero()?'Bomberos · plano del móvil y control diario de materiales':perfilActual+' · permisos según rol';
+        updateNavVisibility();
+        nav(canBombero()?'checklist_materiales':'dashboard');
+      }catch(err){alert(err&&err.message?err.message:'No se pudo iniciar sesión.')}
+    })
+  }catch(err){
+    els.bootMsg.textContent='Error de inicialización.';
+    showBootError(err&&err.message?err.message:String(err))
+  }
+}
+window.addEventListener('error',event=>showBootError(event&&event.message?event.message:'Script error'));
+window.addEventListener('unhandledrejection',event=>showBootError(event&&event.reason&&event.reason.message?event.reason.message:String((event&&event.reason)||'Promise error')));
+init();
 </script>
 </body>
 </html>
