@@ -72,6 +72,8 @@
           <button class="nav" data-sec="proveedores" type="button">Proveedores</button>
           <button class="nav" data-sec="mantenimiento" type="button">Bitácora</button>
           <button class="nav" data-sec="roperia" type="button">Ropería</button>
+          <button class="nav" data-sec="roperia_inventario_general" type="button">Inventario general ropería</button>
+          <button class="nav" data-sec="roperia_informe_bombero" type="button">Informe por bombero</button>
           <button class="nav" data-sec="respaldo" type="button">Importar / exportar</button>
           <button class="nav" data-sec="estadisticas" type="button">Estadísticas</button>
           <button class="nav" data-sec="novedades" type="button">Novedades</button>
@@ -103,7 +105,7 @@ const VIEW_RULES={
   jefatura:['dashboard','guardia_activa','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','roperia','estadisticas','novedades','auditoria','reportes_stock','diagnostico','guardia'],
   automotores:['dashboard','guardia_activa','moviles','fallas','checklist_diario','repuestos','proveedores','mantenimiento','estadisticas','diagnostico','guardia'],
   materiales:['dashboard','guardia_activa','inventario_general','asignaciones','inventario','checklist_materiales','mantenimiento_stock','archivo_bajas','novedades','reportes_stock','estadisticas','diagnostico','guardia'],
-  roperia:['dashboard','guardia_activa','roperia','estadisticas','diagnostico','guardia'],
+  roperia:['dashboard','roperia','roperia_inventario_general','roperia_informe_bombero','diagnostico'],
   bomberos:['dashboard','guardia_activa','inventario','plano','checklist_materiales','diagnostico','guardia']
 };
 const els={login:document.getElementById('login'),app:document.getElementById('app'),loginForm:document.getElementById('loginForm'),perfil:document.getElementById('perfil'),email:document.getElementById('email'),password:document.getElementById('password'),bootMsg:document.getElementById('bootMsg'),bootErr:document.getElementById('bootErr'),userInfo:document.getElementById('userInfo'),guardiaInfo:document.getElementById('guardiaInfo'),title:document.getElementById('title'),content:document.getElementById('content'),flash:document.getElementById('flash'),logout:document.getElementById('logout'),logoutTop:document.getElementById('logoutTop')};
@@ -155,6 +157,25 @@ function enforceHierarchy(targetRole){if(level(perfilActual)<=level(targetRole))
 
 async function dashboard(){
   els.title.textContent='Dashboard';
+  if(perfilActual==='roperia'){
+    const rows=(await tableExists('roperia_items'))? await safeSelect('roperia_items','tipo_prenda',true):[];
+    const activas=rows.filter(r=>String(r.estado||'').toUpperCase()==='ACTIVO');
+    const bajas=rows.filter(r=>String(r.estado||'').toUpperCase()==='BAJA');
+    const asignadas=rows.filter(r=>String(r.asignado_a||'').trim()!=='');
+    const alertas=rows.filter(r=>!r.sin_stock_minimo && Number(r.cantidad_disponible||0)<=Number(r.stock_minimo||0) && String(r.estado||'').toUpperCase()!=='BAJA');
+    els.content.innerHTML='<div class="hero-grid">'+
+      '<div class="hero service"><div class="hero-label">Prendas activas</div><div class="hero-number">'+activas.length+'</div></div>'+
+      '<div class="hero maint"><div class="hero-label">Prendas asignadas</div><div class="hero-number">'+asignadas.length+'</div></div>'+
+      '<div class="hero out"><div class="hero-label">Prendas dadas de baja</div><div class="hero-number">'+bajas.length+'</div></div>'+
+    '</div>'+
+    '<div class="stat-grid" style="margin-top:14px;">'+
+      card('Total prendas',rows.length)+card('Disponibles bajas stock',alertas.length)+card('Asignadas a bomberos',asignadas.length)+card('En estado BAJA',bajas.length)+
+    '</div>'+
+    '<div class="card" style="margin-top:14px;"><strong>Centro de alertas de ropería</strong><div style="margin-top:8px;">'+
+      (alertas.map(r=>'<div class="list-row"><strong>'+h(r.tipo_prenda||'')+'</strong> · talle '+h(r.talle||'')+' · disponible '+h(r.cantidad_disponible||0)+' / mínimo '+h(r.stock_minimo||0)+'</div>').join('')||'Sin alertas de ropería.')+
+    '</div></div>';
+    return;
+  }
   const all=await Promise.all([
     safeSelect('moviles'),
     tableExists('v_stock_assignments_detail').then(x=>x?safeSelect('v_stock_assignments_detail'):[]),
@@ -195,11 +216,6 @@ async function dashboard(){
       (alertasMateriales.map(n=>'<div class="list-row"><strong>'+h(n.material||'')+'</strong> · Móvil '+h(n.movil||'')+' · '+h(n.compartimiento||'')+' · '+h(n.tipo_novedad||'')+'</div>').join('')||'Sin novedades pendientes.')+
       '</div></div>';
   }
-  if(perfilActual==='roperia'){
-    const rows=(await tableExists('roperia_items'))? await safeSelect('roperia_items'):[];
-    const bajas=rows.filter(r=>!r.sin_stock_minimo && Number(r.cantidad_disponible||0)<=Number(r.stock_minimo||0));
-    extra='<div class="card" style="margin-top:14px;"><strong>Alertas de ropería</strong><div style="margin-top:8px;">'+(bajas.map(r=>'<div class="list-row"><strong>'+h(r.tipo_prenda)+'</strong> · talle '+h(r.talle||'')+' · disponible '+h(r.cantidad_disponible)+'</div>').join('')||'Sin alertas de ropería.')+'</div></div>';
-  }
   els.content.innerHTML='<div class="hero-grid">'+
     '<div class="hero service"><div class="hero-label">Móviles en servicio</div><div class="hero-number">'+enServicio+'</div></div>'+
     '<div class="hero maint"><div class="hero-label">En mantenimiento</div><div class="hero-number">'+enMantenimiento+'</div></div>'+
@@ -207,12 +223,12 @@ async function dashboard(){
   '</div>'+
   '<div class="stat-grid" style="margin-top:14px;">'+
     card('Inventario por móvil',inv.length)+card('Fallas críticas',fallasCriticas.length)+card('Repuestos críticos',repuestosCriticos.length)+card('Alertas materiales',alertasMateriales.length)+card('Alertas stock general',alertasStock.length)+card('Checklist hoy',checklistHoy)+card('Controles materiales hoy',controlesHoy)+
-  '</div>'+ (canSeeAlerts()?('<div class="card" style="margin-top:14px;"><strong>Centro de alertas</strong><div style="margin-top:10px;">'+alertHtml+'</div></div>'):'') + extra;
+  '</div>'+(canSeeAlerts()?('<div class="card" style="margin-top:14px;"><strong>Centro de alertas</strong><div style="margin-top:10px;">'+alertHtml+'</div></div>'):'')+extra;
 }
 
 async function guardia_activa(){
   els.title.textContent='Guardia activa';
-  if(!(await tableExists('guardias_activas'))){els.content.innerHTML='<div class="err">No existe la tabla guardias_activas en Supabase.</div>';return;}
+  if(!(await tableExists('guardias_activas'))){els.content.innerHTML='<div class="card"><strong>Guardia activa</strong><div class="small" style="margin-top:8px;">No existe la tabla guardias_activas en Supabase. El sistema sigue funcionando, pero este módulo queda deshabilitado hasta que la crees.</div></div>';return;}
   const rows=await safeSelect('guardias_activas','fecha_inicio',false,20);
   let html='';
   if(['administrador','jefatura'].includes(perfilActual)){
@@ -410,16 +426,41 @@ async function mantenimiento(){
 
 async function roperia(){
   els.title.textContent='Ropería';
-  if(!(await tableExists('roperia_items'))){els.content.innerHTML='<div class="err">No existe la tabla roperia_items.</div>';return;}
-  const rows=await safeSelect('roperia_items','tipo_prenda',true); let html='';
-  if(canEditRoperia()) html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de prenda</strong><form id="fRoperia" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="codigo_interno" placeholder="Código interno"><input name="tipo_prenda" placeholder="Tipo de prenda" required><input name="descripcion" placeholder="Descripción"><input name="talle" placeholder="Talle"><input name="sexo" placeholder="Sexo / corte"><input name="cantidad_total" type="number" min="0" placeholder="Cantidad total" required><input name="cantidad_disponible" type="number" min="0" placeholder="Cantidad disponible" required><input name="stock_minimo" type="number" min="0" placeholder="Stock mínimo"><select name="sin_stock_minimo"><option value="false">Con stock mínimo</option><option value="true">Sin stock mínimo</option></select><input name="asignado_a" placeholder="Asignado a"><input name="estado" placeholder="Estado" value="ACTIVO"><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar prenda</button></form></div>';
-  html+='<div class="card"><table><thead><tr><th>Código</th><th>Prenda</th><th>Talle</th><th>Disponible</th><th>Total</th><th>Asignado a</th><th>Estado</th>'+(canEditRoperia()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(r.codigo_interno||'')+'</td><td><strong>'+h(r.tipo_prenda||'')+'</strong><div class="small">'+h(r.descripcion||'')+'</div></td><td>'+h(r.talle||'')+'</td><td>'+h(r.cantidad_disponible||0)+'</td><td>'+h(r.cantidad_total||0)+'</td><td>'+h(r.asignado_a||'')+'</td><td>'+statusPill(r.estado||'')+'</td>'+(canEditRoperia()?'<td><button class="secondary edit-roperia" data-id="'+r.id+'">Editar</button> <button class="danger del-roperia" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="8">Sin prendas cargadas.</td></tr>')+'</tbody></table></div>';
+  if(!(await tableExists('roperia_items'))){els.content.innerHTML='<div class="card"><strong>Ropería</strong><div class="small" style="margin-top:8px;">No existe la tabla roperia_items en Supabase.</div></div>';return;}
+  const rows=await safeSelect('roperia_items','tipo_prenda',true);
+  const bomberos=(await tableExists('bomberos'))? await safeSelect('bomberos','apellido',true):[];
+  const nombresBomberos=bomberos.map(b=>((b.jerarquia||'')+' '+(b.apellido||'')+' '+(b.nombre||'')).trim()).filter(Boolean);
+  let html='';
+  if(canEditRoperia()) html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de prenda</strong><form id="fRoperia" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="codigo_interno" placeholder="Código interno"><input name="tipo_prenda" placeholder="Tipo de prenda" required><input name="descripcion" placeholder="Descripción"><input name="talle" placeholder="Talle"><input name="sexo" placeholder="Sexo / corte"><input name="cantidad_total" type="number" min="0" placeholder="Cantidad total" required><input name="cantidad_disponible" type="number" min="0" placeholder="Cantidad disponible" required><input name="stock_minimo" type="number" min="0" placeholder="Stock mínimo"><select name="sin_stock_minimo"><option value="false">Con stock mínimo</option><option value="true">Sin stock mínimo</option></select><select name="asignado_a"><option value="">Sin asignar</option>'+nombresBomberos.map(n=>'<option value="'+h(n)+'">'+h(n)+'</option>').join('')+'</select><input name="estado" placeholder="Estado" value="ACTIVO"><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar prenda</button></form></div>';
+  html+='<div class="card"><table><thead><tr><th>Código</th><th>Prenda</th><th>Talle</th><th>Disponible</th><th>Total</th><th>Asignado a</th><th>Estado</th>'+(canEditRoperia()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(r.codigo_interno||'')+'</td><td><strong>'+h(r.tipo_prenda||'')+'</strong><div class="small">'+h(r.descripcion||'')+'</div></td><td>'+h(r.talle||'')+'</td><td>'+h(r.cantidad_disponible||0)+'</td><td>'+h(r.cantidad_total||0)+'</td><td>'+h(r.asignado_a||'Sin asignar')+'</td><td>'+statusPill(r.estado||'')+'</td>'+(canEditRoperia()?'<td><button class="secondary edit-roperia" data-id="'+r.id+'">Editar</button> <button class="danger baja-roperia" data-id="'+r.id+'">Dar de baja</button></td>':'')+'</tr>').join('')||'<tr><td colspan="8">Sin prendas cargadas.</td></tr>')+'</tbody></table></div>';
   els.content.innerHTML=html;
   if(!canEditRoperia()) return;
   const form=document.getElementById('fRoperia');
-  form.addEventListener('submit',async e=>{e.preventDefault();if(!requireGuardia())return;const fd=new FormData(form);const row={codigo_interno:fd.get('codigo_interno'),tipo_prenda:fd.get('tipo_prenda'),descripcion:fd.get('descripcion'),talle:fd.get('talle'),sexo:fd.get('sexo'),cantidad_total:Number(fd.get('cantidad_total')||0),cantidad_disponible:Number(fd.get('cantidad_disponible')||0),stock_minimo:Number(fd.get('stock_minimo')||0),sin_stock_minimo:String(fd.get('sin_stock_minimo'))==='true',asignado_a:fd.get('asignado_a'),estado:fd.get('estado'),observaciones:fd.get('observaciones')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('roperia_items',row);await audit(fd.get('id')?'editar':'crear','roperia_item',row);showFlash('Prenda guardada','ok');roperia()});
+  form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={codigo_interno:fd.get('codigo_interno'),tipo_prenda:fd.get('tipo_prenda'),descripcion:fd.get('descripcion'),talle:fd.get('talle'),sexo:fd.get('sexo'),cantidad_total:Number(fd.get('cantidad_total')||0),cantidad_disponible:Number(fd.get('cantidad_disponible')||0),stock_minimo:Number(fd.get('stock_minimo')||0),sin_stock_minimo:String(fd.get('sin_stock_minimo'))==='true',asignado_a:fd.get('asignado_a'),estado:fd.get('estado')||'ACTIVO',observaciones:fd.get('observaciones')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('roperia_items',row);await audit(fd.get('id')?'editar':'crear','roperia_item',row);showFlash('Prenda guardada','ok');roperia()});
   document.querySelectorAll('.edit-roperia').forEach(btn=>btn.addEventListener('click',()=>{const item=rows.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.codigo_interno.value=item.codigo_interno||'';form.elements.tipo_prenda.value=item.tipo_prenda||'';form.elements.descripcion.value=item.descripcion||'';form.elements.talle.value=item.talle||'';form.elements.sexo.value=item.sexo||'';form.elements.cantidad_total.value=item.cantidad_total||0;form.elements.cantidad_disponible.value=item.cantidad_disponible||0;form.elements.stock_minimo.value=item.stock_minimo||0;form.elements.sin_stock_minimo.value=String(!!item.sin_stock_minimo);form.elements.asignado_a.value=item.asignado_a||'';form.elements.estado.value=item.estado||'ACTIVO';form.elements.observaciones.value=item.observaciones||''}));
-  document.querySelectorAll('.del-roperia').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar prenda?'))return;await deleteRow('roperia_items',Number(btn.dataset.id));await audit('eliminar','roperia_item',{id:Number(btn.dataset.id)});showFlash('Prenda eliminada','ok');roperia()}));
+  document.querySelectorAll('.baja-roperia').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Dar de baja esta prenda?'))return;await updateRows('roperia_items',{estado:'BAJA'},Number(btn.dataset.id));await audit('baja','roperia_item',{id:Number(btn.dataset.id)});showFlash('Prenda dada de baja','ok');roperia()}));
+}
+
+async function roperia_inventario_general(){
+  els.title.textContent='Inventario general ropería';
+  if(!(await tableExists('roperia_items'))){els.content.innerHTML='<div class="card"><strong>Inventario general ropería</strong><div class="small" style="margin-top:8px;">No existe la tabla roperia_items en Supabase.</div></div>';return;}
+  const rows=await safeSelect('roperia_items','tipo_prenda',true);
+  els.content.innerHTML='<div class="card"><table><thead><tr><th>Código</th><th>Prenda</th><th>Talle</th><th>Disponible</th><th>Total</th><th>Stock mínimo</th><th>Asignado a</th><th>Estado</th>'+(canEditRoperia()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(r.codigo_interno||'')+'</td><td><strong>'+h(r.tipo_prenda||'')+'</strong><div class="small">'+h(r.descripcion||'')+'</div></td><td>'+h(r.talle||'')+'</td><td>'+h(r.cantidad_disponible||0)+'</td><td>'+h(r.cantidad_total||0)+'</td><td>'+(r.sin_stock_minimo?'<span class="pill pill-info">Sin mínimo</span>':h(r.stock_minimo||0))+'</td><td>'+h(r.asignado_a||'Sin asignar')+'</td><td>'+statusPill(r.estado||'')+'</td>'+(canEditRoperia()?'<td><button class="danger baja-roperia-general" data-id="'+r.id+'">Dar de baja</button></td>':'')+'</tr>').join('')||'<tr><td colspan="9">Sin prendas cargadas.</td></tr>')+'</tbody></table></div>';
+  if(canEditRoperia()) document.querySelectorAll('.baja-roperia-general').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Dar de baja esta prenda?'))return;await updateRows('roperia_items',{estado:'BAJA'},Number(btn.dataset.id));await audit('baja','roperia_item',{id:Number(btn.dataset.id)});showFlash('Prenda dada de baja','ok');roperia_inventario_general()}));
+}
+
+async function roperia_informe_bombero(){
+  els.title.textContent='Informe por bombero';
+  if(!(await tableExists('roperia_items'))){els.content.innerHTML='<div class="card"><strong>Informe por bombero</strong><div class="small" style="margin-top:8px;">No existe la tabla roperia_items en Supabase.</div></div>';return;}
+  const bomberos=(await tableExists('bomberos'))? await safeSelect('bomberos','apellido',true):[];
+  const rows=await safeSelect('roperia_items','asignado_a',true);
+  const nombresBomberos=bomberos.map(b=>((b.jerarquia||'')+' '+(b.apellido||'')+' '+(b.nombre||'')).trim()).filter(Boolean);
+  els.content.innerHTML='<div class="card"><div class="grid" style="grid-template-columns:280px 220px; align-items:end;"><div><label class="small">Bombero</label><select id="repBombero" style="margin-top:8px;"><option value="">Todos</option>'+nombresBomberos.map(n=>'<option value="'+h(n)+'">'+h(n)+'</option>').join('')+'</select></div><div><button id="expBomberoCsv" class="primary" type="button">Exportar informe por bombero</button></div></div><div id="repBomberoWrap" style="margin-top:14px;"></div></div>';
+  const sel=document.getElementById('repBombero');
+  const wrap=document.getElementById('repBomberoWrap');
+  function render(){const filtered=rows.filter(r=>!sel.value || String(r.asignado_a||'')===String(sel.value)); wrap.innerHTML='<table><thead><tr><th>Bombero</th><th>Prenda</th><th>Talle</th><th>Estado</th><th>Observaciones</th></tr></thead><tbody>'+(filtered.map(r=>'<tr><td>'+h(r.asignado_a||'Sin asignar')+'</td><td><strong>'+h(r.tipo_prenda||'')+'</strong><div class="small">'+h(r.descripcion||'')+'</div></td><td>'+h(r.talle||'')+'</td><td>'+statusPill(r.estado||'')+'</td><td>'+h(r.observaciones||'')+'</td></tr>').join('')||'<tr><td colspan="5">Sin datos para el filtro seleccionado.</td></tr>')+'</tbody></table>';}
+  render(); sel.addEventListener('change',render);
+  document.getElementById('expBomberoCsv').addEventListener('click',()=>{const filtered=rows.filter(r=>!sel.value || String(r.asignado_a||'')===String(sel.value)).map(r=>({bombero:r.asignado_a||'',tipo_prenda:r.tipo_prenda||'',descripcion:r.descripcion||'',talle:r.talle||'',estado:r.estado||'',observaciones:r.observaciones||''})); downloadText('informe_roperia_por_bombero.csv',csv(filtered),'text/csv;charset=utf-8');});
 }
 
 async function respaldo(){
@@ -449,7 +490,7 @@ async function novedades(){
 
 async function auditoria(){
   els.title.textContent='Auditoría';
-  if(!(await tableExists('audit_logs'))){els.content.innerHTML='<div class="err">No existe la tabla audit_logs. Debés crearla en Supabase para registrar quién tocó qué.</div>';return;}
+  if(!(await tableExists('audit_logs'))){els.content.innerHTML='<div class="card"><strong>Auditoría</strong><div class="small" style="margin-top:8px;">No existe la tabla audit_logs. El sistema puede seguir usándose, pero no va a registrar historial hasta que la crees en Supabase.</div></div>';return;}
   const rows=await safeSelect('audit_logs','fecha_hora',false,200);
   els.content.innerHTML='<div class="card"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Perfil</th><th>Acción</th><th>Entidad</th><th>Detalle</th></tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+'</td><td>'+h(r.usuario||'')+'</td><td>'+h(r.perfil||'')+'</td><td>'+h(r.accion||'')+'</td><td>'+h(r.entidad||'')+'</td><td>'+h(r.detalle||'')+'</td></tr>').join('')||'<tr><td colspan="6">Sin auditoría.</td></tr>')+'</tbody></table></div>';
 }
@@ -486,10 +527,10 @@ async function guardia(){
   document.getElementById('refreshGuardia').addEventListener('click',()=>guardia()); const autoBtn=document.getElementById('autoGuardia'); autoBtn.textContent=window.__guardiaAuto?'Auto 60 s: ON':'Auto 60 s: OFF'; autoBtn.addEventListener('click',()=>{window.__guardiaAuto=!window.__guardiaAuto;autoBtn.textContent=window.__guardiaAuto?'Auto 60 s: ON':'Auto 60 s: OFF';if(window.__guardiaTimer){clearInterval(window.__guardiaTimer);window.__guardiaTimer=null}if(window.__guardiaAuto){window.__guardiaTimer=setInterval(()=>{if(els.title.textContent==='Modo guardia')guardia()},60000)}}); if(window.__guardiaAuto){window.__guardiaTimer=setInterval(()=>{if(els.title.textContent==='Modo guardia')guardia()},60000)}
 }
 
-async function nav(sec){ if(!canView(sec)){showFlash('Ese perfil no tiene acceso a esta sección','err');return} activateNav(sec); if(sec==='dashboard')return dashboard(); if(sec==='guardia_activa')return guardia_activa(); if(sec==='moviles')return moviles(); if(sec==='bomberos')return bomberos(); if(sec==='inventario_general')return inventario_general(); if(sec==='asignaciones')return asignaciones(); if(sec==='inventario')return inventario(); if(sec==='plano')return plano(); if(sec==='fallas')return fallas(); if(sec==='checklist_diario')return checklist_diario(); if(sec==='checklist_materiales')return checklist_materiales(); if(sec==='mantenimiento_stock')return mantenimiento_stock(); if(sec==='archivo_bajas')return archivo_bajas(); if(sec==='repuestos')return repuestos(); if(sec==='proveedores')return proveedores(); if(sec==='mantenimiento')return mantenimiento(); if(sec==='roperia')return roperia(); if(sec==='respaldo')return respaldo(); if(sec==='estadisticas')return estadisticas(); if(sec==='novedades')return novedades(); if(sec==='auditoria')return auditoria(); if(sec==='reportes_stock')return reportes_stock(); if(sec==='diagnostico')return diagnostico(); if(sec==='guardia')return guardia(); }
+async function nav(sec){ if(!canView(sec)){showFlash('Ese perfil no tiene acceso a esta sección','err');return} activateNav(sec); if(sec==='dashboard')return dashboard(); if(sec==='guardia_activa')return guardia_activa(); if(sec==='moviles')return moviles(); if(sec==='bomberos')return bomberos(); if(sec==='inventario_general')return inventario_general(); if(sec==='asignaciones')return asignaciones(); if(sec==='inventario')return inventario(); if(sec==='plano')return plano(); if(sec==='fallas')return fallas(); if(sec==='checklist_diario')return checklist_diario(); if(sec==='checklist_materiales')return checklist_materiales(); if(sec==='mantenimiento_stock')return mantenimiento_stock(); if(sec==='archivo_bajas')return archivo_bajas(); if(sec==='repuestos')return repuestos(); if(sec==='proveedores')return proveedores(); if(sec==='mantenimiento')return mantenimiento(); if(sec==='roperia')return roperia(); if(sec==='roperia_inventario_general')return roperia_inventario_general(); if(sec==='roperia_informe_bombero')return roperia_informe_bombero(); if(sec==='respaldo')return respaldo(); if(sec==='estadisticas')return estadisticas(); if(sec==='novedades')return novedades(); if(sec==='auditoria')return auditoria(); if(sec==='reportes_stock')return reportes_stock(); if(sec==='diagnostico')return diagnostico(); if(sec==='guardia')return guardia(); }
 
 async function init(){
-  try{ if(!window.supabase||typeof window.supabase.createClient!=='function') throw new Error('No cargó la librería de Supabase.'); sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY); els.bootMsg.textContent='Sistema listo.'; authInputs(); els.perfil.addEventListener('change',authInputs); els.logout.addEventListener('click',logout); els.logoutTop.addEventListener('click',logout); document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>nav(btn.dataset.sec))); els.loginForm.addEventListener('submit',async e=>{e.preventDefault(); perfilActual=els.perfil.value; try{ if(perfilActual==='bomberos') await loginBomberos(); else await loginAdmin(els.email.value,els.password.value,perfilActual); els.login.classList.add('hidden'); els.app.classList.remove('hidden'); els.userInfo.textContent=(userActual?.email||perfilActual)+' · rol '+perfilActual; await loadGuardiaActiva(); updateNavVisibility(); nav(canBombero()?'checklist_materiales':'dashboard'); }catch(err){alert(err&&err.message?err.message:'No se pudo iniciar sesión.')}}) }catch(err){ els.bootMsg.textContent='Error de inicialización.'; showBootError(err&&err.message?err.message:String(err)); }
+  try{ if(!window.supabase||typeof window.supabase.createClient!=='function') throw new Error('No cargó la librería de Supabase.'); sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY); els.bootMsg.textContent='Sistema listo.'; authInputs(); els.perfil.addEventListener('change',authInputs); els.logout.addEventListener('click',logout); els.logoutTop.addEventListener('click',logout); document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>nav(btn.dataset.sec))); els.loginForm.addEventListener('submit',async e=>{e.preventDefault(); perfilActual=els.perfil.value; try{ if(perfilActual==='bomberos') await loginBomberos(); else await loginAdmin(els.email.value,els.password.value,perfilActual); els.login.classList.add('hidden'); els.app.classList.remove('hidden'); els.userInfo.textContent=(userActual?.email||perfilActual)+' · rol '+perfilActual; await loadGuardiaActiva(); updateNavVisibility(); nav(perfilActual==='roperia'?'dashboard':(canBombero()?'checklist_materiales':'dashboard')); }catch(err){alert(err&&err.message?err.message:'No se pudo iniciar sesión.')}}) }catch(err){ els.bootMsg.textContent='Error de inicialización.'; showBootError(err&&err.message?err.message:String(err)); }
 }
 window.addEventListener('error',event=>showBootError(event&&event.message?event.message:'Script error')); window.addEventListener('unhandledrejection',event=>showBootError(event&&event.reason&&event.reason.message?event.reason.message:String((event&&event.reason)||'Promise error'))); init();
 </script>
