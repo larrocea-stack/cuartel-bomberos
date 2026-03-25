@@ -1,282 +1,306 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cuartel Online</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body{font-family:Arial,sans-serif;background:#020617;color:#e2e8f0;margin:0}
-    .card{background:#0f172a;border:1px solid #334155;border-radius:16px;padding:16px}
-    input,select,textarea{width:100%;box-sizing:border-box;background:#1e293b;border:1px solid #334155;color:#fff;border-radius:12px;padding:12px}
-    textarea{min-height:100px;resize:vertical}
-    button{cursor:pointer;border:none}
-    .primary{background:#b91c1c;color:#fff;padding:12px;border-radius:12px;font-weight:700}
-    .secondary{background:#1e293b;color:#fff;padding:10px 12px;border-radius:10px}
-    .danger{background:#7f1d1d;color:#fff;padding:10px 12px;border-radius:10px}
-    .nav{background:#111827;color:#e2e8f0;padding:10px 12px;border-radius:10px;text-align:left}
-    .nav.active{background:#991b1b;color:#fff}
-    .hidden{display:none!important}.grid{display:grid;gap:12px}.small{font-size:12px;color:#94a3b8}
-    .list-row{padding:10px 0;border-bottom:1px solid #334155}.err{background:#450a0a;border:1px solid #7f1d1d;color:#fecaca;border-radius:12px;padding:12px;white-space:pre-wrap}
-    .ok{background:#052e16;border:1px solid #166534;color:#bbf7d0;border-radius:12px;padding:12px}.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px}
-    .pill-ok{background:#052e16;color:#bbf7d0}.pill-warn{background:#78350f;color:#fde68a}.pill-bad{background:#450a0a;color:#fecaca}.pill-info{background:#172554;color:#bfdbfe}
-    table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #334155;text-align:left;vertical-align:top}th{color:#94a3b8;font-size:12px;text-transform:uppercase}
-    .toolbar{display:flex;gap:8px;flex-wrap:wrap}.mobile-map{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.comp-box{background:#111827;border:1px solid #334155;border-radius:14px;padding:12px}
-    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.hero-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-    .hero-number{font-size:34px;font-weight:800;line-height:1;margin-top:8px}.hero-label{font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
-    .status-big,.guardia-card{border-radius:18px;padding:18px;border:1px solid #334155}.status-service{background:#052e16;border-color:#166534}.status-maint{background:#3b2a05;border-color:#92400e}.status-out{background:#450a0a;border-color:#7f1d1d}
-    .guardia-wrap{min-height:100vh;background:#020617;color:#e2e8f0;padding:20px}.guardia-header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}.guardia-title{font-size:34px;font-weight:800;letter-spacing:.04em}.guardia-sub{color:#94a3b8;font-size:14px}
-    .guardia-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}.guardia-number{font-size:56px;font-weight:900;line-height:1;margin-top:10px}.guardia-label{font-size:13px;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em}
-    .guardia-list{margin-top:18px;display:grid;grid-template-columns:1.1fr .9fr;gap:16px}.guardia-item{padding:12px 0;border-bottom:1px solid #334155;font-size:18px}.guardia-item:last-child{border-bottom:none}.guardia-badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}.guardia-danger{background:#7f1d1d;color:#fecaca}.guardia-warn{background:#92400e;color:#fde68a}.guardia-ok{background:#166534;color:#bbf7d0}.guardia-footer{margin-top:16px;color:#94a3b8;font-size:13px}
-    @media (max-width:900px){.layout{display:block!important}aside{width:auto!important;border-right:none!important;border-bottom:1px solid #334155!important}.guardia-list{grid-template-columns:1fr}}
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cuartel Online - Ezeiza</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body{font-family:Arial,sans-serif;background:#020617;color:#e2e8f0;margin:0}
+    .card{background:#0f172a;border:1px solid #334155;border-radius:16px;padding:16px}
+    input,select,textarea{width:100%;box-sizing:border-box;background:#1e293b;border:1px solid #334155;color:#fff;border-radius:12px;padding:12px}
+    button{cursor:pointer;border:none}
+    .primary{background:#b91c1c;color:#fff;padding:12px;border-radius:12px;font-weight:700}
+    .secondary{background:#1e293b;color:#fff;padding:10px 12px;border-radius:10px}
+    .danger{background:#7f1d1d;color:#fff;padding:10px 12px;border-radius:10px}
+    .nav{background:#111827;color:#e2e8f0;padding:10px 12px;border-radius:10px;text-align:left;margin-bottom:4px;width:100%}
+    .nav.active{background:#991b1b;color:#fff}
+    .hidden{display:none!important}.grid{display:grid;gap:12px}.small{font-size:12px;color:#94a3b8}
+    .list-row{padding:10px 0;border-bottom:1px solid #334155}
+    .ok{background:#052e16;border:1px solid #166534;color:#bbf7d0;border-radius:12px;padding:12px}
+    .err{background:#450a0a;border:1px solid #7f1d1d;color:#fecaca;border-radius:12px;padding:12px}
+    .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px}
+    .pill-ok{background:#052e16;color:#bbf7d0}.pill-warn{background:#78350f;color:#fde68a}.pill-bad{background:#450a0a;color:#fecaca}
+    table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #334155;text-align:left}th{color:#94a3b8;font-size:12px;text-transform:uppercase}
+    .status-big{border-radius:18px;padding:18px;border:1px solid #334155}
+    .status-service{background:#052e16;border-color:#166534}.status-maint{background:#3b2a05;border-color:#92400e}.status-out{background:#450a0a;border-color:#7f1d1d}
+    @media (max-width:900px){.layout{display:block!important}aside{width:auto!important;border-right:none!important}}
+  </style>
 </head>
 <body>
-  <div id="login" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
-    <div class="card" style="width:100%;max-width:420px;">
-      <h1 style="font-size:32px;font-weight:800;margin:0 0 8px 0;">CUARTEL<span style="color:#ef4444;">ONLINE</span></h1>
-      <p class="small" style="margin:0 0 16px 0;">Sistema con perfiles y control operativo</p>
-      <div id="bootMsg" class="small" style="margin-bottom:12px;">Cargando sistema…</div>
-      <div id="bootErr" class="err hidden" style="margin-bottom:12px;"></div>
-      <form id="loginForm" class="grid">
-        <select id="perfil">
-          <option value="administrador">Administrador</option>
-          <option value="materiales">Encargado de materiales</option>
-          <option value="automotores">Encargado de automotores</option>
-          <option value="jefatura">Jefatura</option>
-          <option value="bomberos">Bomberos</option>
-        </select>
-        <input id="email" type="email" placeholder="Email" />
-        <input id="password" type="password" placeholder="Contraseña" />
-        <button type="submit" class="primary">Ingresar</button>
-      </form>
-    </div>
-  </div>
+  <div id="login" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
+    <div class="card" style="width:100%;max-width:420px;">
+      <h1 style="font-size:32px;font-weight:800;margin:0 0 8px 0;">CUARTEL<span style="color:#ef4444;">ONLINE</span></h1>
+      <form id="loginForm" class="grid">
+        <select id="perfil">
+          <option value="administrador">Administrador</option>
+          <option value="materiales">Encargado de materiales</option>
+          <option value="automotores">Encargado de automotores</option>
+          <option value="roperia">Ropería</option>
+          <option value="jefatura">Jefatura</option>
+        </select>
+        <input id="email" type="email" placeholder="Email" required />
+        <input id="password" type="password" placeholder="Contraseña" required />
+        <button type="submit" class="primary">Ingresar</button>
+      </form>
+    </div>
+  </div>
 
-  <div id="app" class="hidden">
-    <div class="layout" style="display:flex;min-height:100vh;">
-      <aside style="width:300px;background:#020617;border-right:1px solid #334155;padding:16px;box-sizing:border-box;">
-        <div id="brandEscudoWrap" class="hidden" style="text-align:center;margin-bottom:10px;">
-          <img id="brandEscudo" style="max-height:80px;max-width:100%;object-fit:contain;">
-        </div>
-        <div style="font-weight:800;font-size:22px;margin-bottom:8px;">CUARTEL<span style="color:#ef4444;">ONLINE</span></div>
-        <div id="userInfo" class="small" style="margin-bottom:16px;"></div>
-        <div class="grid">
-          <button class="nav active" data-sec="dashboard" type="button">Dashboard</button>
-          <button class="nav" data-sec="identidad" type="button">Identidad institucional</button>
-          <button class="nav" data-sec="moviles" type="button">Móviles</button>
-          <button class="nav" data-sec="bomberos" type="button">Bomberos</button>
-          <button class="nav" data-sec="inventario_general" type="button">Inventario general</button>
-          <button class="nav" data-sec="asignaciones" type="button">Asignaciones</button>
-          <button class="nav" data-sec="inventario" type="button">Inventario por móvil</button>
-          <button class="nav" data-sec="plano" type="button">Plano del móvil</button>
-          <button class="nav" data-sec="fallas" type="button">Reporte de fallas</button>
-          <button class="nav" data-sec="checklist_diario" type="button">Checklist diario</button>
-          <button class="nav" data-sec="checklist_materiales" type="button">Control diario materiales</button>
-          <button class="nav" data-sec="mantenimiento_stock" type="button">Control de mantenimiento</button>
-          <button class="nav" data-sec="archivo_bajas" type="button">Archivo / bajas</button>
-          <button class="nav" data-sec="repuestos" type="button">Repuestos</button>
-          <button class="nav" data-sec="proveedores" type="button">Proveedores</button>
-          <button class="nav" data-sec="mantenimiento" type="button">Bitácora</button>
-          <button class="nav" data-sec="respaldo" type="button">Importar / exportar</button>
-          <button class="nav" data-sec="estadisticas" type="button">Estadísticas</button>
-          <button class="nav" data-sec="novedades" type="button">Novedades de materiales</button>
-          <button class="nav" data-sec="reportes_stock" type="button">Reportes de stock</button>
-          <button class="nav" data-sec="diagnostico" type="button">Diagnóstico</button>
-          <button class="nav" data-sec="guardia" type="button">Modo guardia</button>
-        </div>
-        <button id="logout" class="secondary" style="margin-top:20px;width:100%;" type="button">Cerrar sesión</button>
-      </aside>
+  <div id="app" class="hidden">
+    <div class="layout" style="display:flex;min-height:100vh;">
+      <aside style="width:280px;background:#020617;border-right:1px solid #334155;padding:16px;">
+        <div style="font-weight:800;font-size:22px;margin-bottom:20px;">CUARTEL<span style="color:#ef4444;">ONLINE</span></div>
+        <div id="userInfo" class="small" style="margin-bottom:16px;"></div>
+        <nav class="grid" id="navContainer"></nav>
+        <button id="logout" class="secondary" style="margin-top:20px;width:100%;">Cerrar sesión</button>
+      </aside>
 
-      <main style="flex:1;padding:20px;box-sizing:border-box;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
-          <h2 id="title" style="margin:0;">Dashboard</h2>
-          <button id="logoutTop" class="secondary" type="button">Salir</button>
-        </div>
-        <div id="flash" class="hidden" style="margin-top:12px;"></div>
-        <div id="content" style="margin-top:16px;"></div>
-      </main>
-    </div>
-  </div>
+      <main style="flex:1;padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <h2 id="title" style="margin:0;">Dashboard</h2>
+        </div>
+        <div id="flash" class="hidden" style="margin-top:12px;"></div>
+        <div id="content" style="margin-top:20px;"></div>
+      </main>
+    </div>
+  </div>
 
 <script>
+// CONFIGURACIÓN SUPABASE
 const SUPABASE_URL='https://nksnxiqteqqlngmpzeew.supabase.co';
 const SUPABASE_KEY='sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
-const PROFILE_EMAILS={administrador:'admin@cuartel.com',materiales:'materiales@cuartel.com',automotores:'automotores@cuartel.com',jefatura:'jefatura@cuartel.com'};
-const VIEW_RULES={
-  administrador:['dashboard','identidad','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','respaldo','estadisticas','novedades','reportes_stock','diagnostico','guardia'],
-  materiales:['dashboard','inventario_general','asignaciones','inventario','plano','checklist_materiales','mantenimiento_stock','archivo_bajas','novedades','reportes_stock','estadisticas','diagnostico','guardia'],
-  automotores:['dashboard','moviles','plano','fallas','checklist_diario','repuestos','proveedores','estadisticas','diagnostico','guardia'],
-  jefatura:['dashboard','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','estadisticas','novedades','reportes_stock','diagnostico','guardia'],
-  bomberos:['dashboard','inventario','plano','checklist_materiales','diagnostico','guardia']
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// REGLAS DE VISTA SEGÚN TU PEDIDO
+const VIEW_RULES = {
+  administrador: ['dashboard','moviles','bomberos','inventario_general','asignaciones','mantenimiento','reportes_stock'],
+  materiales: ['dashboard','inventario_general','asignaciones','reportes_stock'],
+  automotores: ['dashboard','moviles','mantenimiento'], // Se agregó Bitácora (mantenimiento)
+  roperia: ['dashboard','inventario_roperia'],
+  jefatura: ['dashboard','moviles','bomberos','inventario_general','asignaciones','mantenimiento','reportes_stock']
 };
 
-const els={login:document.getElementById('login'),app:document.getElementById('app'),loginForm:document.getElementById('loginForm'),perfil:document.getElementById('perfil'),email:document.getElementById('email'),password:document.getElementById('password'),bootMsg:document.getElementById('bootMsg'),bootErr:document.getElementById('bootErr'),userInfo:document.getElementById('userInfo'),title:document.getElementById('title'),content:document.getElementById('content'),flash:document.getElementById('flash'),logout:document.getElementById('logout'),logoutTop:document.getElementById('logoutTop')};
-let sb=null,perfilActual=null,userActual=null;
+let perfilActual = null;
+const els = {
+  login: document.getElementById('login'),
+  app: document.getElementById('app'),
+  content: document.getElementById('content'),
+  title: document.getElementById('title'),
+  flash: document.getElementById('flash'),
+  nav: document.getElementById('navContainer')
+};
 
-function canView(s){return (VIEW_RULES[perfilActual]||[]).includes(s)}
-function canAdmin(){return perfilActual==='administrador'}
-function canBombero(){return perfilActual==='bomberos'}
-function canEditMoviles(){return perfilActual==='administrador'}
-function canEditBomberos(){return perfilActual==='administrador'}
-function canEditFallas(){return perfilActual==='administrador'||perfilActual==='automotores'}
-function canEditChecklistDiario(){return perfilActual==='administrador'||perfilActual==='automotores'||perfilActual==='jefatura'}
-function canEditChecklistMateriales(){return perfilActual==='administrador'||perfilActual==='materiales'||perfilActual==='bomberos'||perfilActual==='jefatura'}
-function canEditRepuestos(){return perfilActual==='administrador'||perfilActual==='automotores'}
-function canEditProveedores(){return perfilActual==='administrador'||perfilActual==='automotores'}
-function canEditMantenimiento(){return perfilActual==='administrador'}
-function canBackup(){return perfilActual==='administrador'}
-function canManageNovedades(){return perfilActual==='administrador'||perfilActual==='materiales'}
-function canEditStockGeneral(){return perfilActual==='administrador'||perfilActual==='materiales'}
-
-function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
-function showBootError(msg){els.bootErr.textContent=msg;els.bootErr.classList.remove('hidden')}
-function showFlash(msg,type){els.flash.className=type==='ok'?'ok':'err';els.flash.textContent=msg;els.flash.classList.remove('hidden');setTimeout(()=>els.flash.classList.add('hidden'),3200)}
-function authInputs(){const b=els.perfil.value==='bomberos';els.email.classList.toggle('hidden',b);els.password.classList.toggle('hidden',b)}
-function activateNav(sec){document.querySelectorAll('.nav').forEach(btn=>btn.classList.remove('active'));const btn=document.querySelector('.nav[data-sec="'+sec+'"]');if(btn)btn.classList.add('active')}
-function updateNavVisibility(){document.querySelectorAll('.nav').forEach(btn=>btn.classList.toggle('hidden',!canView(btn.dataset.sec)))}
-function card(label,value){return '<div class="card"><div class="small">'+escapeHtml(label)+'</div><div style="font-size:28px;font-weight:800;">'+escapeHtml(value)+'</div></div>'}
-function statusPill(status){const s=String(status||'').trim().toLowerCase();if(s==='en servicio')return '<span class="pill pill-ok">En servicio</span>';if(s==='en mantenimiento')return '<span class="pill pill-warn">En mantenimiento</span>';if(s==='fuera de servicio')return '<span class="pill pill-bad">Fuera de servicio</span>';return '<span class="pill pill-bad">'+escapeHtml(status||'Sin estado')+'</span>'}
-function severityPill(sev){const s=String(sev||'').trim().toLowerCase();if(s==='leve')return '<span class="pill pill-ok">Leve</span>';if(s==='moderada')return '<span class="pill pill-warn">Moderada</span>';return '<span class="pill pill-bad">'+escapeHtml(sev||'Crítica')+'</span>'}
-function csv(rows){if(!rows||!rows.length)return '';const headers=Object.keys(rows[0]);const esc=(v)=>'"'+String(v??'').replace(/"/g,'""')+'"';return [headers.join(',')].concat(rows.map(r=>headers.map(k=>esc(r[k])).join(','))).join('\n')}
-function downloadText(filename,content,type){const blob=new Blob([content],{type:type||'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url)}
-
-async function safeSelect(table,orderBy,ascending,limit){let q=sb.from(table).select('*');if(orderBy)q=q.order(orderBy,{ascending:!!ascending});if(limit)q=q.limit(limit);const res=await q;if(res.error)throw res.error;return res.data||[]}
-async function upsertRow(table,row){const res=await sb.from(table).upsert(row);if(res.error)throw res.error}
-async function insertRow(table,row){const res=await sb.from(table).insert(row);if(res.error)throw res.error}
-async function deleteRow(table,id){const res=await sb.from(table).delete().eq('id',id);if(res.error)throw res.error}
-async function updateRows(table,values,id){const res=await sb.from(table).update(values).eq('id',id);if(res.error)throw res.error}
-async function loginAdmin(email,password,profile){const expected=PROFILE_EMAILS[profile];if(!expected)throw new Error('Perfil inválido.');if(String(email||'').trim().toLowerCase()!==expected.toLowerCase())throw new Error('Para el perfil '+profile+' debés usar el email '+expected);const authRes=await sb.auth.signInWithPassword({email:email,password:password});if(authRes.error)throw authRes.error;userActual=authRes.data.user;const roleRes=await sb.from('user_profiles').select('*').eq('user_id',userActual.id).eq('profile_name',profile).limit(1);if(roleRes.error)throw roleRes.error;if(!roleRes.data||!roleRes.data.length)throw new Error('Ese usuario no tiene asignado el perfil seleccionado.')}
-async function loginBomberos(){userActual=null}
-async function logout(){try{if(userActual)await sb.auth.signOut()}catch(e){}location.reload()}
-
-async function cargarEscudo(){
-  const wrap=document.getElementById('brandEscudoWrap');
-  const img=document.getElementById('brandEscudo');
-  const res=await sb.from('configuracion_cuartel').select('*').eq('clave','escudo_url').limit(1);
-  if(res.error)return;
-  const url=res.data?.[0]?.valor;
-  if(url){img.src=url;wrap.classList.remove('hidden');}else{img.src='';wrap.classList.add('hidden');}
+// --- UTILIDADES ---
+function showFlash(msg,type){
+  els.flash.className = type==='ok'?'ok':'err';
+  els.flash.textContent = msg;
+  els.flash.classList.remove('hidden');
+  setTimeout(()=>els.flash.classList.add('hidden'),3000);
 }
 
-async function identidad(){
-  els.title.textContent='Identidad institucional';
-  const res=await sb.from('configuracion_cuartel').select('*').eq('clave','escudo_url').limit(1);
-  if(res.error){els.content.innerHTML='<div class="err">'+escapeHtml(res.error.message)+'</div>';return;}
-  const actual=res.data?.[0]?.valor || '';
-  els.content.innerHTML='<div class="card" style="max-width:900px;"><strong>Escudo institucional</strong><div class="small" style="margin-top:8px;">Pegá la URL directa de la imagen del escudo.</div><div style="margin-top:14px;">'+(actual?'<img src="'+escapeHtml(actual)+'" style="max-height:160px;max-width:100%;object-fit:contain;">':'<div class="small">Todavía no hay escudo cargado.</div>')+'</div><form id="fEscudo" class="grid" style="margin-top:12px;"><input name="escudo_url" placeholder="https://..." value="'+escapeHtml(actual)+'"><button class="primary" type="submit">Guardar escudo</button></form></div>';
-  document.getElementById('fEscudo').addEventListener('submit',async e=>{
-    e.preventDefault();
-    const fd=new FormData(e.target);
-    const save=await sb.from('configuracion_cuartel').upsert({clave:'escudo_url',valor:fd.get('escudo_url'),updated_at:new Date().toISOString()},{onConflict:'clave'});
-    if(save.error){alert(save.error.message);return;}
-    await cargarEscudo();
-    showFlash('Escudo guardado','ok');
-    identidad();
-  });
+function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+async function safeSelect(table){
+  const {data, error} = await sb.from(table).select('*');
+  if(error) { console.error(error); return []; }
+  return data;
 }
 
-async function dashboard(){
-  els.title.textContent='Dashboard';
-  const all=await Promise.all([safeSelect('moviles'),safeSelect('v_stock_assignments_detail'),safeSelect('fallas'),safeSelect('repuestos'),safeSelect('novedades_materiales'),safeSelect('revisiones'),safeSelect('controles_materiales'),safeSelect('v_stock_general')]);
-  const mov=all[0],inv=all[1],fallas=all[2],repuestos=all[3],novedades=all[4],revisiones=all[5],controles=all[6],stockGeneral=all[7];
-  const hoy=(new Date()).toDateString();
-  const enServicio=mov.filter(x=>x.estado==='En servicio').length;
-  const enMantenimiento=mov.filter(x=>x.estado==='En mantenimiento').length;
-  const fueraServicio=mov.filter(x=>x.estado==='Fuera de servicio').length;
-  const fallasCriticas=fallas.filter(f=>String(f.tipo_falla||'').toLowerCase().indexOf('crit')>=0);
-  const repuestosCriticos=repuestos.filter(r=>Number(r.stock_actual||0)<=Number(r.stock_minimo||0));
-  const alertasMateriales=novedades.filter(n=>String(n.estado||'').toLowerCase()==='pendiente');
-  const alertasStock=stockGeneral.filter(s=>s.alerta_minimo===true);
-  const checklistHoy=revisiones.filter(r=>r.fecha_hora&&new Date(r.fecha_hora).toDateString()===hoy).length;
-  const controlesHoy=controles.filter(r=>r.fecha_hora&&new Date(r.fecha_hora).toDateString()===hoy).length;
-  let alertHtml='';
-  alertHtml+=alertasMateriales.slice(0,6).map(n=>'<div class="list-row"><strong>Móvil '+escapeHtml(n.movil||'')+'</strong> · '+escapeHtml(n.material||'')+' · <span class="pill pill-bad">'+escapeHtml(n.tipo_novedad||'Novedad')+'</span></div>').join('');
-  alertHtml+=fallasCriticas.slice(0,4).map(f=>'<div class="list-row"><strong>Móvil '+escapeHtml(f.movil||'')+'</strong> · '+escapeHtml(f.componente||'')+' · <span class="pill pill-bad">Crítica</span></div>').join('');
-  alertHtml+=alertasStock.slice(0,4).map(s=>'<div class="list-row"><strong>'+escapeHtml(s.nombre||'')+'</strong> · disponible '+escapeHtml(s.disponible_real)+' / mínimo '+escapeHtml(s.stock_minimo)+' <span class="pill pill-bad">Stock bajo</span></div>').join('');
-  if(!alertHtml)alertHtml='<div class="list-row">Sin alertas activas.</div>';
-  els.content.innerHTML='<div class="hero-grid">'+
-    '<div class="status-big status-service"><div class="hero-label">Móviles en servicio</div><div class="hero-number">'+enServicio+'</div><div class="small">Operativos para salida</div></div>'+
-    '<div class="status-big status-maint"><div class="hero-label">En mantenimiento</div><div class="hero-number">'+enMantenimiento+'</div><div class="small">Requieren intervención</div></div>'+
-    '<div class="status-big status-out"><div class="hero-label">Fuera de servicio</div><div class="hero-number">'+fueraServicio+'</div><div class="small">No disponibles</div></div>'+
-  '</div>'+
-  '<div class="stat-grid" style="margin-top:14px;">'+
-    card('Inventario por móvil',inv.length)+
-    card('Fallas críticas',fallasCriticas.length)+
-    card('Repuestos críticos',repuestosCriticos.length)+
-    card('Alertas materiales',alertasMateriales.length)+
-    card('Alertas stock general',alertasStock.length)+
-    card('Checklist hoy',checklistHoy)+
-    card('Controles materiales hoy',controlesHoy)+
-  '</div>'+
-  '<div class="grid" style="grid-template-columns:1.1fr .9fr; margin-top:14px; align-items:start;">'+
-    '<div class="card"><strong>Centro de alertas</strong><div style="margin-top:10px;">'+alertHtml+'</div></div>'+
-    '<div class="card"><strong>Resumen operativo</strong><div style="margin-top:10px;">'+
-      '<div class="list-row">Total de móviles: <strong>'+mov.length+'</strong></div>'+
-      '<div class="list-row">Móviles operativos: <strong>'+enServicio+'</strong></div>'+
-      '<div class="list-row">Materiales observados: <strong>'+alertasMateriales.length+'</strong></div>'+
-      '<div class="list-row">Fallas registradas: <strong>'+fallas.length+'</strong></div>'+
-      '<div class="list-row">Repuestos bajo mínimo: <strong>'+repuestosCriticos.length+'</strong></div>'+
-      '<div class="list-row">Último checklist diario: <strong>'+(revisiones[0]?escapeHtml(new Date(revisiones[0].fecha_hora||Date.now()).toLocaleString('es-AR')):'Sin datos')+'</strong></div>'+
-    '</div></div>'+
-  '</div>';
+// --- NAVEGACIÓN DINÁMICA ---
+function renderNav(){
+  const rules = VIEW_RULES[perfilActual] || [];
+  const links = [
+    {id:'dashboard', label:'Dashboard'},
+    {id:'moviles', label:'Móviles'},
+    {id:'bomberos', label:'Bomberos'},
+    {id:'inventario_general', label:'Inventario Materiales'},
+    {id:'asignaciones', label:'Asignaciones'},
+    {id:'inventario_roperia', label:'Inventario Ropería'},
+    {id:'mantenimiento', label:'Bitácora'},
+    {id:'reportes_stock', label:'Reportes Excel'}
+  ];
+  
+  els.nav.innerHTML = links
+    .filter(l => rules.includes(l.id))
+    .map(l => `<button class="nav" onclick="navigate('${l.id}')" data-sec="${l.id}">${l.label}</button>`)
+    .join('');
 }
 
-async function moviles(){
-  els.title.textContent='Móviles';
-  const data=await safeSelect('moviles');
-  let html='';
-  if(canEditMoviles()){
-    html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de móvil</strong><form id="fMovil" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="numero" placeholder="Número de móvil" required><input name="patente" placeholder="Patente" required><input name="modelo" placeholder="Modelo" required><input name="tipo" placeholder="Tipo" required><input name="agua" type="number" placeholder="Capacidad de agua"><select name="estado"><option>En servicio</option><option>En mantenimiento</option><option>Fuera de servicio</option></select><button class="primary" type="submit">Guardar móvil</button></form></div>'
-  }
-  html+='<div class="card"><table><thead><tr><th>Móvil</th><th>Patente</th><th>Modelo</th><th>Tipo</th><th>Agua</th><th>Estado</th>'+(canEditMoviles()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(data.map(x=>'<tr><td><strong>'+escapeHtml(x.numero)+'</strong></td><td>'+escapeHtml(x.patente)+'</td><td>'+escapeHtml(x.modelo)+'</td><td>'+escapeHtml(x.tipo)+'</td><td>'+escapeHtml(x.agua||0)+' L</td><td>'+statusPill(x.estado)+'</td>'+(canEditMoviles()?'<td><button class="secondary edit-movil" data-id="'+x.id+'">Editar</button> <button class="danger del-movil" data-id="'+x.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin móviles cargados.</td></tr>')+'</tbody></table></div>';
-  els.content.innerHTML=html;
-  if(!canEditMoviles())return;
-  const form=document.getElementById('fMovil');
-  form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={numero:fd.get('numero'),patente:fd.get('patente'),modelo:fd.get('modelo'),tipo:fd.get('tipo'),agua:Number(fd.get('agua')||0),estado:fd.get('estado')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('moviles',row);showFlash('Móvil guardado','ok');moviles()});
-  document.querySelectorAll('.edit-movil').forEach(btn=>btn.addEventListener('click',()=>{const item=data.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.numero.value=item.numero||'';form.elements.patente.value=item.patente||'';form.elements.modelo.value=item.modelo||'';form.elements.tipo.value=item.tipo||'';form.elements.agua.value=item.agua||0;form.elements.estado.value=item.estado||'En servicio'}));
-  document.querySelectorAll('.del-movil').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar móvil?'))return;await deleteRow('moviles',Number(btn.dataset.id));showFlash('Móvil eliminado','ok');moviles()}));
+function navigate(sec){
+  document.querySelectorAll('.nav').forEach(b => b.classList.toggle('active', b.dataset.sec === sec));
+  if(sec === 'dashboard') renderDashboard();
+  else if(sec === 'moviles') renderMoviles();
+  else if(sec === 'inventario_general') renderInventarioGeneral();
+  else if(sec === 'asignaciones') renderAsignaciones();
+  else if(sec === 'reportes_stock') renderReportes();
+  else if(sec === 'inventario_roperia') els.content.innerHTML = '<div class="card">Módulo de Ropería (En desarrollo)</div>';
+  else els.content.innerHTML = '<div class="card">Sección: ' + sec + '</div>';
 }
 
-async function bomberos(){
-  els.title.textContent='Bomberos';
-  const data=await safeSelect('bomberos');
-  let html='';
-  if(canEditBomberos()){
-    html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de bombero</strong><form id="fBombero" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="jerarquia" placeholder="Jerarquía" required><input name="nombre" placeholder="Nombre" required><input name="apellido" placeholder="Apellido" required><input name="legajo" placeholder="Legajo" required><button class="primary" type="submit">Guardar bombero</button></form></div>'
-  }
-  html+='<div class="card"><table><thead><tr><th>Jerarquía</th><th>Apellido y nombre</th><th>Legajo</th>'+(canEditBomberos()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(data.map(x=>'<tr><td>'+escapeHtml(x.jerarquia)+'</td><td><strong>'+escapeHtml(x.apellido)+', '+escapeHtml(x.nombre)+'</strong></td><td>'+escapeHtml(x.legajo)+'</td>'+(canEditBomberos()?'<td><button class="secondary edit-bombero" data-id="'+x.id+'">Editar</button> <button class="danger del-bombero" data-id="'+x.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="4">Sin bomberos cargados.</td></tr>')+'</tbody></table></div>';
-  els.content.innerHTML=html;
-  if(!canEditBomberos())return;
-  const form=document.getElementById('fBombero');
-  form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={jerarquia:fd.get('jerarquia'),nombre:fd.get('nombre'),apellido:fd.get('apellido'),legajo:fd.get('legajo')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('bomberos',row);showFlash('Bombero guardado','ok');bomberos()});
-  document.querySelectorAll('.edit-bombero').forEach(btn=>btn.addEventListener('click',()=>{const item=data.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.jerarquia.value=item.jerarquia||'';form.elements.nombre.value=item.nombre||'';form.elements.apellido.value=item.apellido||'';form.elements.legajo.value=item.legajo||''}));
-  document.querySelectorAll('.del-bombero').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar bombero?'))return;await deleteRow('bomberos',Number(btn.dataset.id));showFlash('Bombero eliminado','ok');bomberos()}));
+// --- VISTAS ---
+
+async function renderDashboard(){
+  els.title.textContent = 'Dashboard';
+  const moviles = await safeSelect('moviles');
+  const novedades = await safeSelect('novedades_materiales');
+
+  // CASO AUTOMOTORES: Solo móviles fuera de servicio
+  if(perfilActual === 'automotores'){
+    const rotos = moviles.filter(m => m.estado !== 'En servicio');
+    els.content.innerHTML = `
+      <div class="card">
+        <h3 style="margin-bottom:12px">Móviles Fuera de Servicio / Mantenimiento</h3>
+        <table>
+          <thead><tr><th>Móvil</th><th>Estado</th></tr></thead>
+          <tbody>
+            ${rotos.map(m => `<tr><td><strong>${m.numero}</strong></td><td><span class="pill pill-bad">${m.estado}</span></td></tr>`).join('') || '<tr><td>Todos operativos</td></tr>'}
+          </tbody>
+        </table>
+      </div>`;
+    return;
+  }
+
+  // CASO GENERAL / MATERIALES
+  const pendientes = novedades.filter(n => n.estado === 'Pendiente');
+  els.content.innerHTML = `
+    <div class="grid" style="grid-template-columns: repeat(3, 1fr)">
+      <div class="status-big status-service">Servicio: ${moviles.filter(m=>m.estado==='En servicio').length}</div>
+      <div class="status-big status-maint">Mantenimiento: ${moviles.filter(m=>m.estado==='En mantenimiento').length}</div>
+      <div class="status-big status-out">Fuera de Servicio: ${moviles.filter(m=>m.estado==='Fuera de servicio').length}</div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <h3 style="margin-bottom:12px">Novedades Críticas (Materiales)</h3>
+      ${pendientes.map(n => `
+        <div class="list-row">
+          <strong>${n.material}</strong> - Móvil: ${n.movil || 'Gral'} - Ubicación: ${n.ubicacion || '-'}
+          <span class="pill pill-bad">${n.tipo_novedad}</span>
+        </div>
+      `).join('') || 'Sin novedades pendientes'}
+    </div>`;
 }
 
-async function inventario_general(){
-  els.title.textContent='Inventario general';
-  const vista=await safeSelect('v_stock_general','nombre',true);
-  const maestro=await safeSelect('stock_items','nombre',true);
-  let html='';
-  if(canEditStockGeneral()){
-    html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de stock maestro</strong><form id="fStockMaster" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="codigo_interno" placeholder="Código interno"><input name="nombre" placeholder="Nombre" required><input name="categoria" placeholder="Categoría"><input name="marca" placeholder="Marca"><input name="modelo" placeholder="Modelo"><input name="numero_serie" placeholder="N° serie"><input name="cantidad_total" type="number" min="0" placeholder="Cantidad total" required><input name="stock_minimo" type="number" min="0" placeholder="Stock mínimo" required><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar ítem</button></form></div>'
-  }
-  html+='<div class="card"><table><thead><tr><th>Código</th><th>Ítem</th><th>Total</th><th>Asignado</th><th>Disponible</th><th>Reparación</th><th>Baja</th><th>Mínimo</th><th>Alerta</th>'+(canEditStockGeneral()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(vista.map(r=>'<tr><td>'+escapeHtml(r.codigo_interno||'')+'</td><td><strong>'+escapeHtml(r.nombre)+'</strong><div class="small">'+escapeHtml([r.categoria,r.marca,r.modelo].filter(Boolean).join(' · '))+'</div></td><td>'+escapeHtml(r.cantidad_total)+'</td><td>'+escapeHtml(r.asignado_moviles)+'</td><td><strong>'+escapeHtml(r.disponible_real)+'</strong></td><td>'+escapeHtml(r.en_reparacion)+'</td><td>'+escapeHtml(r.en_baja)+'</td><td>'+escapeHtml(r.stock_minimo)+'</td><td>'+(r.alerta_minimo?'<span class="pill pill-bad">Bajo mínimo</span>':'<span class="pill pill-ok">OK</span>')+'</td>'+(canEditStockGeneral()?'<td><button class="secondary edit-stock" data-id="'+r.id+'">Editar</button> <button class="secondary maint-stock" data-id="'+r.id+'">Reparación</button> <button class="danger baja-stock" data-id="'+r.id+'">Baja</button></td>':'')+'</tr>').join('')||'<tr><td colspan="10">Sin stock cargado.</td></tr>')+'</tbody></table></div>';
-  els.content.innerHTML=html;
-  if(!canEditStockGeneral())return;
-  const form=document.getElementById('fStockMaster');
-  form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={codigo_interno:fd.get('codigo_interno'),nombre:fd.get('nombre'),categoria:fd.get('categoria'),marca:fd.get('marca'),modelo:fd.get('modelo'),numero_serie:fd.get('numero_serie'),cantidad_total:Number(fd.get('cantidad_total')||0),stock_minimo:Number(fd.get('stock_minimo')||0),observaciones:fd.get('observaciones')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('stock_items',row);showFlash('Stock maestro guardado','ok');inventario_general()});
-  document.querySelectorAll('.edit-stock').forEach(btn=>btn.addEventListener('click',()=>{const item=maestro.find(x=>String(x.id)===btn.dataset.id);if(!item)return;form.elements.id.value=item.id;form.elements.codigo_interno.value=item.codigo_interno||'';form.elements.nombre.value=item.nombre||'';form.elements.categoria.value=item.categoria||'';form.elements.marca.value=item.marca||'';form.elements.modelo.value=item.modelo||'';form.elements.numero_serie.value=item.numero_serie||'';form.elements.cantidad_total.value=item.cantidad_total||0;form.elements.stock_minimo.value=item.stock_minimo||0;form.elements.observaciones.value=item.observaciones||''}));
-  document.querySelectorAll('.maint-stock').forEach(btn=>btn.addEventListener('click',async()=>{const motivo=prompt('Motivo de reparación / mantenimiento:');if(!motivo)return;const cantidad=Number(prompt('Cantidad a enviar a reparación:','1')||0);if(cantidad<1)return;const res=await sb.rpc('send_item_to_maintenance',{p_stock_item_id:Number(btn.dataset.id),p_cantidad:cantidad,p_motivo:motivo,p_usuario:perfilActual,p_movil:null});if(res.error){alert(res.error.message);return;}showFlash('Ítem enviado a reparación','ok');inventario_general()}));
-  document.querySelectorAll('.baja-stock').forEach(btn=>btn.addEventListener('click',async()=>{const motivo=prompt('Motivo de baja:');if(!motivo)return;const cantidad=Number(prompt('Cantidad a dar de baja:','1')||0);if(cantidad<1)return;const res=await sb.rpc('decommission_item',{p_stock_item_id:Number(btn.dataset.id),p_cantidad:cantidad,p_motivo:motivo,p_usuario:perfilActual});if(res.error){alert(res.error.message);return;}showFlash('Ítem dado de baja','ok');inventario_general()}));
+async function renderMoviles(){
+  els.title.textContent = 'Gestión de Móviles';
+  const data = await safeSelect('moviles');
+  const canEdit = (perfilActual === 'administrador' || perfilActual === 'automotores');
+
+  let html = '';
+  if(canEdit){
+    html += `
+    <div class="card" style="margin-bottom:20px">
+      <form id="fMovil" class="grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr))">
+        <input type="hidden" name="id">
+        <input name="numero" placeholder="N° Móvil" required>
+        <select name="estado">
+          <option value="En servicio">En servicio</option>
+          <option value="En mantenimiento">En mantenimiento</option>
+          <option value="Fuera de servicio">Fuera de servicio</option>
+        </select>
+        <button class="primary" type="submit">Guardar</button>
+      </form>
+    </div>`;
+  }
+
+  html += `<div class="card"><table><thead><tr><th>Móvil</th><th>Estado</th>${canEdit?'<th>Acción</th>':''}</tr></thead><tbody>`;
+  html += data.map(m => `
+    <tr>
+      <td><strong>${m.numero}</strong></td>
+      <td><span class="pill ${m.estado==='En servicio'?'pill-ok':'pill-bad'}">${m.estado}</span></td>
+      ${canEdit ? `<td><button class="secondary" onclick="editMovil(${m.id}, '${m.numero}', '${m.estado}')">Editar</button></td>` : ''}
+    </tr>`).join('');
+  html += `</tbody></table></div>`;
+  
+  els.content.innerHTML = html;
+
+  if(canEdit){
+    document.getElementById('fMovil').onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const row = { numero: fd.get('numero'), estado: fd.get('estado') };
+      if(fd.get('id')) row.id = fd.get('id');
+      const {error} = await sb.from('moviles').upsert(row);
+      if(error) alert(error.message);
+      else { showFlash('Móvil actualizado','ok'); renderMoviles(); }
+    };
+  }
 }
 
-async function asignaciones(){
-  els.title.textContent='Asignaciones';
-  const all=await Promise.all([safeSelect('v_stock_general','nombre',true),safeSelect('v_stock_assignments_detail','fecha_hora',false),safeSelect('moviles','numero',true),safeSelect('stock_compartments','movil',true)]);
-  const stock=all[0],assigns=all[1],movs=all[2],comps=all[3];
-  let html='';
-  if(canEditStockGeneral()){
-    html+='<div class="card" style="margin-bottom:12px;"><strong>Asignar stock</strong><form id="fAssign" class="grid" style="grid-template
+window.editMovil = (id, num, est) => {
+  const f = document.getElementById('fMovil');
+  f.id.value = id;
+  f.numero.value = num;
+  f.estado.value = est;
+};
+
+async function renderInventarioGeneral(){
+  els.title.textContent = 'Inventario General';
+  const data = await safeSelect('stock_items');
+  
+  let html = `<div class="card" style="margin-bottom:20px">
+    <h3>Configuración de Ítem</h3>
+    <form id="fStock" class="grid" style="grid-template-columns: 1fr 1fr 1fr">
+      <input name="nombre" placeholder="Nombre Material" required>
+      <input type="number" name="stock_minimo" id="minVal" placeholder="Stock Mínimo">
+      <label class="small"><input type="checkbox" onchange="document.getElementById('minVal').disabled = this.checked"> Sin stock mínimo</label>
+      <button class="primary" type="submit">Guardar Material</button>
+    </form>
+  </div>`;
+  
+  html += `<div class="card"><table><thead><tr><th>Material</th><th>Mínimo</th></tr></thead><tbody>`;
+  html += data.map(i => `<tr><td>${i.nombre}</td><td>${i.stock_minimo || 'N/A'}</td></tr>`).join('');
+  html += `</tbody></table></div>`;
+  els.content.innerHTML = html;
+}
+
+async function renderAsignaciones(){
+  els.title.textContent = 'Asignaciones de Material';
+  const {data} = await sb.from('v_stock_assignments_detail').select('*');
+  // FILTRO: No mostrar devueltos o dados de baja
+  const activos = (data || []).filter(a => a.estado !== 'Devuelto' && a.estado !== 'Dado de baja');
+
+  els.content.innerHTML = `
+    <div class="card">
+      <table>
+        <thead><tr><th>Material</th><th>Móvil/Destino</th><th>Estado</th></tr></thead>
+        <tbody>
+          ${activos.map(a => `<tr><td>${a.nombre}</td><td>${a.destino || 'Gral'}</td><td>${a.estado}</td></tr>`).join('') || 'Sin asignaciones activas'}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+async function renderReportes(){
+  els.title.textContent = 'Reportes';
+  els.content.innerHTML = `
+    <div class="card" style="text-align:center">
+      <p>Generar reporte consolidado de stock actual</p>
+      <button class="primary" onclick="exportarExcel()">Descargar Excel (.xlsx)</button>
+    </div>`;
+}
+
+async function exportarExcel(){
+  const data = await safeSelect('stock_items');
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Stock");
+  XLSX.writeFile(wb, "Reporte_Stock_Ezeiza.xlsx");
+}
+
+// --- AUTH SIMULADO ---
+document.getElementById('loginForm').onsubmit = (e) => {
+  e.preventDefault();
+  perfilActual = document.getElementById('perfil').value;
+  els.login.classList.add('hidden');
+  els.app.classList.remove('hidden');
+  document.getElementById('userInfo').textContent = `Usuario: ${perfilActual.toUpperCase()}`;
+  renderNav();
+  navigate('dashboard');
+};
+
+document.getElementById('logout').onclick = () => location.reload();
+
+</script>
+</body>
+</html>
