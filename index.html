@@ -48,6 +48,7 @@
           <option value="jefatura">Jefatura</option>
           <option value="roperia">Ropería</option>
           <option value="bomberos">Bomberos</option>
+          <option value="roperia">Ropería</option>
         </select>
         <input id="email" type="email" placeholder="Email" />
         <input id="password" type="password" placeholder="Contraseña" />
@@ -102,7 +103,13 @@
 <script>
 const SUPABASE_URL='https://nksnxiqteqqlngmpzeew.supabase.co';
 const SUPABASE_KEY='sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
-const PROFILE_EMAILS={administrador:'admin@cuartel.com',materiales:'materiales@cuartel.com',automotores:'automotores@cuartel.com',jefatura:'jefatura@cuartel.com'};
+const PROFILE_EMAILS={
+  administrador:'admin@cuartel.com',
+  materiales:'materiales@cuartel.com',
+  automotores:'automotores@cuartel.com',
+  jefatura:'jefatura@cuartel.com',
+  roperia:'roperia@cuartel.com'
+};
 const VIEW_RULES={
   administrador:['dashboard','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','roperia','mantenimiento','respaldo','estadisticas','novedades','reportes_stock','diagnostico','guardia'],
   materiales:['dashboard','inventario_general','asignaciones','inventario','plano','checklist_materiales','mantenimiento_stock','archivo_bajas','novedades','reportes_stock','estadisticas','diagnostico','guardia'],
@@ -117,7 +124,12 @@ const VIEW_RULES={
   'diagnostico',
   'guardia'],
   jefatura:['dashboard','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','estadisticas','novedades','reportes_stock','diagnostico','guardia'],
-  roperia:['dashboard','roperia','diagnostico'],
+  roperia:[
+  'dashboard',
+  'roperia',
+  'estadisticas',
+  'diagnostico'
+],
   bomberos:['dashboard','inventario','plano','checklist_materiales','diagnostico','guardia']
 };
 
@@ -295,7 +307,7 @@ async function inventario_general(){
   if(canEditStockGeneral()){
     html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de stock maestro</strong><form id="fStockMaster" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="codigo_interno" placeholder="Código interno"><input name="nombre" placeholder="Nombre" required><input name="categoria" placeholder="Categoría"><input name="marca" placeholder="Marca"><input name="modelo" placeholder="Modelo"><input name="numero_serie" placeholder="N° serie"><input name="cantidad_total" type="number" min="0" placeholder="Cantidad total" required><input name="stock_minimo" type="number" min="0" placeholder="Stock mínimo"><label style="display:flex;align-items:center;gap:8px;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:12px;"><input name="sin_stock_minimo" type="checkbox" style="width:auto;"> Sin stock mínimo</label><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar ítem</button></form></div>'
   }
-  html+='<div class="card"><table><thead><tr><th>Código</th><th>Ítem</th><th>Total</th><th>Asignado</th><th>Disponible</th><th>Reparación</th><th>Baja</th><th>Mínimo</th><th>Alerta</th>'+(canEditStockGeneral()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(vista.map(r=>'<tr><td>'+escapeHtml(r.codigo_interno||'')+'</td><td><strong>'+escapeHtml(r.nombre)+'</strong><div class="small">'+escapeHtml([r.categoria,r.marca,r.modelo].filter(Boolean).join(' · '))+'</div></td><td>'+escapeHtml(r.cantidad_total)+'</td><td>'+escapeHtml(r.asignado_moviles)+'</td><td><strong>'+escapeHtml(r.disponible_real)+'</strong></td><td>'+escapeHtml(r.en_reparacion)+'</td><td>'+escapeHtml(r.en_baja)+'</td><td>'+(r.sin_stock_minimo?'<span class="pill pill-info">Sin mínimo</span>':escapeHtml(r.stock_minimo))+'</td><td>'+((r.sin_stock_minimo||!r.alerta_minimo)?'<span class="pill pill-ok">OK</span>':'<span class="pill pill-bad">Bajo mínimo</span>')+'</td>'+(canEditStockGeneral()?'<td><button class="secondary edit-stock" data-id="'+r.id+'">Editar</button> <button class="secondary maint-stock" data-id="'+r.id+'">Reparación</button> <button class="danger baja-stock" data-id="'+r.id+'">Baja</button></td>':'')+'</tr>').join('')||'<tr><td colspan="10">Sin stock cargado.</td></tr>')+'</tbody></table></div>';
+  html+='<div class="card"><table><thead><tr><th>Código</th><th>Ítem</th><th>Total</th><th>Asignado</th><th>Disponible</th><th>Reparación</th><th>Baja</th><th>Mínimo</th><th>Alerta</th>'+(canEditStockGeneral()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(vista.map(r=>'<tr><td>'+escapeHtml(r.codigo_interno||'')+'</td><td><strong>'+escapeHtml(r.nombre)+'</strong><div class="small">'+escapeHtml([r.categoria,r.marca,r.modelo].filter(Boolean).join(' · '))+'</div></td><td>'+escapeHtml(r.cantidad_total)+'</td><td>'+escapeHtml(r.asignado_moviles)+'</td><td><strong>'+escapeHtml(r.disponible_real)+'</strong></td><td>'+escapeHtml(r.en_reparacion)+'</td><td>'+escapeHtml(r.en_baja)+'</td><td>'+(r.sin_stock_minimo?'<span class="pill pill-info">Sin mínimo</span>':escapeHtml(r.stock_minimo))+'</td><td>'+((r.sin_stock_minimo||!r.alerta_minimo)?'<span class="pill pill-ok">OK</span>':'<span class="pill pill-bad">Bajo mínimo</span>')+'</td>'+(canEditStockGeneral()?'<td><button class="secondary edit-stock" data-id="'+r.id+'">Editar</button> <button class="nav" data-sec="roperia" type="button">Ropería</button> <button class="secondary maint-stock" data-id="'+r.id+'">Reparación</button> <button class="danger baja-stock" data-id="'+r.id+'">Baja</button></td>':'')+'</tr>').join('')||'<tr><td colspan="10">Sin stock cargado.</td></tr>')+'</tbody></table></div>';
   els.content.innerHTML=html;
   if(!canEditStockGeneral())return;
   const form=document.getElementById('fStockMaster');
@@ -514,11 +526,137 @@ async function proveedores(){
 
 async function roperia(){
   els.title.textContent='Ropería';
-  const rows=await safeSelect('roperia_items','tipo_prenda',true);
+  const rows = await safeSelect('roperia_items','tipo_prenda',true);
   let html='';
-  if(canEditRoperia()){
-    html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de indumentaria</strong><form id="fRoperia" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="tipo_prenda" placeholder="Tipo de prenda" required><input name="talle" placeholder="Talle" required><input name="cantidad" type="number" min="0" placeholder="Cantidad" required><input name="asignado_a" placeholder="Asignado a"><select name="estado"><option>Disponible</option><option>Asignado</option><option>Baja</option></select><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar prenda</button></form></div>';
+
+  if(perfilActual==='administrador' || perfilActual==='roperia'){
+    html += `
+      <div class="card" style="margin-bottom:12px;">
+        <strong>Alta / edición de prenda</strong>
+        <form id="fRoperia" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;">
+          <input name="id" type="hidden">
+          <input name="codigo_interno" placeholder="Código interno">
+          <input name="tipo_prenda" placeholder="Tipo de prenda" required>
+          <input name="descripcion" placeholder="Descripción">
+          <input name="talle" placeholder="Talle">
+          <input name="sexo" placeholder="Sexo / corte">
+          <input name="cantidad_total" type="number" min="0" placeholder="Cantidad total" required>
+          <input name="cantidad_disponible" type="number" min="0" placeholder="Cantidad disponible" required>
+          <input name="stock_minimo" type="number" min="0" placeholder="Stock mínimo">
+          <input name="asignado_a" placeholder="Asignado a">
+          <input name="estado" placeholder="Estado" value="ACTIVO">
+          <input name="observaciones" placeholder="Observaciones">
+          <button class="primary" type="submit">Guardar prenda</button>
+        </form>
+      </div>
+    `;
   }
+
+  html += `
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Prenda</th>
+            <th>Talle</th>
+            <th>Disponible</th>
+            <th>Total</th>
+            <th>Asignado a</th>
+            <th>Estado</th>
+            ${(perfilActual==='administrador' || perfilActual==='roperia') ? '<th>Acciones</th>' : ''}
+          </tr>
+        </thead>
+        <tbody>
+          ${
+            rows.map(r => `
+              <tr>
+                <td>${escapeHtml(r.codigo_interno || '')}</td>
+                <td>
+                  <strong>${escapeHtml(r.tipo_prenda || '')}</strong>
+                  <div class="small">${escapeHtml(r.descripcion || '')}</div>
+                </td>
+                <td>${escapeHtml(r.talle || '')}</td>
+                <td>${escapeHtml(r.cantidad_disponible || 0)}</td>
+                <td>${escapeHtml(r.cantidad_total || 0)}</td>
+                <td>${escapeHtml(r.asignado_a || '')}</td>
+                <td>${escapeHtml(r.estado || '')}</td>
+                ${
+                  (perfilActual==='administrador' || perfilActual==='roperia')
+                  ? `<td>
+                      <button class="secondary edit-roperia" data-id="${r.id}">Editar</button>
+                      <button class="danger del-roperia" data-id="${r.id}">Borrar</button>
+                    </td>`
+                  : ''
+                }
+              </tr>
+            `).join('') || '<tr><td colspan="8">Sin prendas cargadas.</td></tr>'
+          }
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  els.content.innerHTML = html;
+
+  if(!(perfilActual==='administrador' || perfilActual==='roperia')) return;
+
+  const form = document.getElementById('fRoperia');
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = new FormData(form);
+
+    const row = {
+      codigo_interno: fd.get('codigo_interno'),
+      tipo_prenda: fd.get('tipo_prenda'),
+      descripcion: fd.get('descripcion'),
+      talle: fd.get('talle'),
+      sexo: fd.get('sexo'),
+      cantidad_total: Number(fd.get('cantidad_total') || 0),
+      cantidad_disponible: Number(fd.get('cantidad_disponible') || 0),
+      stock_minimo: Number(fd.get('stock_minimo') || 0),
+      asignado_a: fd.get('asignado_a'),
+      estado: fd.get('estado'),
+      observaciones: fd.get('observaciones')
+    };
+
+    if(fd.get('id')) row.id = Number(fd.get('id'));
+
+    await upsertRow('roperia_items', row);
+    showFlash('Prenda guardada','ok');
+    roperia();
+  });
+
+  document.querySelectorAll('.edit-roperia').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = rows.find(x => String(x.id) === btn.dataset.id);
+      if(!item) return;
+
+      form.elements.id.value = item.id;
+      form.elements.codigo_interno.value = item.codigo_interno || '';
+      form.elements.tipo_prenda.value = item.tipo_prenda || '';
+      form.elements.descripcion.value = item.descripcion || '';
+      form.elements.talle.value = item.talle || '';
+      form.elements.sexo.value = item.sexo || '';
+      form.elements.cantidad_total.value = item.cantidad_total || 0;
+      form.elements.cantidad_disponible.value = item.cantidad_disponible || 0;
+      form.elements.stock_minimo.value = item.stock_minimo || 0;
+      form.elements.asignado_a.value = item.asignado_a || '';
+      form.elements.estado.value = item.estado || 'ACTIVO';
+      form.elements.observaciones.value = item.observaciones || '';
+    });
+  });
+
+  document.querySelectorAll('.del-roperia').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if(!confirm('¿Eliminar prenda?')) return;
+      await deleteRow('roperia_items', Number(btn.dataset.id));
+      showFlash('Prenda eliminada','ok');
+      roperia();
+    });
+  });
+}
   html+='<div class="card"><table><thead><tr><th>Prenda</th><th>Talle</th><th>Cantidad</th><th>Asignado a</th><th>Estado</th><th>Observaciones</th>'+(canEditRoperia()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td><strong>'+escapeHtml(r.tipo_prenda)+'</strong></td><td>'+escapeHtml(r.talle)+'</td><td>'+escapeHtml(r.cantidad)+'</td><td>'+escapeHtml(r.asignado_a||'')+'</td><td>'+escapeHtml(r.estado||'Disponible')+'</td><td>'+escapeHtml(r.observaciones||'')+'</td>'+(canEditRoperia()?'<td><button class="secondary edit-roperia" data-id="'+r.id+'">Editar</button> <button class="danger del-roperia" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin prendas cargadas.</td></tr>')+'</tbody></table></div>';
   els.content.innerHTML=html;
   if(!canEditRoperia())return;
