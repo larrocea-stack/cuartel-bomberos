@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cuartel Online</title>
+  <title>Cuartel Online - Ezeiza</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -11,43 +11,38 @@
     body{font-family:Arial,sans-serif;background:#020617;color:#e2e8f0;margin:0}
     .card{background:#0f172a;border:1px solid #334155;border-radius:16px;padding:16px}
     input,select,textarea{width:100%;box-sizing:border-box;background:#1e293b;border:1px solid #334155;color:#fff;border-radius:12px;padding:12px}
-    textarea{min-height:100px;resize:vertical}
     button{cursor:pointer;border:none}
     .primary{background:#b91c1c;color:#fff;padding:12px;border-radius:12px;font-weight:700}
     .secondary{background:#1e293b;color:#fff;padding:10px 12px;border-radius:10px}
     .danger{background:#7f1d1d;color:#fff;padding:10px 12px;border-radius:10px}
-    .nav{background:#111827;color:#e2e8f0;padding:10px 12px;border-radius:10px;text-align:left;margin-bottom:4px;}
+    .nav{background:#111827;color:#e2e8f0;padding:10px 12px;border-radius:10px;text-align:left;margin-bottom:4px;width:100%}
     .nav.active{background:#991b1b;color:#fff}
     .hidden{display:none!important}.grid{display:grid;gap:12px}.small{font-size:12px;color:#94a3b8}
     .list-row{padding:10px 0;border-bottom:1px solid #334155}
-    .err{background:#450a0a;border:1px solid #7f1d1d;color:#fecaca;border-radius:12px;padding:12px;white-space:pre-wrap}
     .ok{background:#052e16;border:1px solid #166534;color:#bbf7d0;border-radius:12px;padding:12px}
+    .err{background:#450a0a;border:1px solid #7f1d1d;color:#fecaca;border-radius:12px;padding:12px}
     .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px}
     .pill-ok{background:#052e16;color:#bbf7d0}.pill-warn{background:#78350f;color:#fde68a}.pill-bad{background:#450a0a;color:#fecaca}
-    table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #334155;text-align:left;vertical-align:top}th{color:#94a3b8;font-size:12px;text-transform:uppercase}
-    .hero-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-    .hero-number{font-size:34px;font-weight:800;line-height:1;margin-top:8px}.hero-label{font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
-    .status-big{border-radius:18px;padding:18px;border:1px solid #334155}.status-service{background:#052e16;border-color:#166534}.status-maint{background:#3b2a05;border-color:#92400e}.status-out{background:#450a0a;border-color:#7f1d1d}
-    @media (max-width:900px){.layout{display:block!important}aside{width:auto!important;border-right:none!important;border-bottom:1px solid #334155!important}}
+    table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #334155;text-align:left}th{color:#94a3b8;font-size:12px;text-transform:uppercase}
+    .status-big{border-radius:18px;padding:18px;border:1px solid #334155}
+    .status-service{background:#052e16;border-color:#166534}.status-maint{background:#3b2a05;border-color:#92400e}.status-out{background:#450a0a;border-color:#7f1d1d}
+    @media (max-width:900px){.layout{display:block!important}aside{width:auto!important;border-right:none!important}}
   </style>
 </head>
 <body>
   <div id="login" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
     <div class="card" style="width:100%;max-width:420px;">
       <h1 style="font-size:32px;font-weight:800;margin:0 0 8px 0;">CUARTEL<span style="color:#ef4444;">ONLINE</span></h1>
-      <p class="small" style="margin:0 0 16px 0;">Sistema con perfiles y control operativo</p>
-      <div id="bootMsg" class="small" style="margin-bottom:12px;">Cargando sistema…</div>
-      <div id="bootErr" class="err hidden" style="margin-bottom:12px;"></div>
       <form id="loginForm" class="grid">
         <select id="perfil">
           <option value="administrador">Administrador</option>
           <option value="materiales">Encargado de materiales</option>
           <option value="automotores">Encargado de automotores</option>
-          <option value="roperia">Encargado de Ropería</option> <option value="jefatura">Jefatura</option>
-          <option value="bomberos">Bomberos</option>
+          <option value="roperia">Ropería</option>
+          <option value="jefatura">Jefatura</option>
         </select>
-        <input id="email" type="email" placeholder="Email" />
-        <input id="password" type="password" placeholder="Contraseña" />
+        <input id="email" type="email" placeholder="Email" required />
+        <input id="password" type="password" placeholder="Contraseña" required />
         <button type="submit" class="primary">Ingresar</button>
       </form>
     </div>
@@ -55,259 +50,257 @@
 
   <div id="app" class="hidden">
     <div class="layout" style="display:flex;min-height:100vh;">
-      <aside style="width:300px;background:#020617;border-right:1px solid #334155;padding:16px;box-sizing:border-box;">
-        <div style="font-weight:800;font-size:22px;margin-bottom:8px;">CUARTEL<span style="color:#ef4444;">ONLINE</span></div>
+      <aside style="width:280px;background:#020617;border-right:1px solid #334155;padding:16px;">
+        <div style="font-weight:800;font-size:22px;margin-bottom:20px;">CUARTEL<span style="color:#ef4444;">ONLINE</span></div>
         <div id="userInfo" class="small" style="margin-bottom:16px;"></div>
-        <div class="grid">
-          <button class="nav active" data-sec="dashboard" type="button">Dashboard</button>
-          <button class="nav" data-sec="moviles" type="button">Móviles</button>
-          <button class="nav" data-sec="bomberos" type="button">Bomberos</button>
-          <button class="nav" data-sec="inventario_general" type="button">Inventario general</button>
-          <button class="nav" data-sec="asignaciones" type="button">Asignaciones</button>
-          <button class="nav" data-sec="inventario" type="button">Inventario por móvil</button>
-          <button class="nav" data-sec="plano" type="button">Plano del móvil</button>
-          <button class="nav" data-sec="fallas" type="button">Reporte de fallas</button>
-          <button class="nav" data-sec="mantenimiento" type="button">Bitácora</button>
-          
-          <button class="nav" data-sec="inventario_roperia" type="button">Inventario Ropería</button>
-          
-          <button class="nav" data-sec="reportes_stock" type="button">Reportes de stock</button>
-        </div>
-        <button id="logout" class="secondary" style="margin-top:20px;width:100%;" type="button">Cerrar sesión</button>
+        <nav class="grid" id="navContainer"></nav>
+        <button id="logout" class="secondary" style="margin-top:20px;width:100%;">Cerrar sesión</button>
       </aside>
 
-      <main style="flex:1;padding:20px;box-sizing:border-box;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+      <main style="flex:1;padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
           <h2 id="title" style="margin:0;">Dashboard</h2>
-          <button id="logoutTop" class="secondary" type="button">Salir</button>
         </div>
         <div id="flash" class="hidden" style="margin-top:12px;"></div>
-        <div id="content" style="margin-top:16px;"></div>
+        <div id="content" style="margin-top:20px;"></div>
       </main>
     </div>
   </div>
 
 <script>
+// CONFIGURACIÓN SUPABASE
 const SUPABASE_URL='https://nksnxiqteqqlngmpzeew.supabase.co';
 const SUPABASE_KEY='sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
-// AGREGADO CORREO DE ROPERÍA
-const PROFILE_EMAILS={
-  administrador:'admin@cuartel.com',
-  materiales:'materiales@cuartel.com',
-  automotores:'automotores@cuartel.com',
-  roperia:'roperia@cuartel.com',
-  jefatura:'jefatura@cuartel.com'
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// REGLAS DE VISTA SEGÚN TU PEDIDO
+const VIEW_RULES = {
+  administrador: ['dashboard','moviles','bomberos','inventario_general','asignaciones','mantenimiento','reportes_stock'],
+  materiales: ['dashboard','inventario_general','asignaciones','reportes_stock'],
+  automotores: ['dashboard','moviles','mantenimiento'], // Se agregó Bitácora (mantenimiento)
+  roperia: ['dashboard','inventario_roperia'],
+  jefatura: ['dashboard','moviles','bomberos','inventario_general','asignaciones','mantenimiento','reportes_stock']
 };
 
-// AJUSTE DE PERMISOS SEGÚN INSTRUCCIONES
-const VIEW_RULES={
-  administrador:['dashboard','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','mantenimiento','reportes_stock'],
-  materiales:['dashboard','inventario_general','asignaciones','inventario','plano','reportes_stock'],
-  // AUTOMOTORES: Se agrega mantenimiento (bitácora), se quita plano
-  automotores:['dashboard','moviles','fallas','mantenimiento'],
-  // ROPERÍA: Permisos exclusivos
-  roperia:['dashboard','inventario_roperia'],
-  jefatura:['dashboard','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','mantenimiento','reportes_stock'],
-  bomberos:['dashboard','inventario','plano']
+let perfilActual = null;
+const els = {
+  login: document.getElementById('login'),
+  app: document.getElementById('app'),
+  content: document.getElementById('content'),
+  title: document.getElementById('title'),
+  flash: document.getElementById('flash'),
+  nav: document.getElementById('navContainer')
 };
 
-const els={login:document.getElementById('login'),app:document.getElementById('app'),loginForm:document.getElementById('loginForm'),perfil:document.getElementById('perfil'),email:document.getElementById('email'),password:document.getElementById('password'),bootMsg:document.getElementById('bootMsg'),bootErr:document.getElementById('bootErr'),userInfo:document.getElementById('userInfo'),title:document.getElementById('title'),content:document.getElementById('content'),flash:document.getElementById('flash'),logout:document.getElementById('logout'),logoutTop:document.getElementById('logoutTop')};
-let sb=null,perfilActual=null,userActual=null;
-
-function canView(s){return (VIEW_RULES[perfilActual]||[]).includes(s)}
-// PERMISOS AUTOMOTORES PARA MOVILES
-function canEditMoviles(){return perfilActual==='administrador' || perfilActual==='automotores'}
-function canEditStockGeneral(){return perfilActual==='administrador'||perfilActual==='materiales'}
-
-function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
-function showFlash(msg,type){els.flash.className=type==='ok'?'ok':'err';els.flash.textContent=msg;els.flash.classList.remove('hidden');setTimeout(()=>els.flash.classList.add('hidden'),3200)}
-
-async function safeSelect(table,orderBy,ascending,limit){let q=sb.from(table).select('*');if(orderBy)q=q.order(orderBy,{ascending:!!ascending});if(limit)q=q.limit(limit);const res=await q;if(res.error)throw res.error;return res.data||[]}
-async function upsertRow(table,row){const res=await sb.from(table).upsert(row);if(res.error)throw res.error}
-async function deleteRow(table,id){const res=await sb.from(table).delete().eq('id',id);if(res.error)throw res.error}
-
-// --- DASHBOARD ---
-async function dashboard(){
-  els.title.textContent='Dashboard';
-  const all=await Promise.all([safeSelect('moviles'),safeSelect('novedades_materiales'),safeSelect('v_stock_general')]);
-  const mov=all[0], novedades=all[1], stockGeneral=all[2];
-  
-  // DASHBOARD ESPECÍFICO AUTOMOTORES
-  if(perfilActual === 'automotores') {
-      const movilesAfectados = mov.filter(x => x.estado === 'Fuera de servicio' || x.estado === 'En mantenimiento');
-      let html = '<div class="card"><strong>Móviles Fuera de Servicio / En Mantenimiento</strong><table style="margin-top:12px;"><thead><tr><th>Móvil</th><th>Modelo</th><th>Estado</th></tr></thead><tbody>';
-      if(movilesAfectados.length > 0) {
-          html += movilesAfectados.map(m => `<tr><td><strong>${escapeHtml(m.numero)}</strong></td><td>${escapeHtml(m.modelo)}</td><td><span class="pill ${m.estado==='Fuera de servicio'?'pill-bad':'pill-warn'}">${escapeHtml(m.estado)}</span></td></tr>`).join('');
-      } else {
-          html += '<tr><td colspan="3">Todos los móviles operativos.</td></tr>';
-      }
-      html += '</tbody></table></div>';
-      els.content.innerHTML = html;
-      return;
-  }
-
-  // DASHBOARD GENERAL Y MATERIALES
-  const enServicio=mov.filter(x=>x.estado==='En servicio').length;
-  const enMantenimiento=mov.filter(x=>x.estado==='En mantenimiento').length;
-  const fueraServicio=mov.filter(x=>x.estado==='Fuera de servicio').length;
-  
-  // Novedades con detalle (Materiales)
-  const alertasMateriales=novedades.filter(n=>String(n.estado||'').toLowerCase()==='pendiente');
-  let alertHtml='';
-  
-  // SE AGREGA UBICACIÓN Y DETALLE EXACTO PARA NOVEDADES DE MATERIALES
-  alertHtml+=alertasMateriales.slice(0,6).map(n=>`<div class="list-row"><strong>Novedad:</strong> ${escapeHtml(n.material||'')} | <strong>Móvil:</strong> ${escapeHtml(n.movil||'General')} | <strong>Ubicación:</strong> ${escapeHtml(n.ubicacion||'No especificada')} | <span class="pill pill-bad">${escapeHtml(n.tipo_novedad||'Daño/Faltante')}</span></div>`).join('');
-  if(!alertHtml)alertHtml='<div class="list-row">Sin alertas activas.</div>';
-
-  els.content.innerHTML='<div class="hero-grid">'+
-    '<div class="status-big status-service"><div class="hero-label">Móviles en servicio</div><div class="hero-number">'+enServicio+'</div><div class="small">Operativos para salida</div></div>'+
-    '<div class="status-big status-maint"><div class="hero-label">En mantenimiento</div><div class="hero-number">'+enMantenimiento+'</div><div class="small">Requieren intervención</div></div>'+
-    '<div class="status-big status-out"><div class="hero-label">Fuera de servicio</div><div class="hero-number">'+fueraServicio+'</div><div class="small">No disponibles</div></div>'+
-  '</div>'+
-  '<div class="grid" style="grid-template-columns:1fr; margin-top:14px; align-items:start;">'+
-    '<div class="card"><strong>Centro de Alertas de Materiales (Faltantes / Daños)</strong><div style="margin-top:10px;">'+alertHtml+'</div></div>'+
-  '</div>';
+// --- UTILIDADES ---
+function showFlash(msg,type){
+  els.flash.className = type==='ok'?'ok':'err';
+  els.flash.textContent = msg;
+  els.flash.classList.remove('hidden');
+  setTimeout(()=>els.flash.classList.add('hidden'),3000);
 }
 
-// --- MÓVILES ---
-async function moviles(){
-  els.title.textContent='Móviles';
-  const data=await safeSelect('moviles');
-  let html='';
-  if(canEditMoviles()){
-    html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de móvil</strong><form id="fMovil" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="numero" placeholder="Número de móvil" required><input name="patente" placeholder="Patente" required><input name="modelo" placeholder="Modelo" required><input name="tipo" placeholder="Tipo" required><input name="agua" type="number" placeholder="Capacidad de agua"><select name="estado"><option value="En servicio">En servicio</option><option value="En mantenimiento">En mantenimiento</option><option value="Fuera de servicio">Fuera de servicio</option></select><button class="primary" type="submit">Guardar móvil</button></form></div>'
-  }
-  html+='<div class="card"><table><thead><tr><th>Móvil</th><th>Patente</th><th>Modelo</th><th>Tipo</th><th>Agua</th><th>Estado</th>'+(canEditMoviles()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(data.map(x=>'<tr><td><strong>'+escapeHtml(x.numero)+'</strong></td><td>'+escapeHtml(x.patente)+'</td><td>'+escapeHtml(x.modelo)+'</td><td>'+escapeHtml(x.tipo)+'</td><td>'+escapeHtml(x.agua||0)+' L</td><td><span class="pill '+(x.estado==='En servicio'?'pill-ok':'pill-bad')+'">'+escapeHtml(x.estado)+'</span></td>'+(canEditMoviles()?'<td><button class="secondary edit-movil" data-id="'+x.id+'">Editar</button> <button class="danger del-movil" data-id="'+x.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin móviles cargados.</td></tr>')+'</tbody></table></div>';
-  els.content.innerHTML=html;
-  
-  if(!canEditMoviles())return;
-  const form=document.getElementById('fMovil');
-  form.addEventListener('submit',async e=>{
-    e.preventDefault();
-    const fd=new FormData(form);
-    const row={numero:fd.get('numero'),patente:fd.get('patente'),modelo:fd.get('modelo'),tipo:fd.get('tipo'),agua:Number(fd.get('agua')||0),estado:fd.get('estado')}; // CORRECCIÓN DEL ESTADO PARA ADMIN
-    if(fd.get('id'))row.id=Number(fd.get('id'));
-    await upsertRow('moviles',row);
-    showFlash('Móvil guardado','ok');
-    moviles();
-  });
-  document.querySelectorAll('.edit-movil').forEach(btn=>btn.addEventListener('click',()=>{
-    const item=data.find(x=>String(x.id)===btn.dataset.id);
-    form.elements.id.value=item.id;
-    form.elements.numero.value=item.numero||'';
-    form.elements.patente.value=item.patente||'';
-    form.elements.modelo.value=item.modelo||'';
-    form.elements.tipo.value=item.tipo||'';
-    form.elements.agua.value=item.agua||0;
-    form.elements.estado.value=item.estado||'En servicio';
-  }));
+function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+async function safeSelect(table){
+  const {data, error} = await sb.from(table).select('*');
+  if(error) { console.error(error); return []; }
+  return data;
 }
 
-// --- INVENTARIO GENERAL ---
-async function inventario_general(){
-  els.title.textContent='Inventario general';
-  const vista=await safeSelect('v_stock_general','nombre',true);
-  let html='';
-  if(canEditStockGeneral()){
-    // SE AGREGA CHECKBOX "SIN STOCK MÍNIMO"
-    html+=`<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de stock maestro</strong><form id="fStockMaster" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="codigo_interno" placeholder="Código interno"><input name="nombre" placeholder="Nombre" required><input name="cantidad_total" type="number" min="0" placeholder="Cantidad total" required>
-    <div><input name="stock_minimo" id="stockMinInput" type="number" min="0" placeholder="Stock mínimo"><label style="font-size:12px;display:flex;align-items:center;gap:4px;margin-top:4px;"><input type="checkbox" id="sinStockMin" style="width:auto;"> Sin stock mínimo</label></div>
-    <button class="primary" type="submit">Guardar ítem</button></form></div>`
-  }
-  // RESTO DE LA TABLA (simplificada para el ejemplo)
-  els.content.innerHTML=html + '<div class="card"><i>Aquí va la tabla de inventario...</i></div>';
+// --- NAVEGACIÓN DINÁMICA ---
+function renderNav(){
+  const rules = VIEW_RULES[perfilActual] || [];
+  const links = [
+    {id:'dashboard', label:'Dashboard'},
+    {id:'moviles', label:'Móviles'},
+    {id:'bomberos', label:'Bomberos'},
+    {id:'inventario_general', label:'Inventario Materiales'},
+    {id:'asignaciones', label:'Asignaciones'},
+    {id:'inventario_roperia', label:'Inventario Ropería'},
+    {id:'mantenimiento', label:'Bitácora'},
+    {id:'reportes_stock', label:'Reportes Excel'}
+  ];
   
-  if(canEditStockGeneral()){
-      document.getElementById('sinStockMin')?.addEventListener('change', (e) => {
-          document.getElementById('stockMinInput').disabled = e.target.checked;
-          if(e.target.checked) document.getElementById('stockMinInput').value = '';
-      });
+  els.nav.innerHTML = links
+    .filter(l => rules.includes(l.id))
+    .map(l => `<button class="nav" onclick="navigate('${l.id}')" data-sec="${l.id}">${l.label}</button>`)
+    .join('');
+}
+
+function navigate(sec){
+  document.querySelectorAll('.nav').forEach(b => b.classList.toggle('active', b.dataset.sec === sec));
+  if(sec === 'dashboard') renderDashboard();
+  else if(sec === 'moviles') renderMoviles();
+  else if(sec === 'inventario_general') renderInventarioGeneral();
+  else if(sec === 'asignaciones') renderAsignaciones();
+  else if(sec === 'reportes_stock') renderReportes();
+  else if(sec === 'inventario_roperia') els.content.innerHTML = '<div class="card">Módulo de Ropería (En desarrollo)</div>';
+  else els.content.innerHTML = '<div class="card">Sección: ' + sec + '</div>';
+}
+
+// --- VISTAS ---
+
+async function renderDashboard(){
+  els.title.textContent = 'Dashboard';
+  const moviles = await safeSelect('moviles');
+  const novedades = await safeSelect('novedades_materiales');
+
+  // CASO AUTOMOTORES: Solo móviles fuera de servicio
+  if(perfilActual === 'automotores'){
+    const rotos = moviles.filter(m => m.estado !== 'En servicio');
+    els.content.innerHTML = `
+      <div class="card">
+        <h3 style="margin-bottom:12px">Móviles Fuera de Servicio / Mantenimiento</h3>
+        <table>
+          <thead><tr><th>Móvil</th><th>Estado</th></tr></thead>
+          <tbody>
+            ${rotos.map(m => `<tr><td><strong>${m.numero}</strong></td><td><span class="pill pill-bad">${m.estado}</span></td></tr>`).join('') || '<tr><td>Todos operativos</td></tr>'}
+          </tbody>
+        </table>
+      </div>`;
+    return;
+  }
+
+  // CASO GENERAL / MATERIALES
+  const pendientes = novedades.filter(n => n.estado === 'Pendiente');
+  els.content.innerHTML = `
+    <div class="grid" style="grid-template-columns: repeat(3, 1fr)">
+      <div class="status-big status-service">Servicio: ${moviles.filter(m=>m.estado==='En servicio').length}</div>
+      <div class="status-big status-maint">Mantenimiento: ${moviles.filter(m=>m.estado==='En mantenimiento').length}</div>
+      <div class="status-big status-out">Fuera de Servicio: ${moviles.filter(m=>m.estado==='Fuera de servicio').length}</div>
+    </div>
+    <div class="card" style="margin-top:20px">
+      <h3 style="margin-bottom:12px">Novedades Críticas (Materiales)</h3>
+      ${pendientes.map(n => `
+        <div class="list-row">
+          <strong>${n.material}</strong> - Móvil: ${n.movil || 'Gral'} - Ubicación: ${n.ubicacion || '-'}
+          <span class="pill pill-bad">${n.tipo_novedad}</span>
+        </div>
+      `).join('') || 'Sin novedades pendientes'}
+    </div>`;
+}
+
+async function renderMoviles(){
+  els.title.textContent = 'Gestión de Móviles';
+  const data = await safeSelect('moviles');
+  const canEdit = (perfilActual === 'administrador' || perfilActual === 'automotores');
+
+  let html = '';
+  if(canEdit){
+    html += `
+    <div class="card" style="margin-bottom:20px">
+      <form id="fMovil" class="grid" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr))">
+        <input type="hidden" name="id">
+        <input name="numero" placeholder="N° Móvil" required>
+        <select name="estado">
+          <option value="En servicio">En servicio</option>
+          <option value="En mantenimiento">En mantenimiento</option>
+          <option value="Fuera de servicio">Fuera de servicio</option>
+        </select>
+        <button class="primary" type="submit">Guardar</button>
+      </form>
+    </div>`;
+  }
+
+  html += `<div class="card"><table><thead><tr><th>Móvil</th><th>Estado</th>${canEdit?'<th>Acción</th>':''}</tr></thead><tbody>`;
+  html += data.map(m => `
+    <tr>
+      <td><strong>${m.numero}</strong></td>
+      <td><span class="pill ${m.estado==='En servicio'?'pill-ok':'pill-bad'}">${m.estado}</span></td>
+      ${canEdit ? `<td><button class="secondary" onclick="editMovil(${m.id}, '${m.numero}', '${m.estado}')">Editar</button></td>` : ''}
+    </tr>`).join('');
+  html += `</tbody></table></div>`;
+  
+  els.content.innerHTML = html;
+
+  if(canEdit){
+    document.getElementById('fMovil').onsubmit = async (e) => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const row = { numero: fd.get('numero'), estado: fd.get('estado') };
+      if(fd.get('id')) row.id = fd.get('id');
+      const {error} = await sb.from('moviles').upsert(row);
+      if(error) alert(error.message);
+      else { showFlash('Móvil actualizado','ok'); renderMoviles(); }
+    };
   }
 }
 
-// --- ASIGNACIONES ---
-async function asignaciones(){
-  els.title.textContent='Asignaciones';
-  // SE FILTRA PARA EXCLUIR DEVUELTOS Y DADOS DE BAJA
-  const allAssigns = await safeSelect('v_stock_assignments_detail','fecha_hora',false);
-  const activeAssigns = allAssigns.filter(a => a.estado !== 'Devuelto' && a.estado !== 'Dado de baja');
-  
-  els.content.innerHTML = `<div class="card"><strong>Historial de Asignaciones Activas</strong>
-    <table><thead><tr><th>Fecha</th><th>Material</th><th>Destino</th><th>Estado</th></tr></thead>
-    <tbody>${activeAssigns.map(a => `<tr><td>${escapeHtml(a.fecha_hora)}</td><td>${escapeHtml(a.nombre)}</td><td>${escapeHtml(a.destino)}</td><td><span class="pill pill-ok">${escapeHtml(a.estado)}</span></td></tr>`).join('')}</tbody></table>
-  </div>`;
-}
+window.editMovil = (id, num, est) => {
+  const f = document.getElementById('fMovil');
+  f.id.value = id;
+  f.numero.value = num;
+  f.estado.value = est;
+};
 
-// --- ROPERÍA (NUEVO PERFIL) ---
-async function inventario_roperia(){
-  els.title.textContent='Inventario de Ropería';
-  // Lógica espejo a la de materiales pero con campos de indumentaria
-  let html=`<div class="card" style="margin-bottom:12px;"><strong>Alta de Indumentaria</strong>
-    <form id="fRoperia" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); margin-top:12px;">
-      <input name="prenda" placeholder="Tipo de Prenda (ej. Chaqueta, Botas)" required>
-      <input name="talle" placeholder="Talle / Medida" required>
-      <input name="estado" placeholder="Estado (Nuevo, Usado)">
-      <button class="primary" type="submit">Guardar Prenda</button>
+async function renderInventarioGeneral(){
+  els.title.textContent = 'Inventario General';
+  const data = await safeSelect('stock_items');
+  
+  let html = `<div class="card" style="margin-bottom:20px">
+    <h3>Configuración de Ítem</h3>
+    <form id="fStock" class="grid" style="grid-template-columns: 1fr 1fr 1fr">
+      <input name="nombre" placeholder="Nombre Material" required>
+      <input type="number" name="stock_minimo" id="minVal" placeholder="Stock Mínimo">
+      <label class="small"><input type="checkbox" onchange="document.getElementById('minVal').disabled = this.checked"> Sin stock mínimo</label>
+      <button class="primary" type="submit">Guardar Material</button>
     </form>
-  </div>
-  <div class="card"><i>Tabla de stock de ropería...</i></div>`;
+  </div>`;
+  
+  html += `<div class="card"><table><thead><tr><th>Material</th><th>Mínimo</th></tr></thead><tbody>`;
+  html += data.map(i => `<tr><td>${i.nombre}</td><td>${i.stock_minimo || 'N/A'}</td></tr>`).join('');
+  html += `</tbody></table></div>`;
   els.content.innerHTML = html;
 }
 
-// --- EXPORTAR A EXCEL (REPORTES) ---
-async function reportes_stock(){
-    els.title.textContent='Reportes de Stock';
-    els.content.innerHTML = `<div class="card"><button id="btnExportar" class="primary">Descargar Stock en Excel (.xlsx)</button></div>`;
-    
-    document.getElementById('btnExportar').addEventListener('click', async () => {
-        const data = await safeSelect('v_stock_general');
-        if(!data.length){ showFlash('No hay datos para exportar','err'); return; }
-        
-        // Uso de SheetJS para crear un Excel real
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Inventario");
-        XLSX.writeFile(wb, "Reporte_Stock_Cuartel.xlsx");
-        showFlash('Excel descargado correctamente','ok');
-    });
+async function renderAsignaciones(){
+  els.title.textContent = 'Asignaciones de Material';
+  const {data} = await sb.from('v_stock_assignments_detail').select('*');
+  // FILTRO: No mostrar devueltos o dados de baja
+  const activos = (data || []).filter(a => a.estado !== 'Devuelto' && a.estado !== 'Dado de baja');
+
+  els.content.innerHTML = `
+    <div class="card">
+      <table>
+        <thead><tr><th>Material</th><th>Móvil/Destino</th><th>Estado</th></tr></thead>
+        <tbody>
+          ${activos.map(a => `<tr><td>${a.nombre}</td><td>${a.destino || 'Gral'}</td><td>${a.estado}</td></tr>`).join('') || 'Sin asignaciones activas'}
+        </tbody>
+      </table>
+    </div>`;
 }
 
-// Función mock para simular Reportar Novedad (Descuenta y pone en Pendiente)
-async function reportarNovedadMaterial(materialId, cantidad){
-    // 1. Lógica en backend sugerida:
-    // Update stock_items set estado = 'Pendiente' where id = materialId
-    // Trigger / RPC que reste del general/móvil
-    showFlash('Material reportado. Pasó a estado "Pendiente" y se descontó del activo.','warn');
+async function renderReportes(){
+  els.title.textContent = 'Reportes';
+  els.content.innerHTML = `
+    <div class="card" style="text-align:center">
+      <p>Generar reporte consolidado de stock actual</p>
+      <button class="primary" onclick="exportarExcel()">Descargar Excel (.xlsx)</button>
+    </div>`;
 }
 
-// --- NAVEGACIÓN ---
-document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>navigate(btn.dataset.sec)));
-function navigate(sec){
-  activateNav(sec);
-  if(sec==='dashboard')dashboard();
-  else if(sec==='moviles')moviles();
-  else if(sec==='inventario_general')inventario_general();
-  else if(sec==='asignaciones')asignaciones();
-  else if(sec==='inventario_roperia')inventario_roperia();
-  else if(sec==='reportes_stock')reportes_stock();
-  else els.content.innerHTML='<div class="card">Módulo en desarrollo...</div>';
+async function exportarExcel(){
+  const data = await safeSelect('stock_items');
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Stock");
+  XLSX.writeFile(wb, "Reporte_Stock_Ezeiza.xlsx");
 }
 
-// INICIO SIMULADO
-document.getElementById('loginForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    perfilActual = document.getElementById('perfil').value;
-    document.getElementById('login').classList.add('hidden');
-    document.getElementById('app').classList.remove('hidden');
-    
-    // Ocultar botones según reglas
-    document.querySelectorAll('.nav').forEach(btn=>{
-        if(!canView(btn.dataset.sec)) btn.classList.add('hidden');
-    });
-    
-    document.getElementById('userInfo').textContent = `Perfil: ${perfilActual.toUpperCase()}`;
-    navigate('dashboard');
-});
+// --- AUTH SIMULADO ---
+document.getElementById('loginForm').onsubmit = (e) => {
+  e.preventDefault();
+  perfilActual = document.getElementById('perfil').value;
+  els.login.classList.add('hidden');
+  els.app.classList.remove('hidden');
+  document.getElementById('userInfo').textContent = `Usuario: ${perfilActual.toUpperCase()}`;
+  renderNav();
+  navigate('dashboard');
+};
+
+document.getElementById('logout').onclick = () => location.reload();
+
 </script>
 </body>
 </html>
