@@ -230,50 +230,120 @@ async function guardia_activa(){
   els.title.textContent='Guardia activa';
 
   if(!(await tableExists('guardias_activas'))){
-    els.content.innerHTML='<div class="card"><strong>Guardia activa</strong><div class="small" style="margin-top:8px;">No existe la tabla guardias_activas en Supabase. El sistema sigue funcionando, pero este módulo queda deshabilitado hasta que la crees.</div></div>';
+    els.content.innerHTML='<div class="card"><strong>Guardia activa</strong><div class="small" style="margin-top:8px;">No existe la tabla guardias_activas en Supabase.</div></div>';
     return;
   }
 
-  const rows=await safeSelect('guardias_activas','fecha_inicio',false,20);
-  const puedeGestionarGuardia=['administrador','jefatura','bomberos'].includes(perfilActual);
+  if(!(await tableExists('guardia_personal'))){
+    els.content.innerHTML='<div class="card"><strong>Guardia activa</strong><div class="err" style="margin-top:8px;">Falta crear la tabla guardia_personal en Supabase.</div></div>';
+    return;
+  }
+
+  const puedeGestionarGuardia=['administrador','jefatura'].includes(perfilActual);
+  const puedeRegistrarPresencia=['administrador','jefatura','bomberos'].includes(perfilActual);
+
+  const all=await Promise.all([
+    safeSelect('guardias_activas','fecha_inicio',false,20),
+    safeSelect('bomberos'),
+    safeSelect('guardia_personal','fecha_ingreso',false,300)
+  ]);
+
+  const rows=all[0];
+  const bomberosData=all[1];
+  const movimientos=all[2];
+
   const guardiaAbierta=rows.find(r=>String(r.estado||'').toLowerCase()==='activa')||null;
+
+  const bomberosOrdenados=[...bomberosData].sort((a,b)=>{
+    const na=(a.numero_j===null || a.numero_j===undefined || a.numero_j==='') ? 999999 : Number(a.numero_j);
+    const nb=(b.numero_j===null || b.numero_j===undefined || b.numero_j==='') ? 999999 : Number(b.numero_j);
+    if(na!==nb) return na-nb;
+    return String(a.apellido||'').localeCompare(String(b.apellido||''),'es');
+  });
+
+  const presentes=guardiaAbierta
+    ? movimientos.filter(x=>Number(x.guardia_id)===Number(guardiaAbierta.id) && String(x.estado||'').toLowerCase()==='activo')
+    : [];
 
   let html='';
 
   if(puedeGestionarGuardia){
     html+='<div class="card" style="margin-bottom:12px;">'+
-      '<strong>Abrir / cerrar guardia</strong>'+
-      '<form id="fGuardia" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-top:12px;">'+
-        '<input name="nombre" placeholder="Nombre de guardia" required>'+
-        '<input name="responsable" placeholder="Responsable" required>'+
-        '<button class="primary" type="submit">'+(guardiaAbierta ? 'Cambiar guardia activa' : 'Abrir guardia')+'</button>'+
+      '<strong>Guardia general</strong>'+
+      '<form id="fGuardiaGeneral" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-top:12px;">'+
+        '<input name="nombre" placeholder="Nombre de guardia" '+(guardiaAbierta?'value="'+h(guardiaAbierta.nombre||'')+'"':'')+' required>'+
+        '<input name="responsable" placeholder="Responsable" '+(guardiaAbierta?'value="'+h(guardiaAbierta.responsable||'')+'"':'')+' required>'+
+        '<button class="primary" type="submit">'+(guardiaAbierta?'Cambiar guardia activa':'Abrir guardia')+'</button>'+
+      '</form>'+
+      (guardiaAbierta?'<button id="btnCerrarGuardiaGeneral" class="secondary" type="button" style="margin-top:12px;">Cerrar guardia general</button>':'')+
+    '</div>';
+  }
+
+  if(guardiaAbierta && puedeRegistrarPresencia){
+    html+='<div class="card" style="margin-bottom:12px;">'+
+      '<strong>Registrar presencia</strong>'+
+      '<div class="small" style="margin-top:6px;">Guardia activa: '+h(guardiaAbierta.nombre||'')+'</div>'+
+      '<form id="fPresenciaGuardia" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-top:12px;">'+
+        '<select name="bombero_id" required>'+
+          '<option value="">Seleccionar bombero</option>'+
+          bomberosOrdenados.map(b=>{
+            const yaPresente=presentes.some(p=>Number(p.bombero_id)===Number(b.id));
+            return '<option value="'+b.id+'" '+(yaPresente?'disabled':'')+'>'+
+              h((b.numero_j||'')+' · '+(b.jerarquia||'')+' · '+(b.apellido||'')+', '+(b.nombre||''))+
+              (yaPresente?' (ya presente)':'')+
+            '</option>';
+          }).join('')+
+        '</select>'+
+        '<button class="primary" type="submit">Marcar ingreso</button>'+
       '</form>'+
     '</div>';
   }
 
-  html+='<div class="card"><table><thead><tr><th>Nombre</th><th>Responsable</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>'+
-    (rows.map(r=>{
-      const activa=String(r.estado||'').toLowerCase()==='activa';
-      return '<tr>'+
-        '<td>'+h(r.nombre||'')+'</td>'+
-        '<td>'+h(r.responsable||'')+'</td>'+
-        '<td>'+h(new Date(r.fecha_inicio||Date.now()).toLocaleString('es-AR'))+'</td>'+
-        '<td>'+h(r.fecha_fin?new Date(r.fecha_fin).toLocaleString('es-AR'):'')+'</td>'+
-        '<td>'+statusPill(r.estado||'')+'</td>'+
-        '<td>'+(puedeGestionarGuardia && activa ? '<button class="secondary close-guard" data-id="'+r.id+'">Cerrar</button>' : '')+'</td>'+
-      '</tr>';
-    }).join('')||'<tr><td colspan="6">Sin guardias.</td></tr>')+
+  html+='<div class="grid" style="grid-template-columns:1fr 1fr;gap:12px;">';
+
+  html+='<div class="card"><strong>Personal actualmente en guardia</strong><div style="margin-top:12px;">'+
+    (guardiaAbierta
+      ? (
+          presentes.map(p=>{
+            const b=bomberosOrdenados.find(x=>Number(x.id)===Number(p.bombero_id));
+            return '<div class="list-row">'+
+              '<strong>'+(b?h((b.numero_j||'')+' · '+(b.jerarquia||'')+' · '+(b.apellido||'')+', '+(b.nombre||'')):'Sin identificar')+'</strong>'+
+              '<div class="small">Ingreso: '+h(new Date(p.fecha_ingreso||Date.now()).toLocaleString('es-AR'))+'</div>'+
+              (puedeRegistrarPresencia?'<button class="secondary cerrar-presencia" data-id="'+p.id+'" style="margin-top:8px;">Cerrar mi presencia</button>':'')+
+            '</div>';
+          }).join('') || 'Sin personal presente.'
+        )
+      : 'No hay guardia activa abierta.'
+    )+
+  '</div></div>';
+
+  html+='<div class="card"><strong>Últimos movimientos</strong><div style="margin-top:12px;">'+
+    (movimientos.slice(0,20).map(m=>{
+      const b=bomberosOrdenados.find(x=>Number(x.id)===Number(m.bombero_id));
+      return '<div class="list-row">'+
+        '<strong>'+(b?h((b.numero_j||'')+' · '+(b.apellido||'')+', '+(b.nombre||'')):'Sin identificar')+'</strong>'+
+        '<div class="small">Ingreso: '+h(new Date(m.fecha_ingreso||Date.now()).toLocaleString('es-AR'))+'</div>'+
+        (m.fecha_salida?'<div class="small">Salida: '+h(new Date(m.fecha_salida).toLocaleString('es-AR'))+'</div>':'<div class="small">Aún en guardia</div>')+
+      '</div>';
+    }).join('') || 'Sin movimientos registrados.')+
+  '</div></div>';
+
+  html+='</div>';
+
+  html+='<div class="card" style="margin-top:12px;"><table><thead><tr><th>Nombre</th><th>Responsable</th><th>Inicio</th><th>Fin</th><th>Estado</th></tr></thead><tbody>'+
+    (rows.map(r=>'<tr><td>'+h(r.nombre||'')+'</td><td>'+h(r.responsable||'')+'</td><td>'+h(new Date(r.fecha_inicio||Date.now()).toLocaleString('es-AR'))+'</td><td>'+h(r.fecha_fin?new Date(r.fecha_fin).toLocaleString('es-AR'):'')+'</td><td>'+statusPill(r.estado||'')+'</td></tr>').join('')||'<tr><td colspan="5">Sin guardias.</td></tr>')+
     '</tbody></table></div>';
 
   els.content.innerHTML=html;
 
-  const form=document.getElementById('fGuardia');
-  if(form){
-    form.addEventListener('submit',async e=>{
+  const formGuardia=document.getElementById('fGuardiaGeneral');
+  if(formGuardia){
+    formGuardia.addEventListener('submit',async e=>{
       e.preventDefault();
-      const fd=new FormData(form);
 
+      const fd=new FormData(formGuardia);
       const activas=rows.filter(r=>String(r.estado||'').toLowerCase()==='activa');
+
       for(const a of activas){
         await updateRows('guardias_activas',{
           estado:'cerrada',
@@ -294,21 +364,81 @@ async function guardia_activa(){
       });
 
       await loadGuardiaActiva();
-      showFlash('Guardia activa abierta','ok');
+      showFlash('Guardia general abierta','ok');
       guardia_activa();
     });
   }
 
-  document.querySelectorAll('.close-guard').forEach(btn=>{
-    btn.addEventListener('click',async()=>{
+  const btnCerrarGuardiaGeneral=document.getElementById('btnCerrarGuardiaGeneral');
+  if(btnCerrarGuardiaGeneral && guardiaAbierta){
+    btnCerrarGuardiaGeneral.addEventListener('click',async()=>{
       await updateRows('guardias_activas',{
         estado:'cerrada',
         fecha_fin:new Date().toISOString()
+      },guardiaAbierta.id);
+
+      for(const p of presentes){
+        await updateRows('guardia_personal',{
+          estado:'cerrado',
+          fecha_salida:new Date().toISOString()
+        },p.id);
+      }
+
+      await audit('cerrar','guardia_activa',{id:guardiaAbierta.id});
+      await loadGuardiaActiva();
+      showFlash('Guardia general cerrada','ok');
+      guardia_activa();
+    });
+  }
+
+  const formPresencia=document.getElementById('fPresenciaGuardia');
+  if(formPresencia && guardiaAbierta){
+    formPresencia.addEventListener('submit',async e=>{
+      e.preventDefault();
+
+      const fd=new FormData(formPresencia);
+      const bomberoId=Number(fd.get('bombero_id')||0);
+
+      if(!bomberoId){
+        showFlash('Seleccioná un bombero','err');
+        return;
+      }
+
+      const bombero=bomberosOrdenados.find(x=>Number(x.id)===bomberoId);
+      const yaPresente=presentes.find(p=>Number(p.bombero_id)===bomberoId);
+
+      if(yaPresente){
+        showFlash('Ese bombero ya está presente en la guardia','err');
+        return;
+      }
+
+      await insertRow('guardia_personal',{
+        guardia_id:guardiaAbierta.id,
+        bombero_id:bomberoId,
+        numero_j:bombero?.numero_j || null,
+        fecha_ingreso:new Date().toISOString(),
+        estado:'activo'
+      });
+
+      await audit('crear','guardia_personal',{
+        guardia_id:guardiaAbierta.id,
+        bombero_id:bomberoId
+      });
+
+      showFlash('Presencia registrada','ok');
+      guardia_activa();
+    });
+  }
+
+  document.querySelectorAll('.cerrar-presencia').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      await updateRows('guardia_personal',{
+        estado:'cerrado',
+        fecha_salida:new Date().toISOString()
       },Number(btn.dataset.id));
 
-      await audit('cerrar','guardia_activa',{id:Number(btn.dataset.id)});
-      await loadGuardiaActiva();
-      showFlash('Guardia cerrada','ok');
+      await audit('cerrar','guardia_personal',{id:Number(btn.dataset.id)});
+      showFlash('Salida registrada','ok');
       guardia_activa();
     });
   });
