@@ -228,51 +228,180 @@ async function dashboard(){
 
 async function guardia_activa(){
   els.title.textContent='Guardia activa';
-  if(!(await tableExists('guardias_activas'))){els.content.innerHTML='<div class="card"><strong>Guardia activa</strong><div class="small" style="margin-top:8px;">No existe la tabla guardias_activas en Supabase. El sistema sigue funcionando, pero este módulo queda deshabilitado hasta que la crees.</div></div>';return;}
-  const rows=await safeSelect('guardias_activas','fecha_inicio',false,20);
-  let html='';
-  if(['administrador','jefatura'].includes(perfilActual)){
-    html+='<div class="card" style="margin-bottom:12px;"><strong>Abrir / cerrar guardia</strong><form id="fGuardia" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-top:12px;"><input name="nombre" placeholder="Nombre de guardia" required><input name="responsable" placeholder="Responsable" required><button class="primary" type="submit">Abrir guardia</button></form></div>';
-  }
-  html+='<div class="card"><table><thead><tr><th>Nombre</th><th>Responsable</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>'+
-    (rows.map(r=>'<tr><td>'+h(r.nombre||'')+'</td><td>'+h(r.responsable||'')+'</td><td>'+h(new Date(r.fecha_inicio||Date.now()).toLocaleString('es-AR'))+'</td><td>'+h(r.fecha_fin?new Date(r.fecha_fin).toLocaleString('es-AR'):'')+'</td><td>'+statusPill(r.estado||'')+'</td><td>'+((['administrador','jefatura'].includes(perfilActual)&&String(r.estado||'').toLowerCase()==='activa')?'<button class="secondary close-guard" data-id="'+r.id+'">Cerrar</button>':'')+'</td></tr>').join('')||'<tr><td colspan="6">Sin guardias.</td></tr>')+
-    '</tbody></table></div>';
-  els.content.innerHTML=html;
-  const form=document.getElementById('fGuardia');
-  if(form){form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const activas=rows.filter(r=>String(r.estado||'').toLowerCase()==='activa');for(const a of activas){await updateRows('guardias_activas',{estado:'cerrada',fecha_fin:new Date().toISOString()},a.id)}await insertRow('guardias_activas',{nombre:fd.get('nombre'),responsable:fd.get('responsable'),fecha_inicio:new Date().toISOString(),estado:'activa'});await audit('crear','guardia_activa',{nombre:fd.get('nombre')});await loadGuardiaActiva();showFlash('Guardia activa abierta','ok');guardia_activa()});}
-  document.querySelectorAll('.close-guard').forEach(btn=>btn.addEventListener('click',async()=>{await updateRows('guardias_activas',{estado:'cerrada',fecha_fin:new Date().toISOString()},Number(btn.dataset.id));await audit('cerrar','guardia_activa',{id:Number(btn.dataset.id)});await loadGuardiaActiva();showFlash('Guardia cerrada','ok');guardia_activa()}));
-}
 
-async function moviles(){
-  els.title.textContent='Móviles';
-  const data=await safeSelect('moviles');
+  if(!(await tableExists('guardias_activas'))){
+    els.content.innerHTML='<div class="card"><strong>Guardia activa</strong><div class="small" style="margin-top:8px;">No existe la tabla guardias_activas en Supabase. El sistema sigue funcionando, pero este módulo queda deshabilitado hasta que la crees.</div></div>';
+    return;
+  }
+
+  const rows=await safeSelect('guardias_activas','fecha_inicio',false,20);
+  const puedeGestionarGuardia=['administrador','jefatura','bomberos'].includes(perfilActual);
+  const guardiaAbierta=rows.find(r=>String(r.estado||'').toLowerCase()==='activa')||null;
+
   let html='';
-  if(canEditMoviles()) html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de móvil</strong><form id="fMovil" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="numero" placeholder="Número de móvil" required><input name="patente" placeholder="Patente" required><input name="modelo" placeholder="Modelo" required><input name="tipo" placeholder="Tipo" required><input name="agua" type="number" placeholder="Capacidad de agua"><select name="estado"><option>En servicio</option><option>En mantenimiento</option><option>Fuera de servicio</option></select><button class="primary" type="submit">Guardar móvil</button></form></div>';
-  html+='<div class="card"><table><thead><tr><th>Móvil</th><th>Patente</th><th>Modelo</th><th>Tipo</th><th>Agua</th><th>Estado</th>'+(canEditMoviles()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+
-    (data.map(x=>'<tr><td><strong>'+h(x.numero)+'</strong></td><td>'+h(x.patente)+'</td><td>'+h(x.modelo)+'</td><td>'+h(x.tipo)+'</td><td>'+h(x.agua||0)+' L</td><td>'+statusPill(x.estado)+'</td>'+(canEditMoviles()?'<td><button class="secondary edit-movil" data-id="'+x.id+'">Editar</button> <button class="danger del-movil" data-id="'+x.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin móviles cargados.</td></tr>')+
+
+  if(puedeGestionarGuardia){
+    html+='<div class="card" style="margin-bottom:12px;">'+
+      '<strong>Abrir / cerrar guardia</strong>'+
+      '<form id="fGuardia" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-top:12px;">'+
+        '<input name="nombre" placeholder="Nombre de guardia" required>'+
+        '<input name="responsable" placeholder="Responsable" required>'+
+        '<button class="primary" type="submit">'+(guardiaAbierta ? 'Cambiar guardia activa' : 'Abrir guardia')+'</button>'+
+      '</form>'+
+    '</div>';
+  }
+
+  html+='<div class="card"><table><thead><tr><th>Nombre</th><th>Responsable</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>'+
+    (rows.map(r=>{
+      const activa=String(r.estado||'').toLowerCase()==='activa';
+      return '<tr>'+
+        '<td>'+h(r.nombre||'')+'</td>'+
+        '<td>'+h(r.responsable||'')+'</td>'+
+        '<td>'+h(new Date(r.fecha_inicio||Date.now()).toLocaleString('es-AR'))+'</td>'+
+        '<td>'+h(r.fecha_fin?new Date(r.fecha_fin).toLocaleString('es-AR'):'')+'</td>'+
+        '<td>'+statusPill(r.estado||'')+'</td>'+
+        '<td>'+(puedeGestionarGuardia && activa ? '<button class="secondary close-guard" data-id="'+r.id+'">Cerrar</button>' : '')+'</td>'+
+      '</tr>';
+    }).join('')||'<tr><td colspan="6">Sin guardias.</td></tr>')+
     '</tbody></table></div>';
+
   els.content.innerHTML=html;
-  if(!canEditMoviles()) return;
-  const form=document.getElementById('fMovil');
-  form.addEventListener('submit',async e=>{e.preventDefault();if(!requireGuardia())return;const fd=new FormData(form);const row={numero:fd.get('numero'),patente:fd.get('patente'),modelo:fd.get('modelo'),tipo:fd.get('tipo'),agua:Number(fd.get('agua')||0),estado:fd.get('estado')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('moviles',row);await audit(fd.get('id')?'editar':'crear','movil',row);showFlash('Móvil guardado','ok');moviles()});
-  document.querySelectorAll('.edit-movil').forEach(btn=>btn.addEventListener('click',()=>{const item=data.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.numero.value=item.numero||'';form.elements.patente.value=item.patente||'';form.elements.modelo.value=item.modelo||'';form.elements.tipo.value=item.tipo||'';form.elements.agua.value=item.agua||0;form.elements.estado.value=item.estado||'En servicio'}));
-  document.querySelectorAll('.del-movil').forEach(btn=>btn.addEventListener('click',async()=>{if(!requireGuardia())return;if(!confirm('¿Eliminar móvil?'))return;await deleteRow('moviles',Number(btn.dataset.id));await audit('eliminar','movil',{id:Number(btn.dataset.id)});showFlash('Móvil eliminado','ok');moviles()}));
+
+  const form=document.getElementById('fGuardia');
+  if(form){
+    form.addEventListener('submit',async e=>{
+      e.preventDefault();
+      const fd=new FormData(form);
+
+      const activas=rows.filter(r=>String(r.estado||'').toLowerCase()==='activa');
+      for(const a of activas){
+        await updateRows('guardias_activas',{
+          estado:'cerrada',
+          fecha_fin:new Date().toISOString()
+        },a.id);
+      }
+
+      await insertRow('guardias_activas',{
+        nombre:fd.get('nombre'),
+        responsable:fd.get('responsable'),
+        fecha_inicio:new Date().toISOString(),
+        estado:'activa'
+      });
+
+      await audit('crear','guardia_activa',{
+        nombre:fd.get('nombre'),
+        responsable:fd.get('responsable')
+      });
+
+      await loadGuardiaActiva();
+      showFlash('Guardia activa abierta','ok');
+      guardia_activa();
+    });
+  }
+
+  document.querySelectorAll('.close-guard').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      await updateRows('guardias_activas',{
+        estado:'cerrada',
+        fecha_fin:new Date().toISOString()
+      },Number(btn.dataset.id));
+
+      await audit('cerrar','guardia_activa',{id:Number(btn.dataset.id)});
+      await loadGuardiaActiva();
+      showFlash('Guardia cerrada','ok');
+      guardia_activa();
+    });
+  });
 }
 
 async function bomberos(){
   els.title.textContent='Bomberos';
-  const data=await safeSelect('bomberos');
-  let html='';
-  if(canEditBomberos()) html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de bombero</strong><form id="fBombero" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="jerarquia" placeholder="Jerarquía" required><input name="nombre" placeholder="Nombre" required><input name="apellido" placeholder="Apellido" required><input name="legajo" placeholder="Legajo" required><button class="primary" type="submit">Guardar bombero</button></form></div>';
-  html+='<div class="card"><table><thead><tr><th>Jerarquía</th><th>Apellido y nombre</th><th>Legajo</th>'+(canEditBomberos()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+ (data.map(x=>'<tr><td>'+h(x.jerarquia)+'</td><td><strong>'+h(x.apellido)+', '+h(x.nombre)+'</strong></td><td>'+h(x.legajo)+'</td>'+(canEditBomberos()?'<td><button class="secondary edit-bombero" data-id="'+x.id+'">Editar</button> <button class="danger del-bombero" data-id="'+x.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="4">Sin bomberos cargados.</td></tr>')+'</tbody></table></div>';
-  els.content.innerHTML=html;
-  if(!canEditBomberos()) return;
-  const form=document.getElementById('fBombero');
-  form.addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(form);const row={jerarquia:fd.get('jerarquia'),nombre:fd.get('nombre'),apellido:fd.get('apellido'),legajo:fd.get('legajo')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('bomberos',row);await audit(fd.get('id')?'editar':'crear','bombero',row);showFlash('Bombero guardado','ok');bomberos()});
-  document.querySelectorAll('.edit-bombero').forEach(btn=>btn.addEventListener('click',()=>{const item=data.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.jerarquia.value=item.jerarquia||'';form.elements.nombre.value=item.nombre||'';form.elements.apellido.value=item.apellido||'';form.elements.legajo.value=item.legajo||''}));
-  document.querySelectorAll('.del-bombero').forEach(btn=>btn.addEventListener('click',async()=>{if(!confirm('¿Eliminar bombero?'))return;await deleteRow('bomberos',Number(btn.dataset.id));await audit('eliminar','bombero',{id:Number(btn.dataset.id)});showFlash('Bombero eliminado','ok');bomberos()}));
-}
 
+  const data=await safeSelect('bomberos');
+
+  const ordenados=[...data].sort((a,b)=>{
+    const na=(a.numero_j===null || a.numero_j===undefined || a.numero_j==='') ? 999999 : Number(a.numero_j);
+    const nb=(b.numero_j===null || b.numero_j===undefined || b.numero_j==='') ? 999999 : Number(b.numero_j);
+    if(na!==nb) return na-nb;
+    return String(a.apellido||'').localeCompare(String(b.apellido||''),'es');
+  });
+
+  let html='';
+
+  if(canEditBomberos()) {
+    html+='<div class="card" style="margin-bottom:12px;">'+
+      '<strong>Alta / edición de bombero</strong>'+
+      '<form id="fBombero" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); margin-top:12px;">'+
+        '<input name="id" type="hidden">'+
+        '<input name="numero_j" type="number" min="1" placeholder="Número de J" required>'+
+        '<input name="jerarquia" placeholder="Jerarquía" required>'+
+        '<input name="nombre" placeholder="Nombre" required>'+
+        '<input name="apellido" placeholder="Apellido" required>'+
+        '<input name="legajo" placeholder="Legajo" required>'+
+        '<button class="primary" type="submit">Guardar bombero</button>'+
+      '</form>'+
+    '</div>';
+  }
+
+  html+='<div class="card"><table><thead><tr><th>N° J</th><th>Jerarquía</th><th>Apellido y nombre</th><th>Legajo</th>'+(canEditBomberos()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+
+    (ordenados.map(x=>
+      '<tr>'+
+        '<td><strong>'+h(x.numero_j||'')+'</strong></td>'+
+        '<td>'+h(x.jerarquia||'')+'</td>'+
+        '<td><strong>'+h(x.apellido||'')+', '+h(x.nombre||'')+'</strong></td>'+
+        '<td>'+h(x.legajo||'')+'</td>'+
+        (canEditBomberos()?'<td><button class="secondary edit-bombero" data-id="'+x.id+'">Editar</button> <button class="danger del-bombero" data-id="'+x.id+'">Borrar</button></td>':'')+
+      '</tr>'
+    ).join('')||'<tr><td colspan="5">Sin bomberos cargados.</td></tr>')+
+    '</tbody></table></div>';
+
+  els.content.innerHTML=html;
+
+  if(!canEditBomberos()) return;
+
+  const form=document.getElementById('fBombero');
+
+  form.addEventListener('submit',async e=>{
+    e.preventDefault();
+
+    const fd=new FormData(form);
+
+    const row={
+      numero_j:Number(fd.get('numero_j')||0),
+      jerarquia:fd.get('jerarquia'),
+      nombre:fd.get('nombre'),
+      apellido:fd.get('apellido'),
+      legajo:fd.get('legajo')
+    };
+
+    if(fd.get('id')) row.id=Number(fd.get('id'));
+
+    await upsertRow('bomberos',row);
+    await audit(fd.get('id')?'editar':'crear','bombero',row);
+    showFlash('Bombero guardado','ok');
+    bomberos();
+  });
+
+  document.querySelectorAll('.edit-bombero').forEach(btn=>btn.addEventListener('click',()=>{
+    const item=ordenados.find(x=>String(x.id)===btn.dataset.id);
+    if(!item) return;
+
+    form.elements.id.value=item.id;
+    form.elements.numero_j.value=item.numero_j||'';
+    form.elements.jerarquia.value=item.jerarquia||'';
+    form.elements.nombre.value=item.nombre||'';
+    form.elements.apellido.value=item.apellido||'';
+    form.elements.legajo.value=item.legajo||'';
+  }));
+
+  document.querySelectorAll('.del-bombero').forEach(btn=>btn.addEventListener('click',async()=>{
+    if(!confirm('¿Eliminar bombero?')) return;
+    await deleteRow('bomberos',Number(btn.dataset.id));
+    await audit('eliminar','bombero',{id:Number(btn.dataset.id)});
+    showFlash('Bombero eliminado','ok');
+    bomberos();
+  }));
+}
 async function inventario_general(){
   els.title.textContent='Inventario general';
   if(!(await tableExists('v_stock_general'))){els.content.innerHTML='<div class="err">No existe la vista v_stock_general.</div>';return;}
@@ -356,8 +485,21 @@ async function checklist_materiales(){
   const movs=all[0],boms=all[1],inventario=all[2],controles=all[3],novedades=all[4];
   let html='<div class="card"><form id="fcheckMat" class="grid"><select name="movil" id="checkMovil">'+movs.map(m=>'<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>').join('')+'</select><select name="bombero">'+boms.map(b=>{const nombre=((b.jerarquia||'')+' '+(b.apellido||'')+' '+(b.nombre||'')).trim();return '<option value="'+h(nombre)+'">'+h(nombre)+'</option>'}).join('')+'</select><div id="checkItems"></div><textarea name="comentarios" placeholder="Observaciones generales del control"></textarea><button class="primary" type="submit">Registrar control de materiales</button></form></div>'+
       '<div class="card" style="margin-top:12px;"><strong>Reportar material faltante o dañado</strong><form id="fNovedad" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="movil" id="novMovil">'+movs.map(m=>'<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>').join('')+'</select><select name="compartimiento" id="novComp"></select><select name="material" id="novMaterial"></select><input name="cantidad" type="number" min="1" value="1" placeholder="Cantidad"><select name="tipo_novedad"><option>Faltante</option><option>Dañado</option></select><textarea name="detalle" placeholder="Detalle de la novedad" required></textarea><button class="primary" type="submit">Registrar novedad</button></form></div>'+
-      '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;"><div class="card"><strong>Últimos controles</strong><div style="margin-top:8px;">'+(controles.map(r=>'<div class="list-row">Móvil '+h(r.movil)+' · '+h(r.responsable||r.bombero||'')+' · '+h(r.resumen||r.comentarios||'Sin novedades')+'</div>').join('')||'Sin controles.')+'</div></div><div class="card"><strong>Últimas novedades</strong><div style="margin-top:8px;">'+(novedades.map(n=>'<div class="list-row">Móvil '+h(n.movil)+' · '+h(n.compartimiento)+' · '+h(n.material)+' · '+h(n.tipo_novedad)+' · '+h(n.detalle||'')+' <span class="pill '+(String(n.estado||'').toLowerCase()==='cerrada'?'pill-ok':'pill-bad')+'">'+h(n.estado||'pendiente')+'</span>'+(canManageNovedades()?'<button class="secondary cerrar-nov" data-id="'+n.id+'" style="margin-left:8px;">'+(String(n.estado||'').toLowerCase()==='cerrada'?'Reabrir':'Cerrar')+'</button>':'')+'</div>').join('')||'Sin novedades.')+'</div></div></div>';
-  els.content.innerHTML=html;
+      '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;">'+
+  '<div class="card"><strong>Últimos controles</strong><div style="margin-top:8px;">'+
+    (controles.map(r=>
+      '<div class="list-row"><strong>Móvil '+h(r.movil)+'</strong> · '+h(r.responsable||r.bombero||'Sin responsable')+'</div>'
+    ).join('')||'Sin controles.')+
+  '</div></div>'+
+  '<div class="card"><strong>Últimas novedades</strong><div style="margin-top:8px;">'+
+    (novedades.map(n=>
+      '<div class="list-row">Móvil '+h(n.movil)+' · '+h(n.compartimiento)+' · '+h(n.material)+' · '+h(n.tipo_novedad)+' · '+h(n.detalle||'')+
+      ' <span class="pill '+(String(n.estado||'').toLowerCase()==='cerrada'?'pill-ok':'pill-bad')+'">'+h(n.estado||'pendiente')+'</span>'+
+      (canManageNovedades()?'<button class="secondary cerrar-nov" data-id="'+n.id+'" style="margin-left:8px;">'+(String(n.estado||'').toLowerCase()==='cerrada'?'Reabrir':'Cerrar')+'</button>':'')+
+      '</div>'
+    ).join('')||'Sin novedades.')+
+  '</div></div>'+
+'</div>';    
   const checkMovil=document.getElementById('checkMovil'),novMovil=document.getElementById('novMovil'),novComp=document.getElementById('novComp'),novMaterial=document.getElementById('novMaterial'),checkItems=document.getElementById('checkItems');
   function renderChecklistItems(movil){const items=inventario.filter(i=>String(i.movil)===String(movil)&&String(i.estado_asignacion||'').toUpperCase()==='ACTIVA');if(!items.length){checkItems.innerHTML='<div class="card">Ese móvil no tiene materiales asignados.</div>';return;}checkItems.innerHTML='<div class="card"><strong>Control por material y cantidad</strong><div style="margin-top:12px;">'+items.map((i,idx)=>'<div class="list-row"><div><strong>'+h(i.compartimiento||'Sin compartimiento')+'</strong> · '+h(i.nombre)+' · Cantidad esperada: '+h(i.cantidad)+'</div><div class="grid" style="grid-template-columns:1fr 140px; margin-top:8px; align-items:center;"><label>Cantidad verificada</label><input type="number" name="cantidad_verificada_'+idx+'" min="0" value="'+h(i.cantidad)+'"></div></div>').join('')+'</div></div>'}
   function fillNovedadSelectors(movil){const items=inventario.filter(i=>String(i.movil)===String(movil)&&String(i.estado_asignacion||'').toUpperCase()==='ACTIVA');const comps=Array.from(new Set(items.map(i=>i.compartimiento||'Sin compartimiento')));novComp.innerHTML=comps.map(c=>'<option value="'+h(c)+'">'+h(c)+'</option>').join('');refillMaterials()}
