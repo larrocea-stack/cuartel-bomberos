@@ -444,6 +444,22 @@ async function guardia_activa(){
   });
 }
 
+async function moviles(){
+  els.title.textContent='Móviles';
+  const data=await safeSelect('moviles');
+  let html='';
+  if(canEditMoviles()) html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de móvil</strong><form id="fMovil" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="numero" placeholder="Número de móvil" required><input name="patente" placeholder="Patente" required><input name="modelo" placeholder="Modelo" required><input name="tipo" placeholder="Tipo" required><input name="agua" type="number" placeholder="Capacidad de agua"><select name="estado"><option>En servicio</option><option>En mantenimiento</option><option>Fuera de servicio</option></select><button class="primary" type="submit">Guardar móvil</button></form></div>';
+  html+='<div class="card"><table><thead><tr><th>Móvil</th><th>Patente</th><th>Modelo</th><th>Tipo</th><th>Agua</th><th>Estado</th>'+(canEditMoviles()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+
+    (data.map(x=>'<tr><td><strong>'+h(x.numero)+'</strong></td><td>'+h(x.patente)+'</td><td>'+h(x.modelo)+'</td><td>'+h(x.tipo)+'</td><td>'+h(x.agua||0)+' L</td><td>'+statusPill(x.estado)+'</td>'+(canEditMoviles()?'<td><button class="secondary edit-movil" data-id="'+x.id+'">Editar</button> <button class="danger del-movil" data-id="'+x.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin móviles cargados.</td></tr>')+
+    '</tbody></table></div>';
+  els.content.innerHTML=html;
+  if(!canEditMoviles()) return;
+  const form=document.getElementById('fMovil');
+  form.addEventListener('submit',async e=>{e.preventDefault();if(!requireGuardia())return;const fd=new FormData(form);const row={numero:fd.get('numero'),patente:fd.get('patente'),modelo:fd.get('modelo'),tipo:fd.get('tipo'),agua:Number(fd.get('agua')||0),estado:fd.get('estado')};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('moviles',row);await audit(fd.get('id')?'editar':'crear','movil',row);showFlash('Móvil guardado','ok');moviles()});
+  document.querySelectorAll('.edit-movil').forEach(btn=>btn.addEventListener('click',()=>{const item=data.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.numero.value=item.numero||'';form.elements.patente.value=item.patente||'';form.elements.modelo.value=item.modelo||'';form.elements.tipo.value=item.tipo||'';form.elements.agua.value=item.agua||0;form.elements.estado.value=item.estado||'En servicio'}));
+  document.querySelectorAll('.del-movil').forEach(btn=>btn.addEventListener('click',async()=>{if(!requireGuardia())return;if(!confirm('¿Eliminar móvil?'))return;await deleteRow('moviles',Number(btn.dataset.id));await audit('eliminar','movil',{id:Number(btn.dataset.id)});showFlash('Móvil eliminado','ok');moviles()}));
+}
+
 async function bomberos(){
   els.title.textContent='Bomberos';
 
@@ -532,6 +548,7 @@ async function bomberos(){
     bomberos();
   }));
 }
+
 async function inventario_general(){
   els.title.textContent='Inventario general';
   if(!(await tableExists('v_stock_general'))){els.content.innerHTML='<div class="err">No existe la vista v_stock_general.</div>';return;}
@@ -599,47 +616,285 @@ async function fallas(){
 
 async function checklist_diario(){
   els.title.textContent='Checklist diario';
-  const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('revisiones','fecha_hora',false,20)]); const movs=all[0],rows=all[1];
+
+  const all=await Promise.all([
+    safeSelect('moviles','numero',true),
+    safeSelect('revisiones','fecha_hora',false,20),
+    safeSelect('bomberos')
+  ]);
+
+  const movs=all[0];
+  const rows=all[1];
+  const bomberosData=all[2];
+
+  const bomberosOrdenados=[...bomberosData].sort((a,b)=>{
+    const na=(a.numero_j===null || a.numero_j===undefined || a.numero_j==='') ? 999999 : Number(a.numero_j);
+    const nb=(b.numero_j===null || b.numero_j===undefined || b.numero_j==='') ? 999999 : Number(b.numero_j);
+    if(na!==nb) return na-nb;
+    return String(a.apellido||'').localeCompare(String(b.apellido||''),'es');
+  });
+
   let html='<div class="card"><strong>Checklist diario de móviles</strong><div class="small" style="margin-top:8px;">Control de luces, sirena, aceite, agua, neumáticos, radio y combustible.</div>';
-  if(canEditChecklistDiario()) html+='<form id="fChecklistDiario" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); margin-top:12px;"><select name="movil">'+movs.map(m=>'<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>').join('')+'</select><input name="responsable" placeholder="Responsable / legajo" required><select name="luces"><option value="OK">Luces OK</option><option value="FALLA">Luces FALLA</option></select><select name="sirena"><option value="OK">Sirena y bocina OK</option><option value="FALLA">Sirena y bocina FALLA</option></select><select name="aceite"><option value="OK">Aceite OK</option><option value="FALLA">Aceite FALLA</option></select><select name="agua"><option value="OK">Agua OK</option><option value="FALLA">Agua FALLA</option></select><select name="neumaticos"><option value="OK">Neumáticos OK</option><option value="FALLA">Neumáticos FALLA</option></select><select name="radio"><option value="OK">Radio OK</option><option value="FALLA">Radio FALLA</option></select><select name="combustible"><option value="OK">Combustible > 3/4</option><option value="FALLA">Combustible bajo</option></select><textarea name="observaciones" placeholder="Observaciones"></textarea><button class="primary" type="submit">Guardar checklist diario</button></form>'; else html+='<div class="err" style="margin-top:12px;">Este perfil no tiene permiso para registrar checklist diario.</div>';
-  html+='</div><div class="card" style="margin-top:12px;"><strong>Últimos checklist diarios</strong><div style="margin-top:8px;">'+(rows.map(r=>'<div class="list-row"><strong>Móvil '+h(r.movil||'')+'</strong> · '+h(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+' · '+h(r.responsable||r.bombero||'')+'</div>').join('')||'Sin checklist diarios.')+'</div></div>';
+
+  if(canEditChecklistDiario()){
+    html+='<form id="fChecklistDiario" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); margin-top:12px;">'+
+      '<select name="movil">'+movs.map(m=>'<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>').join('')+'</select>'+
+      '<select name="responsable" required>'+
+        '<option value="">Seleccionar responsable</option>'+
+        bomberosOrdenados.map(b=>'<option value="'+h((b.numero_j||'')+' · '+(b.apellido||'')+', '+(b.nombre||''))+'">'+h((b.numero_j||'')+' · '+(b.apellido||'')+', '+(b.nombre||''))+'</option>').join('')+
+      '</select>'+
+      '<select name="luces"><option value="OK">Luces OK</option><option value="FALLA">Luces FALLA</option></select>'+
+      '<select name="sirena"><option value="OK">Sirena y bocina OK</option><option value="FALLA">Sirena y bocina FALLA</option></select>'+
+      '<select name="aceite"><option value="OK">Aceite OK</option><option value="FALLA">Aceite FALLA</option></select>'+
+      '<select name="agua"><option value="OK">Agua OK</option><option value="FALLA">Agua FALLA</option></select>'+
+      '<select name="neumaticos"><option value="OK">Neumáticos OK</option><option value="FALLA">Neumáticos FALLA</option></select>'+
+      '<select name="radio"><option value="OK">Radio OK</option><option value="FALLA">Radio FALLA</option></select>'+
+      '<select name="combustible"><option value="OK">Combustible > 3/4</option><option value="FALLA">Combustible bajo</option></select>'+
+      '<textarea name="observaciones" placeholder="Observaciones"></textarea>'+
+      '<button class="primary" type="submit">Guardar checklist diario</button>'+
+    '</form>';
+  } else {
+    html+='<div class="err" style="margin-top:12px;">Este perfil no tiene permiso para registrar checklist diario.</div>';
+  }
+
+  html+='</div><div class="card" style="margin-top:12px;"><strong>Últimos checklist diarios</strong><div style="margin-top:8px;">'+
+    (rows.map(r=>'<div class="list-row"><strong>Móvil '+h(r.movil||'')+'</strong> · '+h(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+' · '+h(r.responsable||r.bombero||'')+'</div>').join('')||'Sin checklist diarios.')+
+  '</div></div>';
+
   els.content.innerHTML=html;
+
   const form=document.getElementById('fChecklistDiario');
-  if(form) form.addEventListener('submit',async e=>{e.preventDefault();if(!requireGuardia())return;const fd=new FormData(form);const row={movil:fd.get('movil'),responsable:fd.get('responsable'),luces:fd.get('luces'),sirena:fd.get('sirena'),aceite:fd.get('aceite'),agua:fd.get('agua'),neumaticos:fd.get('neumaticos'),radio:fd.get('radio'),combustible:fd.get('combustible'),observaciones:fd.get('observaciones'),fecha_hora:new Date().toISOString()};await insertRow('revisiones',row);await audit('crear','checklist_diario',row);showFlash('Checklist diario registrado','ok');checklist_diario()});
+  if(form){
+    form.addEventListener('submit',async e=>{
+      e.preventDefault();
+
+      if(!requireGuardia()) return;
+
+      const fd=new FormData(form);
+
+      const row={
+        movil:fd.get('movil'),
+        responsable:fd.get('responsable'),
+        luces:fd.get('luces'),
+        sirena:fd.get('sirena'),
+        aceite:fd.get('aceite'),
+        agua:fd.get('agua'),
+        neumaticos:fd.get('neumaticos'),
+        radio:fd.get('radio'),
+        combustible:fd.get('combustible'),
+        observaciones:fd.get('observaciones'),
+        fecha_hora:new Date().toISOString()
+      };
+
+      await insertRow('revisiones',row);
+      await audit('crear','checklist_diario',row);
+      showFlash('Checklist diario registrado','ok');
+      checklist_diario();
+    });
+  }
 }
 
 async function checklist_materiales(){
   els.title.textContent='Control diario materiales';
-  if(!(await tableExists('v_stock_assignments_detail'))){els.content.innerHTML='<div class="err">No existe la vista v_stock_assignments_detail.</div>';return;}
-  const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('bomberos','apellido',true),safeSelect('v_stock_assignments_detail','movil',true),tableExists('controles_materiales').then(x=>x?safeSelect('controles_materiales','fecha_hora',false,10):[]),safeSelect('novedades_materiales','id',false,10)]);
-  const movs=all[0],boms=all[1],inventario=all[2],controles=all[3],novedades=all[4];
-  let html='<div class="card"><form id="fcheckMat" class="grid"><select name="movil" id="checkMovil">'+movs.map(m=>'<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>').join('')+'</select><select name="bombero">'+boms.map(b=>{const nombre=((b.jerarquia||'')+' '+(b.apellido||'')+' '+(b.nombre||'')).trim();return '<option value="'+h(nombre)+'">'+h(nombre)+'</option>'}).join('')+'</select><div id="checkItems"></div><textarea name="comentarios" placeholder="Observaciones generales del control"></textarea><button class="primary" type="submit">Registrar control de materiales</button></form></div>'+
-      '<div class="card" style="margin-top:12px;"><strong>Reportar material faltante o dañado</strong><form id="fNovedad" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="movil" id="novMovil">'+movs.map(m=>'<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>').join('')+'</select><select name="compartimiento" id="novComp"></select><select name="material" id="novMaterial"></select><input name="cantidad" type="number" min="1" value="1" placeholder="Cantidad"><select name="tipo_novedad"><option>Faltante</option><option>Dañado</option></select><textarea name="detalle" placeholder="Detalle de la novedad" required></textarea><button class="primary" type="submit">Registrar novedad</button></form></div>'+
-      '<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;">'+
-  '<div class="card"><strong>Últimos controles</strong><div style="margin-top:8px;">'+
-    (controles.map(r=>
-      '<div class="list-row"><strong>Móvil '+h(r.movil)+'</strong> · '+h(r.responsable||r.bombero||'Sin responsable')+'</div>'
-    ).join('')||'Sin controles.')+
-  '</div></div>'+
-  '<div class="card"><strong>Últimas novedades</strong><div style="margin-top:8px;">'+
-    (novedades.map(n=>
-      '<div class="list-row">Móvil '+h(n.movil)+' · '+h(n.compartimiento)+' · '+h(n.material)+' · '+h(n.tipo_novedad)+' · '+h(n.detalle||'')+
-      ' <span class="pill '+(String(n.estado||'').toLowerCase()==='cerrada'?'pill-ok':'pill-bad')+'">'+h(n.estado||'pendiente')+'</span>'+
-      (canManageNovedades()?'<button class="secondary cerrar-nov" data-id="'+n.id+'" style="margin-left:8px;">'+(String(n.estado||'').toLowerCase()==='cerrada'?'Reabrir':'Cerrar')+'</button>':'')+
-      '</div>'
-    ).join('')||'Sin novedades.')+
-  '</div></div>'+
-'</div>';    
-  const checkMovil=document.getElementById('checkMovil'),novMovil=document.getElementById('novMovil'),novComp=document.getElementById('novComp'),novMaterial=document.getElementById('novMaterial'),checkItems=document.getElementById('checkItems');
-  function renderChecklistItems(movil){const items=inventario.filter(i=>String(i.movil)===String(movil)&&String(i.estado_asignacion||'').toUpperCase()==='ACTIVA');if(!items.length){checkItems.innerHTML='<div class="card">Ese móvil no tiene materiales asignados.</div>';return;}checkItems.innerHTML='<div class="card"><strong>Control por material y cantidad</strong><div style="margin-top:12px;">'+items.map((i,idx)=>'<div class="list-row"><div><strong>'+h(i.compartimiento||'Sin compartimiento')+'</strong> · '+h(i.nombre)+' · Cantidad esperada: '+h(i.cantidad)+'</div><div class="grid" style="grid-template-columns:1fr 140px; margin-top:8px; align-items:center;"><label>Cantidad verificada</label><input type="number" name="cantidad_verificada_'+idx+'" min="0" value="'+h(i.cantidad)+'"></div></div>').join('')+'</div></div>'}
-  function fillNovedadSelectors(movil){const items=inventario.filter(i=>String(i.movil)===String(movil)&&String(i.estado_asignacion||'').toUpperCase()==='ACTIVA');const comps=Array.from(new Set(items.map(i=>i.compartimiento||'Sin compartimiento')));novComp.innerHTML=comps.map(c=>'<option value="'+h(c)+'">'+h(c)+'</option>').join('');refillMaterials()}
-  function refillMaterials(){const items=inventario.filter(i=>String(i.movil)===String(novMovil.value)&&String(i.compartimiento||'Sin compartimiento')===String(novComp.value)&&String(i.estado_asignacion||'').toUpperCase()==='ACTIVA');novMaterial.innerHTML=items.map(i=>'<option value="'+h(i.nombre)+'" data-stock-item-id="'+h(i.stock_item_id)+'">'+h(i.nombre)+'</option>').join('')}
-  renderChecklistItems(checkMovil.value); fillNovedadSelectors(novMovil.value); checkMovil.addEventListener('change',()=>renderChecklistItems(checkMovil.value)); novMovil.addEventListener('change',()=>fillNovedadSelectors(novMovil.value)); novComp.addEventListener('change',refillMaterials);
-  if(canEditChecklistMateriales()){
-    document.getElementById('fcheckMat').addEventListener('submit',async e=>{e.preventDefault();if(!requireGuardia())return;const fd=new FormData(e.target);const items=inventario.filter(i=>String(i.movil)===String(fd.get('movil'))&&String(i.estado_asignacion||'').toUpperCase()==='ACTIVA');const resumen=items.map((i,idx)=>{const verificada=Number(fd.get('cantidad_verificada_'+idx)||0);return (i.compartimiento||'Sin compartimiento')+' / '+i.nombre+': esperado '+i.cantidad+', verificado '+verificada}).join(' | ');if(await tableExists('controles_materiales')){await insertRow('controles_materiales',{movil:fd.get('movil'),responsable:fd.get('bombero'),resumen,observaciones:fd.get('comentarios'),fecha_hora:new Date().toISOString()}); await audit('crear','control_materiales',{movil:fd.get('movil')});}showFlash('Control de materiales registrado','ok');checklist_materiales()});
-    document.getElementById('fNovedad').addEventListener('submit',async e=>{e.preventDefault();if(!requireGuardia())return;const fd=new FormData(e.target);const items=inventario.filter(i=>String(i.movil)===String(fd.get('movil'))&&String(i.compartimiento||'Sin compartimiento')===String(fd.get('compartimiento'))&&String(i.nombre)===String(fd.get('material'))&&String(i.estado_asignacion||'').toUpperCase()==='ACTIVA');const item=items[0];const payload={movil:fd.get('movil'),compartimiento:fd.get('compartimiento'),material:fd.get('material'),cantidad:Number(fd.get('cantidad')||1),tipo_novedad:fd.get('tipo_novedad'),detalle:fd.get('detalle'),estado:'pendiente',estado_revision:'PENDIENTE',fecha_hora:new Date().toISOString(),reportado_por:canBombero()?'Bomberos':perfilActual};const res=await sb.from('novedades_materiales').insert(payload);if(res.error)return alert(res.error.message);if(item&&item.id) await updateRows('stock_assignments',{estado_asignacion:'PENDIENTE'},item.id);await audit('crear','novedad_material',payload);showFlash('Novedad registrada y descontada del activo','ok');checklist_materiales()});
+
+  if(!(await tableExists('v_stock_assignments_detail'))){
+    els.content.innerHTML='<div class="err">No existe la vista v_stock_assignments_detail.</div>';
+    return;
   }
-  if(canManageNovedades()) document.querySelectorAll('.cerrar-nov').forEach(btn=>btn.addEventListener('click',async()=>{const item=novedades.find(n=>String(n.id)===btn.dataset.id);const nuevoEstado=String(item.estado||'').toLowerCase()==='cerrada'?'pendiente':'cerrada';await updateRows('novedades_materiales',{estado:nuevoEstado,estado_revision:nuevoEstado==='cerrada'?'REVISADA':'PENDIENTE'},Number(btn.dataset.id));await audit('editar','novedad_material',{id:Number(btn.dataset.id),estado:nuevoEstado});showFlash('Novedad actualizada','ok');checklist_materiales()}));
+
+  const controlesExiste=await tableExists('controles_materiales');
+  const novedadesExiste=await tableExists('novedades_materiales');
+
+  const all=await Promise.all([
+    safeSelect('moviles','numero',true),
+    safeSelect('bomberos'),
+    safeSelect('v_stock_assignments_detail','movil',true),
+    controlesExiste ? safeSelect('controles_materiales','fecha_hora',false,10) : [],
+    novedadesExiste ? safeSelect('novedades_materiales','id',false,10) : []
+  ]);
+
+  const movs=all[0]||[];
+  const boms=(all[1]||[]).sort((a,b)=>{
+    const na=(a.numero_j===null || a.numero_j===undefined || a.numero_j==='') ? 999999 : Number(a.numero_j);
+    const nb=(b.numero_j===null || b.numero_j===undefined || b.numero_j==='') ? 999999 : Number(b.numero_j);
+    if(na!==nb) return na-nb;
+    return String(a.apellido||'').localeCompare(String(b.apellido||''),'es');
+  });
+  const inventario=all[2]||[];
+  const controles=all[3]||[];
+  const novedades=all[4]||[];
+
+  if(!movs.length){
+    els.content.innerHTML='<div class="card"><strong>Control diario materiales</strong><div class="small" style="margin-top:8px;">No hay móviles cargados todavía.</div></div>';
+    return;
+  }
+
+  let html='<div class="card">'+
+    '<strong>Registrar control de materiales</strong>'+
+    '<form id="fcheckMat" class="grid" style="margin-top:12px;">'+
+      '<select name="movil" id="checkMovil">'+movs.map(m=>'<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>').join('')+'</select>'+
+      '<select name="bombero" required>'+boms.map(b=>{const nombre=((b.numero_j||'')+' · '+(b.jerarquia||'')+' · '+(b.apellido||'')+' '+(b.nombre||'')).trim();return '<option value="'+h(nombre)+'">'+h(nombre)+'</option>'}).join('')+'</select>'+
+      '<div id="checkItems"></div>'+
+      '<textarea name="comentarios" placeholder="Observaciones generales del control"></textarea>'+
+      '<button class="primary" type="submit">Registrar control de materiales</button>'+
+    '</form>'+
+  '</div>';
+
+  html+='<div class="card" style="margin-top:12px;">'+
+    '<strong>Reportar material faltante o dañado</strong>';
+
+  if(novedadesExiste){
+    html+='<form id="fNovedad" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;">'+
+      '<select name="movil" id="novMovil">'+movs.map(m=>'<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>').join('')+'</select>'+
+      '<select name="compartimiento" id="novComp"></select>'+
+      '<select name="material" id="novMaterial"></select>'+
+      '<input name="cantidad" type="number" min="1" value="1" placeholder="Cantidad">'+
+      '<select name="tipo_novedad"><option>Faltante</option><option>Dañado</option></select>'+
+      '<textarea name="detalle" placeholder="Detalle de la novedad" required></textarea>'+
+      '<button class="primary" type="submit">Registrar novedad</button>'+
+    '</form>';
+  } else {
+    html+='<div class="err" style="margin-top:12px;">No existe la tabla novedades_materiales. Por eso no se puede registrar faltante o dañado.</div>';
+  }
+
+  html+='</div>';
+
+  html+='<div class="grid" style="grid-template-columns:1fr 1fr; margin-top:12px;">'+
+    '<div class="card"><strong>Últimos controles</strong><div style="margin-top:8px;">'+
+      (controles.map(r=>'<div class="list-row"><strong>Móvil '+h(r.movil)+'</strong> · '+h(r.responsable||r.bombero||'Sin responsable')+'</div>').join('')||'Sin controles.')+
+    '</div></div>'+
+    '<div class="card"><strong>Últimas novedades</strong><div style="margin-top:8px;">'+
+      (novedades.map(n=>'<div class="list-row">Móvil '+h(n.movil)+' · '+h(n.compartimiento)+' · '+h(n.material)+' · '+h(n.tipo_novedad)+' · '+h(n.detalle||'')+' <span class="pill '+(String(n.estado||'').toLowerCase()==='cerrada'?'pill-ok':'pill-bad')+'">'+h(n.estado||'pendiente')+'</span>'+(canManageNovedades()?'<button class="secondary cerrar-nov" data-id="'+n.id+'" style="margin-left:8px;">'+(String(n.estado||'').toLowerCase()==='cerrada'?'Reabrir':'Cerrar')+'</button>':'')+'</div>').join('')||'Sin novedades.')+
+    '</div></div>'+
+  '</div>';
+
+  els.content.innerHTML=html;
+
+  const checkMovil=document.getElementById('checkMovil');
+  const novMovil=document.getElementById('novMovil');
+  const novComp=document.getElementById('novComp');
+  const novMaterial=document.getElementById('novMaterial');
+  const checkItems=document.getElementById('checkItems');
+
+  function renderChecklistItems(movil){
+    const items=inventario.filter(i=>String(i.movil)===String(movil)&&String(i.estado_asignacion||'').toUpperCase()==='ACTIVA');
+
+    if(!items.length){
+      checkItems.innerHTML='<div class="card"><strong>Sin materiales asignados</strong><div class="small" style="margin-top:8px;">Ese móvil no tiene materiales activos cargados en la vista de inventario por móvil.</div></div>';
+      return;
+    }
+
+    checkItems.innerHTML='<div class="card"><strong>Control por material y cantidad</strong><div style="margin-top:12px;">'+
+      items.map((i,idx)=>'<div class="list-row"><div><strong>'+h(i.compartimiento||'Sin compartimiento')+'</strong> · '+h(i.nombre)+' · Cantidad esperada: '+h(i.cantidad)+'</div><div class="grid" style="grid-template-columns:1fr 140px; margin-top:8px; align-items:center;"><label>Cantidad verificada</label><input type="number" name="cantidad_verificada_'+idx+'" min="0" value="'+h(i.cantidad)+'"></div></div>').join('')+
+    '</div></div>';
+  }
+
+  function fillNovedadSelectors(movil){
+    if(!novComp || !novMaterial) return;
+
+    const items=inventario.filter(i=>String(i.movil)===String(movil)&&String(i.estado_asignacion||'').toUpperCase()==='ACTIVA');
+    const comps=Array.from(new Set(items.map(i=>i.compartimiento||'Sin compartimiento')));
+
+    novComp.innerHTML=comps.map(c=>'<option value="'+h(c)+'">'+h(c)+'</option>').join('');
+    refillMaterials();
+  }
+
+  function refillMaterials(){
+    if(!novComp || !novMaterial) return;
+
+    const items=inventario.filter(i=>String(i.movil)===String(novMovil.value)&&String(i.compartimiento||'Sin compartimiento')===String(novComp.value)&&String(i.estado_asignacion||'').toUpperCase()==='ACTIVA');
+
+    novMaterial.innerHTML=items.map(i=>'<option value="'+h(i.nombre)+'" data-stock-item-id="'+h(i.stock_item_id)+'">'+h(i.nombre)+'</option>').join('');
+  }
+
+  renderChecklistItems(checkMovil.value);
+
+  checkMovil.addEventListener('change',()=>renderChecklistItems(checkMovil.value));
+
+  if(novMovil && novComp && novMaterial){
+    fillNovedadSelectors(novMovil.value);
+    novMovil.addEventListener('change',()=>fillNovedadSelectors(novMovil.value));
+    novComp.addEventListener('change',refillMaterials);
+  }
+
+  if(canEditChecklistMateriales()){
+    const formControl=document.getElementById('fcheckMat');
+    if(formControl){
+      formControl.addEventListener('submit',async e=>{
+        e.preventDefault();
+        if(!requireGuardia()) return;
+
+        const fd=new FormData(e.target);
+        const items=inventario.filter(i=>String(i.movil)===String(fd.get('movil'))&&String(i.estado_asignacion||'').toUpperCase()==='ACTIVA');
+        const resumen=items.map((i,idx)=>{
+          const verificada=Number(fd.get('cantidad_verificada_'+idx)||0);
+          return (i.compartimiento||'Sin compartimiento')+' / '+i.nombre+': esperado '+i.cantidad+', verificado '+verificada;
+        }).join(' | ');
+
+        if(!controlesExiste){
+          showFlash('No existe la tabla controles_materiales en Supabase.','err');
+          return;
+        }
+
+        await insertRow('controles_materiales',{
+          movil:fd.get('movil'),
+          responsable:fd.get('bombero'),
+          resumen,
+          observaciones:fd.get('comentarios'),
+          fecha_hora:new Date().toISOString()
+        });
+
+        await audit('crear','control_materiales',{movil:fd.get('movil')});
+        showFlash('Control de materiales registrado','ok');
+        checklist_materiales();
+      });
+    }
+
+    const formNovedad=document.getElementById('fNovedad');
+    if(formNovedad){
+      formNovedad.addEventListener('submit',async e=>{
+        e.preventDefault();
+        if(!requireGuardia()) return;
+
+        const fd=new FormData(e.target);
+        const items=inventario.filter(i=>String(i.movil)===String(fd.get('movil'))&&String(i.compartimiento||'Sin compartimiento')===String(fd.get('compartimiento'))&&String(i.nombre)===String(fd.get('material'))&&String(i.estado_asignacion||'').toUpperCase()==='ACTIVA');
+        const item=items[0];
+
+        const payload={
+          movil:fd.get('movil'),
+          compartimiento:fd.get('compartimiento'),
+          material:fd.get('material'),
+          cantidad:Number(fd.get('cantidad')||1),
+          tipo_novedad:fd.get('tipo_novedad'),
+          detalle:fd.get('detalle'),
+          estado:'pendiente',
+          estado_revision:'PENDIENTE',
+          fecha_hora:new Date().toISOString(),
+          reportado_por:canBombero()?'Bomberos':perfilActual
+        };
+
+        const res=await sb.from('novedades_materiales').insert(payload);
+        if(res.error) return alert(res.error.message);
+
+        if(item && item.id) await updateRows('stock_assignments',{estado_asignacion:'PENDIENTE'},item.id);
+
+        await audit('crear','novedad_material',payload);
+        showFlash('Novedad registrada y descontada del activo','ok');
+        checklist_materiales();
+      });
+    }
+  }
+
+  if(canManageNovedades()){
+    document.querySelectorAll('.cerrar-nov').forEach(btn=>btn.addEventListener('click',async()=>{
+      const item=novedades.find(n=>String(n.id)===btn.dataset.id);
+      const nuevoEstado=String(item.estado||'').toLowerCase()==='cerrada'?'pendiente':'cerrada';
+      await updateRows('novedades_materiales',{estado:nuevoEstado,estado_revision:nuevoEstado==='cerrada'?'REVISADA':'PENDIENTE'},Number(btn.dataset.id));
+      await audit('editar','novedad_material',{id:Number(btn.dataset.id),estado:nuevoEstado});
+      showFlash('Novedad actualizada','ok');
+      checklist_materiales();
+    }));
+  }
 }
 
 async function mantenimiento_stock(){
