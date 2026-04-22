@@ -152,7 +152,9 @@ async function loginAdmin(email,password,profile){const expected=PROFILE_EMAILS[
 async function loginBomberos(){userActual=null}
 async function logout(){try{if(userActual)await sb.auth.signOut()}catch(e){}location.reload()}
 async function loadGuardiaActiva(){if(!(await tableExists('guardias_activas'))) {guardiaActual=null; els.guardiaInfo.textContent='Sin módulo de guardia activa'; return;} const rows=await safeSelect('guardias_activas','fecha_inicio',false,1); guardiaActual=rows.find(x=>String(x.estado||'').toLowerCase()==='activa')||null; els.guardiaInfo.textContent=guardiaActual ? ('Guardia activa: '+(guardiaActual.nombre||'Sin nombre')) : 'No hay guardia activa';}
-function requireGuardia(){if(['administrador','jefatura'].includes(perfilActual))return true; if(!guardiaActual){showFlash('No hay guardia activa. Operación bloqueada.','err'); return false;} return true;}
+function requireGuardia(){
+  return true;
+}
 function enforceHierarchy(targetRole){if(level(perfilActual)<=level(targetRole)){showFlash('Bloqueado por jerarquía de roles.','err'); return false;} return true;}
 
 async function dashboard(){
