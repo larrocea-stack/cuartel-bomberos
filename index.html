@@ -1180,7 +1180,7 @@ function abrirReporteImprimible(titulo, cuerpoHtml){
   const html='<!doctype html><html lang="es"><head><meta charset="utf-8"><title>'+h(titulo)+'</title>'+
     '<style>body{font-family:Arial,sans-serif;margin:28px;color:#111}h1{color:#991b1b}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #999;padding:7px;text-align:left;font-size:12px}th{background:#eee}.muted{color:#666;font-size:12px}.header{border-bottom:3px solid #991b1b;margin-bottom:18px;padding-bottom:10px}.footer{margin-top:24px;font-size:11px;color:#666}</style>'+
     '</head><body><div class="header"><h1>'+h(titulo)+'</h1><div class="muted">CUARTELONLINE · Generado: '+formatFechaHora(new Date())+'</div></div>'+cuerpoHtml+
-    '<div class="footer">Sistema de Gestión Operativa · Reporte generado automáticamente</div><script>window.print()</script></body></html>';
+    '<div class="footer">Sistema de Gestión Operativa · Reporte generado automáticamente</div><script>window.print()<\/script></body></html>';
   w.document.write(html);
   w.document.close();
 }
