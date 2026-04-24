@@ -111,12 +111,48 @@ const SUPABASE_KEY='sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
 const PROFILE_EMAILS={administrador:'admin@cuartel.com',materiales:'materiales@cuartel.com',automotores:'automotores@cuartel.com',jefatura:'jefatura@cuartel.com',roperia:'roperia@cuartel.com'};
 const ROLE_LEVEL={bomberos:1,roperia:2,automotores:2,materiales:2,jefatura:3,administrador:4};
 const VIEW_RULES={
-  administrador:['dashboard','guardia_activa','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','roperia','respaldo','estadisticas','novedades','auditoria','reportes_operativos','reportes_stock','diagnostico'],
-  jefatura:['dashboard','guardia_activa','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','roperia','estadisticas','novedades','auditoria','reportes_operativos','reportes_stock','diagnostico'],
-  automotores:['dashboard','guardia_activa','moviles','fallas','checklist_diario','repuestos','proveedores','mantenimiento','reportes_operativos','estadisticas','diagnostico'],
-  materiales:['dashboard','guardia_activa','inventario_general','asignaciones','inventario','checklist_materiales','mantenimiento_stock','archivo_bajas','novedades','reportes_stock','estadisticas','diagnostico'],
-  roperia:['dashboard','roperia','roperia_inventario_general','roperia_informe_bombero','reportes_operativos','diagnostico'],
-  bomberos:['dashboard','guardia_activa','inventario','plano','checklist_materiales','diagnostico']
+  administrador:[
+    'dashboard','guardia_activa','moviles','bomberos',
+    'inventario_general','asignaciones','inventario','plano',
+    'fallas','checklist_diario','checklist_materiales',
+    'mantenimiento_stock','archivo_bajas','repuestos','proveedores',
+    'mantenimiento','roperia','roperia_inventario_general',
+    'roperia_informe_bombero','respaldo','estadisticas','novedades',
+    'auditoria','reportes_operativos','reportes_stock','diagnostico'
+  ],
+
+  jefatura:[
+    'dashboard','guardia_activa','moviles','bomberos',
+    'inventario_general','asignaciones','inventario','plano',
+    'fallas','checklist_diario','checklist_materiales',
+    'mantenimiento_stock','archivo_bajas','repuestos','proveedores',
+    'mantenimiento','roperia','roperia_inventario_general',
+    'roperia_informe_bombero','estadisticas','novedades',
+    'auditoria','reportes_operativos','reportes_stock','diagnostico'
+  ],
+
+  automotores:[
+    'dashboard','guardia_activa','moviles','fallas',
+    'checklist_diario','repuestos','proveedores',
+    'mantenimiento','reportes_operativos','estadisticas','diagnostico'
+  ],
+
+  materiales:[
+    'dashboard','guardia_activa','inventario_general',
+    'asignaciones','inventario','plano','checklist_materiales',
+    'mantenimiento_stock','archivo_bajas','novedades',
+    'reportes_stock','reportes_operativos','estadisticas','diagnostico'
+  ],
+
+  roperia:[
+    'dashboard','roperia','roperia_inventario_general',
+    'roperia_informe_bombero','reportes_operativos','diagnostico'
+  ],
+
+  bomberos:[
+    'dashboard','guardia_activa','inventario','plano',
+    'checklist_materiales','diagnostico'
+  ]
 };
 const els={login:document.getElementById('login'),app:document.getElementById('app'),loginForm:document.getElementById('loginForm'),perfil:document.getElementById('perfil'),email:document.getElementById('email'),password:document.getElementById('password'),bootMsg:document.getElementById('bootMsg'),bootErr:document.getElementById('bootErr'),userInfo:document.getElementById('userInfo'),guardiaInfo:document.getElementById('guardiaInfo'),title:document.getElementById('title'),content:document.getElementById('content'),flash:document.getElementById('flash'),logout:document.getElementById('logout'),logoutTop:document.getElementById('logoutTop')};
 let sb=null,perfilActual=null,userActual=null,guardiaActual=null;
@@ -130,24 +166,76 @@ function formatFechaHora(fecha){
   return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 function canView(s){return (VIEW_RULES[perfilActual]||[]).includes(s)}
+function bloquearSiNoPuede(sec){
+  if(!canView(sec)){
+    els.title.textContent='Acceso restringido';
+    els.content.innerHTML='<div class="err">No tenés permiso para acceder a este módulo con el perfil actual.</div>';
+    return true;
+  }
+  return false;
+}
 function level(role){return ROLE_LEVEL[role]||0}
 function canAdmin(){return perfilActual==='administrador'}
 function canBombero(){return perfilActual==='bomberos'}
-function canEditMoviles(){return perfilActual==='administrador'||perfilActual==='automotores'}
-function canEditBomberos(){return perfilActual==='administrador'||perfilActual==='jefatura'}
-function canEditInventarioMovil(){return perfilActual==='administrador'||perfilActual==='materiales'}
-function canEditFallas(){return perfilActual==='administrador'||perfilActual==='automotores'}
-function canEditChecklistDiario(){return ['administrador','automotores','jefatura'].includes(perfilActual)}
-function canEditChecklistMateriales(){return ['administrador','materiales','bomberos','jefatura'].includes(perfilActual)}
-function canEditRepuestos(){return ['administrador','automotores'].includes(perfilActual)}
-function canEditProveedores(){return ['administrador','automotores'].includes(perfilActual)}
-function canEditMantenimiento(){return ['administrador','automotores'].includes(perfilActual)}
-function canBackup(){return perfilActual==='administrador'}
-function canManageNovedades(){return ['administrador','materiales','jefatura'].includes(perfilActual)}
-function canEditStockGeneral(){return ['administrador','materiales'].includes(perfilActual)}
-function canEditRoperia(){return ['administrador','roperia'].includes(perfilActual)}
-function canSeeAlerts(){return perfilActual!=='automotores'}
-function canUsePlano(){return perfilActual!=='automotores'}
+function canEditMoviles(){
+  return ['administrador','jefatura','automotores'].includes(perfilActual);
+}
+
+function canEditBomberos(){
+  return ['administrador','jefatura'].includes(perfilActual);
+}
+
+function canEditInventarioMovil(){
+  return ['administrador','jefatura','materiales'].includes(perfilActual);
+}
+
+function canEditFallas(){
+  return ['administrador','jefatura','automotores'].includes(perfilActual);
+}
+
+function canEditChecklistDiario(){
+  return ['administrador','jefatura','automotores'].includes(perfilActual);
+}
+
+function canEditChecklistMateriales(){
+  return ['administrador','jefatura','materiales','bomberos'].includes(perfilActual);
+}
+
+function canEditRepuestos(){
+  return ['administrador','jefatura','automotores'].includes(perfilActual);
+}
+
+function canEditProveedores(){
+  return ['administrador','jefatura','automotores'].includes(perfilActual);
+}
+
+function canEditMantenimiento(){
+  return ['administrador','jefatura','automotores'].includes(perfilActual);
+}
+
+function canBackup(){
+  return perfilActual==='administrador';
+}
+
+function canManageNovedades(){
+  return ['administrador','jefatura','materiales'].includes(perfilActual);
+}
+
+function canEditStockGeneral(){
+  return ['administrador','jefatura','materiales'].includes(perfilActual);
+}
+
+function canEditRoperia(){
+  return ['administrador','jefatura','roperia'].includes(perfilActual);
+}
+
+function canSeeAlerts(){
+  return ['administrador','jefatura','materiales','bomberos'].includes(perfilActual);
+}
+
+function canUsePlano(){
+  return ['administrador','jefatura','materiales','bomberos'].includes(perfilActual);
+}
 function statusPill(status){const s=String(status||'').toLowerCase();if(s==='en servicio'||s==='activa'||s==='activo')return '<span class="pill pill-ok">'+h(status)+'</span>';if(s.includes('mant')||s.includes('repar'))return '<span class="pill pill-warn">'+h(status)+'</span>';if(s.includes('baja')||s.includes('fuera'))return '<span class="pill pill-bad">'+h(status||'Sin estado')+'</span>';return '<span class="pill pill-info">'+h(status||'Sin estado')+'</span>'}
 function severityPill(sev){const s=String(sev||'').toLowerCase();if(s==='leve')return '<span class="pill pill-ok">Leve</span>';if(s==='moderada')return '<span class="pill pill-warn">Moderada</span>';return '<span class="pill pill-bad">'+h(sev||'Crítica')+'</span>'}
 function showBootError(msg){els.bootErr.textContent=msg;els.bootErr.classList.remove('hidden')}
@@ -1371,7 +1459,40 @@ async function guardia(){
   }
 }
 
-async function nav(sec){ if(!canView(sec)){showFlash('Ese perfil no tiene acceso a esta sección','err');return} activateNav(sec); if(sec==='dashboard')return dashboard(); if(sec==='guardia_activa')return guardia_activa(); if(sec==='moviles')return moviles(); if(sec==='bomberos')return bomberos(); if(sec==='inventario_general')return inventario_general(); if(sec==='asignaciones')return asignaciones(); if(sec==='inventario')return inventario(); if(sec==='plano')return plano(); if(sec==='fallas')return fallas(); if(sec==='checklist_diario')return checklist_diario(); if(sec==='checklist_materiales')return checklist_materiales(); if(sec==='mantenimiento_stock')return mantenimiento_stock(); if(sec==='archivo_bajas')return archivo_bajas(); if(sec==='repuestos')return repuestos(); if(sec==='proveedores')return proveedores(); if(sec==='mantenimiento')return mantenimiento(); if(sec==='roperia')return roperia(); if(sec==='roperia_inventario_general')return roperia_inventario_general(); if(sec==='roperia_informe_bombero')return roperia_informe_bombero(); if(sec==='respaldo')return respaldo(); if(sec==='estadisticas')return estadisticas(); if(sec==='novedades')return novedades(); if(sec==='auditoria')return auditoria(); if(sec==='reportes_operativos')return reportes_operativos(); if(sec==='reportes_stock')return reportes_stock(); if(sec==='diagnostico')return diagnostico(); }
+async function nav(sec){
+  if(bloquearSiNoPuede(sec)) return;
+  activateNav(sec);
+
+  if(sec==='dashboard') return dashboard();
+  if(sec==='guardia_activa') return guardia_activa();
+  if(sec==='moviles') return moviles();
+  if(sec==='bomberos') return bomberos();
+  if(sec==='inventario_general') return inventario_general();
+  if(sec==='asignaciones') return asignaciones();
+  if(sec==='inventario') return inventario();
+  if(sec==='plano') return plano();
+  if(sec==='fallas') return fallas();
+  if(sec==='checklist_diario') return checklist_diario();
+  if(sec==='checklist_materiales') return checklist_materiales();
+  if(sec==='mantenimiento_stock') return mantenimiento_stock();
+  if(sec==='archivo_bajas') return archivo_bajas();
+  if(sec==='repuestos') return repuestos();
+  if(sec==='proveedores') return proveedores();
+  if(sec==='mantenimiento') return mantenimiento();
+  if(sec==='roperia') return roperia();
+  if(sec==='roperia_inventario_general') return roperia_inventario_general();
+  if(sec==='roperia_informe_bombero') return roperia_informe_bombero();
+  if(sec==='respaldo') return respaldo();
+  if(sec==='estadisticas') return estadisticas();
+  if(sec==='novedades') return novedades();
+  if(sec==='auditoria') return auditoria();
+  if(sec==='reportes_operativos') return reportes_operativos();
+  if(sec==='reportes_stock') return reportes_stock();
+  if(sec==='diagnostico') return diagnostico();
+
+  els.title.textContent='Módulo no disponible';
+  els.content.innerHTML='<div class="err">La sección solicitada no está implementada o fue removida.</div>';
+}
 
 async function init(){
   try{ if(!window.supabase||typeof window.supabase.createClient!=='function') throw new Error('No cargó la librería de Supabase.'); sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY); els.bootMsg.textContent='Sistema listo.'; authInputs(); els.perfil.addEventListener('change',authInputs); els.logout.addEventListener('click',logout); els.logoutTop.addEventListener('click',logout); document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>nav(btn.dataset.sec))); els.loginForm.addEventListener('submit',async e=>{e.preventDefault(); perfilActual=els.perfil.value; try{ if(perfilActual==='bomberos') await loginBomberos(); else await loginAdmin(els.email.value,els.password.value,perfilActual); els.login.classList.add('hidden'); els.app.classList.remove('hidden'); els.userInfo.textContent=(userActual?.email||perfilActual)+' · rol '+perfilActual; await loadGuardiaActiva(); updateNavVisibility(); nav('dashboard'); }catch(err){alert(err&&err.message?err.message:'No se pudo iniciar sesión.')}}) }catch(err){ els.bootMsg.textContent='Error de inicialización.'; showBootError(err&&err.message?err.message:String(err)); }
