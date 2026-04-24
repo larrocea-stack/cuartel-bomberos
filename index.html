@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cuartel Online · Nivel Avanzado</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
   <style>
     :root{--bg:#020617;--panel:#0f172a;--soft:#1e293b;--line:#334155;--text:#e2e8f0;--muted:#94a3b8;--danger:#b91c1c;--danger2:#7f1d1d;--ok:#166534;--warn:#92400e;--info:#1d4ed8}
     *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
@@ -111,12 +113,32 @@ const SUPABASE_KEY='sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
 const PROFILE_EMAILS={administrador:'admin@cuartel.com',materiales:'materiales@cuartel.com',automotores:'automotores@cuartel.com',jefatura:'jefatura@cuartel.com',roperia:'roperia@cuartel.com'};
 const ROLE_LEVEL={bomberos:1,roperia:2,automotores:2,materiales:2,jefatura:3,administrador:4};
 const VIEW_RULES={
-  administrador:['dashboard','guardia_activa','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','roperia','respaldo','estadisticas','novedades','auditoria','reportes_operativos','reportes_stock','diagnostico'],
-  jefatura:['dashboard','guardia_activa','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','roperia','estadisticas','novedades','auditoria','reportes_operativos','reportes_stock','diagnostico'],
-  automotores:['dashboard','guardia_activa','moviles','fallas','checklist_diario','repuestos','proveedores','mantenimiento','reportes_operativos','estadisticas','diagnostico'],
-  materiales:['dashboard','guardia_activa','inventario_general','asignaciones','inventario','checklist_materiales','mantenimiento_stock','archivo_bajas','novedades','reportes_stock','estadisticas','diagnostico'],
-  roperia:['dashboard','roperia','roperia_inventario_general','roperia_informe_bombero','reportes_operativos','diagnostico'],
-  bomberos:['dashboard','guardia_activa','inventario','plano','checklist_materiales','diagnostico']
+  administrador:[
+    'dashboard','guardia_activa',
+    'bomberos','roperia','roperia_inventario_general','roperia_informe_bombero',
+    'moviles','fallas','checklist_diario','mantenimiento','repuestos','proveedores',
+    'inventario_general','asignaciones','inventario','plano','checklist_materiales','mantenimiento_stock','archivo_bajas','novedades',
+    'reportes_operativos','reportes_stock','estadisticas','auditoria','respaldo','diagnostico'
+  ],
+  jefatura:[
+    'dashboard','guardia_activa',
+    'bomberos','roperia','roperia_inventario_general','roperia_informe_bombero',
+    'moviles','fallas','checklist_diario','mantenimiento','repuestos','proveedores',
+    'inventario_general','asignaciones','inventario','plano','checklist_materiales','mantenimiento_stock','archivo_bajas','novedades',
+    'reportes_operativos','reportes_stock','estadisticas','auditoria','diagnostico'
+  ],
+  automotores:[
+    'dashboard','guardia_activa','moviles','fallas','checklist_diario','repuestos','proveedores','mantenimiento','reportes_operativos','estadisticas','diagnostico'
+  ],
+  materiales:[
+    'dashboard','guardia_activa','inventario_general','asignaciones','inventario','checklist_materiales','mantenimiento_stock','archivo_bajas','novedades','reportes_stock','estadisticas','diagnostico'
+  ],
+  roperia:[
+    'dashboard','roperia','roperia_inventario_general','roperia_informe_bombero','reportes_operativos','diagnostico'
+  ],
+  bomberos:[
+    'dashboard','guardia_activa','inventario','plano','checklist_materiales','diagnostico'
+  ]
 };
 const els={login:document.getElementById('login'),app:document.getElementById('app'),loginForm:document.getElementById('loginForm'),perfil:document.getElementById('perfil'),email:document.getElementById('email'),password:document.getElementById('password'),bootMsg:document.getElementById('bootMsg'),bootErr:document.getElementById('bootErr'),userInfo:document.getElementById('userInfo'),guardiaInfo:document.getElementById('guardiaInfo'),title:document.getElementById('title'),content:document.getElementById('content'),flash:document.getElementById('flash'),logout:document.getElementById('logout'),logoutTop:document.getElementById('logoutTop')};
 let sb=null,perfilActual=null,userActual=null,guardiaActual=null;
@@ -1082,16 +1104,114 @@ async function roperia_inventario_general(){
 
 async function roperia_informe_bombero(){
   els.title.textContent='Informe por bombero';
-  if(!(await tableExists('roperia_items'))){els.content.innerHTML='<div class="card"><strong>Informe por bombero</strong><div class="small" style="margin-top:8px;">No existe la tabla roperia_items en Supabase.</div></div>';return;}
+  if(!(await tableExists('roperia_items'))){
+    els.content.innerHTML='<div class="card"><strong>Informe por bombero</strong><div class="small" style="margin-top:8px;">No existe la tabla roperia_items en Supabase.</div></div>';
+    return;
+  }
+
   const bomberos=(await tableExists('bomberos'))? ordenarBomberosPorJ(await safeSelect('bomberos')):[];
   const rows=await safeSelect('roperia_items','asignado_a',true);
   const nombresBomberos=bomberos.map(b=>nombreBomberoJ(b)).filter(Boolean);
-  els.content.innerHTML='<div class="card"><div class="grid" style="grid-template-columns:280px 220px; align-items:end;"><div><label class="small">Bombero</label><select id="repBombero" style="margin-top:8px;"><option value="">Todos</option>'+nombresBomberos.map(n=>'<option value="'+h(n)+'">'+h(n)+'</option>').join('')+'</select></div><div><button id="expBomberoCsv" class="primary" type="button">Exportar informe por bombero</button></div></div><div id="repBomberoWrap" style="margin-top:14px;"></div></div>';
+
+  els.content.innerHTML=
+    '<div class="card">'+
+      '<strong>Informe de ropería por bombero</strong>'+
+      '<div class="small" style="margin-top:6px;">Seleccioná un bombero para generar el informe individual en PDF. También podés seleccionar Todos para un informe general.</div>'+
+      '<div class="grid" style="grid-template-columns:280px 180px 180px; align-items:end; margin-top:14px;">'+
+        '<div><label class="small">Bombero</label><select id="repBombero" style="margin-top:8px;"><option value="">Todos</option>'+nombresBomberos.map(n=>'<option value="'+h(n)+'">'+h(n)+'</option>').join('')+'</select></div>'+
+        '<div><button id="expBomberoPdf" class="primary" type="button">Descargar PDF</button></div>'+
+        '<div><button id="expBomberoCsv" class="secondary" type="button">Exportar CSV</button></div>'+
+      '</div>'+
+      '<div id="repBomberoWrap" style="margin-top:14px;"></div>'+
+    '</div>';
+
   const sel=document.getElementById('repBombero');
   const wrap=document.getElementById('repBomberoWrap');
-  function render(){const filtered=rows.filter(r=>!sel.value || String(r.asignado_a||'')===String(sel.value)); wrap.innerHTML='<table><thead><tr><th>Bombero</th><th>Prenda</th><th>Talle</th><th>Estado</th><th>Observaciones</th></tr></thead><tbody>'+(filtered.map(r=>'<tr><td>'+h(r.asignado_a||'Sin asignar')+'</td><td><strong>'+h(r.tipo_prenda||'')+'</strong><div class="small">'+h(r.descripcion||'')+'</div></td><td>'+h(r.talle||'')+'</td><td>'+statusPill(r.estado||'')+'</td><td>'+h(r.observaciones||'')+'</td></tr>').join('')||'<tr><td colspan="5">Sin datos para el filtro seleccionado.</td></tr>')+'</tbody></table>';}
-  render(); sel.addEventListener('change',render);
-  document.getElementById('expBomberoCsv').addEventListener('click',()=>{const filtered=rows.filter(r=>!sel.value || String(r.asignado_a||'')===String(sel.value)).map(r=>({bombero:r.asignado_a||'',tipo_prenda:r.tipo_prenda||'',descripcion:r.descripcion||'',talle:r.talle||'',estado:r.estado||'',observaciones:r.observaciones||''})); downloadText('informe_roperia_por_bombero.csv',csv(filtered),'text/csv;charset=utf-8');});
+
+  function getFiltrado(){
+    return rows.filter(r=>!sel.value || String(r.asignado_a||'')===String(sel.value));
+  }
+
+  function render(){
+    const filtered=getFiltrado();
+    wrap.innerHTML=
+      '<table><thead><tr><th>Bombero</th><th>Prenda</th><th>Talle</th><th>Estado</th><th>Observaciones</th></tr></thead><tbody>'+
+      (filtered.map(r=>
+        '<tr><td>'+h(r.asignado_a||'Sin asignar')+'</td>'+
+        '<td><strong>'+h(r.tipo_prenda||'')+'</strong><div class="small">'+h(r.descripcion||'')+'</div></td>'+
+        '<td>'+h(r.talle||'')+'</td>'+
+        '<td>'+statusPill(r.estado||'')+'</td>'+
+        '<td>'+h(r.observaciones||'')+'</td></tr>'
+      ).join('')||'<tr><td colspan="5">Sin datos para el filtro seleccionado.</td></tr>')+
+      '</tbody></table>';
+  }
+
+  function descargarPdf(){
+    const filtered=getFiltrado();
+    const bombero=sel.value || 'Todos los bomberos';
+    const fecha=formatFechaHora(new Date());
+    const filename=('informe_roperia_'+bombero)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-zA-Z0-9_-]+/g,'_')
+      .replace(/^_+|_+$/g,'')+'.pdf';
+
+    if(window.jspdf && window.jspdf.jsPDF){
+      const { jsPDF } = window.jspdf;
+      const doc=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+      doc.setFontSize(14);
+      doc.text('CUERPO DE BOMBEROS VOLUNTARIOS DE EZEIZA',105,14,{align:'center'});
+      doc.setFontSize(10);
+      doc.text('Área Capacitación y Entrenamiento',105,20,{align:'center'});
+      doc.setFontSize(13);
+      doc.text('Informe de ropería por bombero',14,32);
+      doc.setFontSize(10);
+      doc.text('Bombero: '+bombero,14,40);
+      doc.text('Fecha de emisión: '+fecha,14,46);
+      doc.text('Total de prendas: '+filtered.length,14,52);
+
+      const body=filtered.map(r=>[
+        r.asignado_a||'Sin asignar',
+        r.tipo_prenda||'',
+        r.descripcion||'',
+        r.talle||'',
+        r.estado||'',
+        r.observaciones||''
+      ]);
+
+      doc.autoTable({
+        startY:58,
+        head:[['Bombero','Prenda','Descripción','Talle','Estado','Observaciones']],
+        body:body.length?body:[['Sin datos','','','','','']],
+        styles:{fontSize:8,cellPadding:2},
+        headStyles:{fillColor:[153,27,27]},
+        margin:{left:10,right:10}
+      });
+
+      const finalY=doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 80;
+      doc.setFontSize(9);
+      doc.text('Firma responsable: _______________________________',14,Math.min(finalY,280));
+      doc.save(filename);
+      return;
+    }
+
+    // Fallback si el CDN de PDF no carga: abre impresión para guardar como PDF.
+    const tableRows=filtered.map(r=>
+      '<tr><td>'+h(r.asignado_a||'Sin asignar')+'</td><td>'+h(r.tipo_prenda||'')+'</td><td>'+h(r.descripcion||'')+'</td><td>'+h(r.talle||'')+'</td><td>'+h(r.estado||'')+'</td><td>'+h(r.observaciones||'')+'</td></tr>'
+    ).join('') || '<tr><td colspan="6">Sin datos</td></tr>';
+    const w=window.open('','_blank');
+    w.document.write('<html><head><title>Informe de ropería</title><style>body{font-family:Arial,sans-serif;padding:24px}h1,h2{text-align:center}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #999;padding:6px;font-size:12px}th{background:#eee}</style></head><body><h2>CUERPO DE BOMBEROS VOLUNTARIOS DE EZEIZA</h2><h1>Informe de ropería por bombero</h1><p><strong>Bombero:</strong> '+h(bombero)+'</p><p><strong>Fecha:</strong> '+h(fecha)+'</p><p><strong>Total de prendas:</strong> '+filtered.length+'</p><table><thead><tr><th>Bombero</th><th>Prenda</th><th>Descripción</th><th>Talle</th><th>Estado</th><th>Observaciones</th></tr></thead><tbody>'+tableRows+'</tbody></table><br><br><p>Firma responsable: _______________________________</p></body></html>');
+    w.document.close();
+    w.focus();
+    w.print();
+  }
+
+  render();
+  sel.addEventListener('change',render);
+  document.getElementById('expBomberoCsv').addEventListener('click',()=>{
+    const filtered=getFiltrado().map(r=>({bombero:r.asignado_a||'',tipo_prenda:r.tipo_prenda||'',descripcion:r.descripcion||'',talle:r.talle||'',estado:r.estado||'',observaciones:r.observaciones||''}));
+    downloadText('informe_roperia_por_bombero.csv',csv(filtered),'text/csv;charset=utf-8');
+  });
+  document.getElementById('expBomberoPdf').addEventListener('click',descargarPdf);
 }
 
 async function respaldo(){
