@@ -147,7 +147,26 @@ async function upsertRow(table,row){const r=await sb.from(table).upsert(row);if(
 async function insertRow(table,row){const r=await sb.from(table).insert(row);if(r.error)throw r.error;return r}
 async function deleteRow(table,id){const r=await sb.from(table).delete().eq('id',id);if(r.error)throw r.error;return r}
 async function updateRows(table,values,id){const r=await sb.from(table).update(values).eq('id',id);if(r.error)throw r.error;return r}
-async function audit(action,entity,payload){if(!(await tableExists('audit_logs')))return;try{await sb.from('audit_logs').insert({fecha_hora:new Date().toISOString(),usuario:userActual?.email||perfilActual,perfil:perfilActual,accion:action,entidad:entity,detalle:JSON.stringify(payload||{})})}catch(e){}}
+async function audit(action,entity,payload){
+  if(!(await tableExists('audit_logs'))) return;
+
+  try{
+    const r = await sb.from('audit_logs').insert({
+      fecha_hora:new Date().toISOString(),
+      usuario:userActual?.email || perfilActual,
+      perfil:perfilActual,
+      accion:action,
+      entidad:entity,
+      detalle:JSON.stringify(payload || {})
+    });
+
+    if(r.error){
+      console.warn('Auditoría no guardada:', r.error.message);
+    }
+  }catch(e){
+    console.warn('Auditoría no disponible:', e);
+  }
+}
 async function loginAdmin(email,password,profile){const expected=PROFILE_EMAILS[profile];if(!expected)throw new Error('Perfil inválido.');if(String(email||'').trim().toLowerCase()!==expected.toLowerCase())throw new Error('Para el perfil '+profile+' debés usar el email '+expected);const authRes=await sb.auth.signInWithPassword({email,password});if(authRes.error)throw authRes.error;userActual=authRes.data.user;const roleRes=await sb.from('user_profiles').select('*').eq('user_id',userActual.id).eq('profile_name',profile).limit(1);if(roleRes.error)throw roleRes.error;if(!roleRes.data||!roleRes.data.length)throw new Error('Ese usuario no tiene asignado el perfil seleccionado.')}
 async function loginBomberos(){userActual=null}
 async function logout(){try{if(userActual)await sb.auth.signOut()}catch(e){}location.reload()}
@@ -494,6 +513,7 @@ form.addEventListener('submit',async e=>{
     legajo:fd.get('legajo')
   };
 
+ try{
   if(fd.get('id')){
     await updateRows('bomberos',row,Number(fd.get('id')));
   } else {
@@ -503,7 +523,11 @@ form.addEventListener('submit',async e=>{
   await audit(fd.get('id')?'editar':'crear','bombero',row);
   showFlash('Bombero guardado','ok');
   bomberos();
-});
+
+}catch(err){
+  console.error('Error guardando bombero:', err);
+  showFlash('No se pudo guardar el bombero: '+(err.message || 'Error desconocido'),'err');
+}
 
   document.querySelectorAll('.edit-bombero').forEach(btn=>btn.addEventListener('click',()=>{
     const item=ordenados.find(x=>String(x.id)===btn.dataset.id);
