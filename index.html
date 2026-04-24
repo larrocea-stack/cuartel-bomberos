@@ -157,16 +157,18 @@ async function updateRows(table,values,id){const r=await sb.from(table).update(v
 async function audit(action,entity,payload){
   if(!(await tableExists('audit_logs'))) return;
 
-  try{
-    const r = await sb.from('audit_logs').insert({
-      fecha_hora:new Date().toISOString(),
-      usuario:userActual?.email || perfilActual,
-      perfil:perfilActual,
-      accion:action,
-      entidad:entity,
-      detalle:JSON.stringify(payload || {})
-    });
+  const registro={
+    fecha_hora:new Date().toISOString(),
+    usuario:userActual?.email || perfilActual || 'sistema',
+    perfil:perfilActual || 'sin perfil',
+    accion:action,
+    entidad:entity,
+    tabla:entity, // requerido por tu tabla audit_logs
+    detalle:JSON.stringify(payload || {})
+  };
 
+  try{
+    const r = await sb.from('audit_logs').insert(registro);
     if(r.error){
       console.warn('Auditoría no guardada:', r.error.message);
     }
@@ -1099,9 +1101,103 @@ async function novedades(){
 
 async function auditoria(){
   els.title.textContent='Auditoría';
-  if(!(await tableExists('audit_logs'))){els.content.innerHTML='<div class="card"><strong>Auditoría</strong><div class="small" style="margin-top:8px;">No existe la tabla audit_logs. El sistema puede seguir usándose, pero no va a registrar historial hasta que la crees en Supabase.</div></div>';return;}
-  const rows=await safeSelect('audit_logs','fecha_hora',false,200);
-  els.content.innerHTML='<div class="card"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Perfil</th><th>Acción</th><th>Entidad</th><th>Detalle</th></tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(formatFechaHora(r.fecha_hora||Date.now()))+'</td><td>'+h(r.usuario||'')+'</td><td>'+h(r.perfil||'')+'</td><td>'+h(r.accion||'')+'</td><td>'+h(r.entidad||'')+'</td><td>'+h(r.detalle||'')+'</td></tr>').join('')||'<tr><td colspan="6">Sin auditoría.</td></tr>')+'</tbody></table></div>';
+
+  if(!(await tableExists('audit_logs'))){
+    els.content.innerHTML='<div class="card"><strong>Auditoría</strong><div class="small" style="margin-top:8px;">No existe la tabla audit_logs. El sistema puede seguir usándose, pero no va a registrar historial hasta que la crees en Supabase.</div></div>';
+    return;
+  }
+
+  let rows=[];
+  try{
+    rows=await safeSelect('audit_logs','fecha_hora',false,300);
+  }catch(err){
+    els.content.innerHTML='<div class="err">No se pudo cargar auditoría: '+h(err.message||err)+'</div>';
+    return;
+  }
+
+  function detalleTexto(valor){
+    if(valor===null || valor===undefined) return '';
+    if(typeof valor==='string') return valor;
+    try{return JSON.stringify(valor);}catch(e){return String(valor);}
+  }
+
+  function renderAudit(lista){
+    const hoy=new Date().toDateString();
+    const total=lista.length;
+    const hoyCant=lista.filter(r=>r.fecha_hora&&new Date(r.fecha_hora).toDateString()===hoy).length;
+    const ultimo=lista[0] ? formatFechaHora(lista[0].fecha_hora) : 'Sin registros';
+
+    document.getElementById('auditStats').innerHTML=
+      card('Registros mostrados',total)+
+      card('Acciones de hoy',hoyCant)+
+      card('Último registro',ultimo);
+
+    document.getElementById('auditRows').innerHTML=lista.map(r=>{
+      const tabla=r.tabla || r.entidad || '';
+      return '<tr>'+ 
+        '<td>'+h(formatFechaHora(r.fecha_hora||Date.now()))+'</td>'+ 
+        '<td>'+h(r.usuario||'')+'</td>'+ 
+        '<td>'+h(r.perfil||'')+'</td>'+ 
+        '<td><strong>'+h(tabla)+'</strong></td>'+ 
+        '<td>'+h(r.accion||'')+'</td>'+ 
+        '<td><div class="small" style="max-width:520px;white-space:pre-wrap;">'+h(detalleTexto(r.detalle))+'</div></td>'+ 
+      '</tr>';
+    }).join('') || '<tr><td colspan="6">Sin auditoría.</td></tr>';
+  }
+
+  const tablas=[...new Set(rows.map(r=>r.tabla||r.entidad||'').filter(Boolean))].sort();
+  const acciones=[...new Set(rows.map(r=>r.accion||'').filter(Boolean))].sort();
+
+  els.content.innerHTML=
+    '<div class="stat-grid" id="auditStats"></div>'+ 
+    '<div class="card" style="margin-top:14px;">'+
+      '<strong>Filtros de auditoría</strong>'+ 
+      '<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-top:12px;">'+
+        '<input id="auditSearch" placeholder="Buscar usuario, perfil, acción o detalle">'+
+        '<select id="auditTabla"><option value="">Todas las tablas / entidades</option>'+tablas.map(t=>'<option value="'+h(t)+'">'+h(t)+'</option>').join('')+'</select>'+ 
+        '<select id="auditAccion"><option value="">Todas las acciones</option>'+acciones.map(a=>'<option value="'+h(a)+'">'+h(a)+'</option>').join('')+'</select>'+ 
+        '<button id="auditExport" class="secondary" type="button">Exportar CSV</button>'+ 
+      '</div>'+ 
+    '</div>'+ 
+    '<div class="card" style="margin-top:14px;overflow:auto;">'+
+      '<strong>Historial de acciones</strong>'+ 
+      '<table style="margin-top:10px;min-width:900px;"><thead><tr><th>Fecha</th><th>Usuario</th><th>Perfil</th><th>Tabla / entidad</th><th>Acción</th><th>Detalle</th></tr></thead><tbody id="auditRows"></tbody></table>'+ 
+    '</div>';
+
+  function aplicarFiltros(){
+    const q=String(document.getElementById('auditSearch').value||'').toLowerCase().trim();
+    const tabla=document.getElementById('auditTabla').value;
+    const accion=document.getElementById('auditAccion').value;
+
+    const filtradas=rows.filter(r=>{
+      const tablaFila=r.tabla||r.entidad||'';
+      const texto=[r.usuario,r.perfil,r.accion,tablaFila,detalleTexto(r.detalle),formatFechaHora(r.fecha_hora)].join(' ').toLowerCase();
+      if(tabla && tablaFila!==tabla) return false;
+      if(accion && String(r.accion||'')!==accion) return false;
+      if(q && !texto.includes(q)) return false;
+      return true;
+    });
+    renderAudit(filtradas);
+    return filtradas;
+  }
+
+  document.getElementById('auditSearch').addEventListener('input',aplicarFiltros);
+  document.getElementById('auditTabla').addEventListener('change',aplicarFiltros);
+  document.getElementById('auditAccion').addEventListener('change',aplicarFiltros);
+  document.getElementById('auditExport').addEventListener('click',()=>{
+    const filtradas=aplicarFiltros();
+    const salida=filtradas.map(r=>({
+      fecha:formatFechaHora(r.fecha_hora),
+      usuario:r.usuario||'',
+      perfil:r.perfil||'',
+      tabla:r.tabla||r.entidad||'',
+      accion:r.accion||'',
+      detalle:detalleTexto(r.detalle)
+    }));
+    downloadText('auditoria_cuartel_online.csv',csv(salida),'text/csv;charset=utf-8');
+  });
+
+  renderAudit(rows);
 }
 
 async function reportes_stock(){
