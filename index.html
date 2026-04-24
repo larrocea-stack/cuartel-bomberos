@@ -111,53 +111,29 @@ const SUPABASE_KEY='sb_publishable_f-MtPNfegeikWpLn-Jsz_A_4fj7_Pm5';
 const PROFILE_EMAILS={administrador:'admin@cuartel.com',materiales:'materiales@cuartel.com',automotores:'automotores@cuartel.com',jefatura:'jefatura@cuartel.com',roperia:'roperia@cuartel.com'};
 const ROLE_LEVEL={bomberos:1,roperia:2,automotores:2,materiales:2,jefatura:3,administrador:4};
 const VIEW_RULES={
-  administrador:[
-    'dashboard','guardia_activa','moviles','bomberos',
-    'inventario_general','asignaciones','inventario','plano',
-    'fallas','checklist_diario','checklist_materiales',
-    'mantenimiento_stock','archivo_bajas','repuestos','proveedores',
-    'mantenimiento','roperia','roperia_inventario_general',
-    'roperia_informe_bombero','respaldo','estadisticas','novedades',
-    'auditoria','reportes_operativos','reportes_stock','diagnostico'
-  ],
-
-  jefatura:[
-    'dashboard','guardia_activa','moviles','bomberos',
-    'inventario_general','asignaciones','inventario','plano',
-    'fallas','checklist_diario','checklist_materiales',
-    'mantenimiento_stock','archivo_bajas','repuestos','proveedores',
-    'mantenimiento','roperia','roperia_inventario_general',
-    'roperia_informe_bombero','estadisticas','novedades',
-    'auditoria','reportes_operativos','reportes_stock','diagnostico'
-  ],
-
-  automotores:[
-    'dashboard','guardia_activa','moviles','fallas',
-    'checklist_diario','repuestos','proveedores',
-    'mantenimiento','reportes_operativos','estadisticas','diagnostico'
-  ],
-
-  materiales:[
-    'dashboard','guardia_activa','inventario_general',
-    'asignaciones','inventario','plano','checklist_materiales',
-    'mantenimiento_stock','archivo_bajas','novedades',
-    'reportes_stock','reportes_operativos','estadisticas','diagnostico'
-  ],
-
-  roperia:[
-    'dashboard','roperia','roperia_inventario_general',
-    'roperia_informe_bombero','reportes_operativos','diagnostico'
-  ],
-
-  bomberos:[
-    'dashboard','guardia_activa','inventario','plano',
-    'checklist_materiales','diagnostico'
-  ]
+  administrador:['dashboard','guardia_activa','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','roperia','respaldo','estadisticas','novedades','auditoria','reportes_operativos','reportes_stock','diagnostico'],
+  jefatura:['dashboard','guardia_activa','moviles','bomberos','inventario_general','asignaciones','inventario','plano','fallas','checklist_diario','checklist_materiales','mantenimiento_stock','archivo_bajas','repuestos','proveedores','mantenimiento','roperia','estadisticas','novedades','auditoria','reportes_operativos','reportes_stock','diagnostico'],
+  automotores:['dashboard','guardia_activa','moviles','fallas','checklist_diario','repuestos','proveedores','mantenimiento','reportes_operativos','estadisticas','diagnostico'],
+  materiales:['dashboard','guardia_activa','inventario_general','asignaciones','inventario','checklist_materiales','mantenimiento_stock','archivo_bajas','novedades','reportes_stock','estadisticas','diagnostico'],
+  roperia:['dashboard','roperia','roperia_inventario_general','roperia_informe_bombero','reportes_operativos','diagnostico'],
+  bomberos:['dashboard','guardia_activa','inventario','plano','checklist_materiales','diagnostico']
 };
 const els={login:document.getElementById('login'),app:document.getElementById('app'),loginForm:document.getElementById('loginForm'),perfil:document.getElementById('perfil'),email:document.getElementById('email'),password:document.getElementById('password'),bootMsg:document.getElementById('bootMsg'),bootErr:document.getElementById('bootErr'),userInfo:document.getElementById('userInfo'),guardiaInfo:document.getElementById('guardiaInfo'),title:document.getElementById('title'),content:document.getElementById('content'),flash:document.getElementById('flash'),logout:document.getElementById('logout'),logoutTop:document.getElementById('logoutTop')};
 let sb=null,perfilActual=null,userActual=null,guardiaActual=null;
 
 function h(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+function ordenarBomberosPorJ(lista){
+  return [...(lista||[])].sort((a,b)=>{
+    const na=(a.numero_j===null || a.numero_j===undefined || a.numero_j==='') ? 999999 : Number(a.numero_j);
+    const nb=(b.numero_j===null || b.numero_j===undefined || b.numero_j==='') ? 999999 : Number(b.numero_j);
+    if(na!==nb) return na-nb;
+    return String(a.apellido||'').localeCompare(String(b.apellido||''),'es');
+  });
+}
+function nombreBomberoJ(b){
+  return ((b?.numero_j||'')+' · '+(b?.jerarquia||'')+' · '+(b?.apellido||'')+', '+(b?.nombre||'')).replace(/^\s*·\s*/,'').trim();
+}
+
 function formatFechaHora(fecha){
   if(!fecha) return '';
   const d=new Date(fecha);
@@ -177,65 +153,21 @@ function bloquearSiNoPuede(sec){
 function level(role){return ROLE_LEVEL[role]||0}
 function canAdmin(){return perfilActual==='administrador'}
 function canBombero(){return perfilActual==='bomberos'}
-function canEditMoviles(){
-  return ['administrador','jefatura','automotores'].includes(perfilActual);
-}
-
-function canEditBomberos(){
-  return ['administrador','jefatura'].includes(perfilActual);
-}
-
-function canEditInventarioMovil(){
-  return ['administrador','jefatura','materiales'].includes(perfilActual);
-}
-
-function canEditFallas(){
-  return ['administrador','jefatura','automotores'].includes(perfilActual);
-}
-
-function canEditChecklistDiario(){
-  return ['administrador','jefatura','automotores'].includes(perfilActual);
-}
-
-function canEditChecklistMateriales(){
-  return ['administrador','jefatura','materiales','bomberos'].includes(perfilActual);
-}
-
-function canEditRepuestos(){
-  return ['administrador','jefatura','automotores'].includes(perfilActual);
-}
-
-function canEditProveedores(){
-  return ['administrador','jefatura','automotores'].includes(perfilActual);
-}
-
-function canEditMantenimiento(){
-  return ['administrador','jefatura','automotores'].includes(perfilActual);
-}
-
-function canBackup(){
-  return perfilActual==='administrador';
-}
-
-function canManageNovedades(){
-  return ['administrador','jefatura','materiales'].includes(perfilActual);
-}
-
-function canEditStockGeneral(){
-  return ['administrador','jefatura','materiales'].includes(perfilActual);
-}
-
-function canEditRoperia(){
-  return ['administrador','jefatura','roperia'].includes(perfilActual);
-}
-
-function canSeeAlerts(){
-  return ['administrador','jefatura','materiales','bomberos'].includes(perfilActual);
-}
-
-function canUsePlano(){
-  return ['administrador','jefatura','materiales','bomberos'].includes(perfilActual);
-}
+function canEditMoviles(){return ['administrador','jefatura','automotores'].includes(perfilActual)}
+function canEditBomberos(){return ['administrador','jefatura'].includes(perfilActual)}
+function canEditInventarioMovil(){return ['administrador','jefatura','materiales'].includes(perfilActual)}
+function canEditFallas(){return ['administrador','jefatura','automotores'].includes(perfilActual)}
+function canEditChecklistDiario(){return ['administrador','jefatura','automotores'].includes(perfilActual)}
+function canEditChecklistMateriales(){return ['administrador','jefatura','materiales','bomberos'].includes(perfilActual)}
+function canEditRepuestos(){return ['administrador','jefatura','automotores'].includes(perfilActual)}
+function canEditProveedores(){return ['administrador','jefatura','automotores'].includes(perfilActual)}
+function canEditMantenimiento(){return ['administrador','jefatura','automotores'].includes(perfilActual)}
+function canBackup(){return perfilActual==='administrador'}
+function canManageNovedades(){return ['administrador','jefatura','materiales'].includes(perfilActual)}
+function canEditStockGeneral(){return ['administrador','jefatura','materiales'].includes(perfilActual)}
+function canEditRoperia(){return ['administrador','jefatura','roperia'].includes(perfilActual)}
+function canSeeAlerts(){return ['administrador','jefatura','materiales','bomberos'].includes(perfilActual)}
+function canUsePlano(){return ['administrador','jefatura','materiales','bomberos'].includes(perfilActual)}
 function statusPill(status){const s=String(status||'').toLowerCase();if(s==='en servicio'||s==='activa'||s==='activo')return '<span class="pill pill-ok">'+h(status)+'</span>';if(s.includes('mant')||s.includes('repar'))return '<span class="pill pill-warn">'+h(status)+'</span>';if(s.includes('baja')||s.includes('fuera'))return '<span class="pill pill-bad">'+h(status||'Sin estado')+'</span>';return '<span class="pill pill-info">'+h(status||'Sin estado')+'</span>'}
 function severityPill(sev){const s=String(sev||'').toLowerCase();if(s==='leve')return '<span class="pill pill-ok">Leve</span>';if(s==='moderada')return '<span class="pill pill-warn">Moderada</span>';return '<span class="pill pill-bad">'+h(sev||'Crítica')+'</span>'}
 function showBootError(msg){els.bootErr.textContent=msg;els.bootErr.classList.remove('hidden')}
@@ -511,12 +443,7 @@ async function guardia_activa(){
   const bomberosData=all[0];
   const movimientos=all[1];
 
-  const bomberosOrdenados=[...bomberosData].sort((a,b)=>{
-    const na=(a.numero_j===null || a.numero_j===undefined || a.numero_j==='') ? 999999 : Number(a.numero_j);
-    const nb=(b.numero_j===null || b.numero_j===undefined || b.numero_j==='') ? 999999 : Number(b.numero_j);
-    if(na!==nb) return na-nb;
-    return String(a.apellido||'').localeCompare(String(b.apellido||''),'es');
-  });
+  const bomberosOrdenados=ordenarBomberosPorJ(bomberosData);
 
   const presentes=movimientos.filter(x=>String(x.estado||'').toLowerCase()==='activo');
 
@@ -644,12 +571,7 @@ async function bomberos(){
 
   const data=await safeSelect('bomberos');
 
-  const ordenados=[...data].sort((a,b)=>{
-    const na=(a.numero_j===null || a.numero_j===undefined || a.numero_j==='') ? 999999 : Number(a.numero_j);
-    const nb=(b.numero_j===null || b.numero_j===undefined || b.numero_j==='') ? 999999 : Number(b.numero_j);
-    if(na!==nb) return na-nb;
-    return String(a.apellido||'').localeCompare(String(b.apellido||''),'es');
-  });
+  const ordenados=ordenarBomberosPorJ(data);
 
   let html='';
 
@@ -819,12 +741,7 @@ async function checklist_diario(){
   const rows=all[1];
   const bomberosData=all[2];
 
-  const bomberosOrdenados=[...bomberosData].sort((a,b)=>{
-    const na=(a.numero_j===null || a.numero_j===undefined || a.numero_j==='') ? 999999 : Number(a.numero_j);
-    const nb=(b.numero_j===null || b.numero_j===undefined || b.numero_j==='') ? 999999 : Number(b.numero_j);
-    if(na!==nb) return na-nb;
-    return String(a.apellido||'').localeCompare(String(b.apellido||''),'es');
-  });
+  const bomberosOrdenados=ordenarBomberosPorJ(bomberosData);
 
   let html='<div class="card"><strong>Checklist diario de móviles</strong><div class="small" style="margin-top:8px;">Control de luces, sirena, aceite, agua, neumáticos, radio y combustible.</div>';
 
@@ -906,12 +823,7 @@ async function checklist_materiales(){
   ]);
 
   const movs=all[0]||[];
-  const boms=(all[1]||[]).sort((a,b)=>{
-    const na=(a.numero_j===null || a.numero_j===undefined || a.numero_j==='') ? 999999 : Number(a.numero_j);
-    const nb=(b.numero_j===null || b.numero_j===undefined || b.numero_j==='') ? 999999 : Number(b.numero_j);
-    if(na!==nb) return na-nb;
-    return String(a.apellido||'').localeCompare(String(b.apellido||''),'es');
-  });
+  const boms=ordenarBomberosPorJ(all[1]||[]);
   const inventario=all[2]||[];
   const controles=all[3]||[];
   const novedades=all[4]||[];
@@ -1134,8 +1046,8 @@ async function proveedores(){
 
 async function mantenimiento(){
   els.title.textContent='Bitácora';
-  const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('bomberos','apellido',true),safeSelect('mantenimientos')]); const movs=all[0],boms=all[1],rows=all[2]; let html='';
-  if(canEditMantenimiento()) html+='<div class="card" style="margin-bottom:12px;"><strong>Registrar mantenimiento</strong><form id="fMan" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><select name="movil">'+movs.map(m=>'<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>').join('')+'</select><select name="responsable">'+boms.map(b=>{const nombre=((b.jerarquia||'')+' '+(b.apellido||'')+' '+(b.nombre||'')).trim();return '<option value="'+h(nombre)+'">'+h(nombre)+'</option>'}).join('')+'</select><input name="tipo" placeholder="Tipo de mantenimiento" required><input name="km" type="number" placeholder="Kilometraje"><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar mantenimiento</button></form></div>';
+  const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('bomberos'),safeSelect('mantenimientos')]); const movs=all[0],boms=ordenarBomberosPorJ(all[1]),rows=all[2]; let html='';
+  if(canEditMantenimiento()) html+='<div class="card" style="margin-bottom:12px;"><strong>Registrar mantenimiento</strong><form id="fMan" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><select name="movil">'+movs.map(m=>'<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>').join('')+'</select><select name="responsable">'+boms.map(b=>{const nombre=nombreBomberoJ(b);return '<option value="'+h(nombre)+'">'+h(nombre)+'</option>'}).join('')+'</select><input name="tipo" placeholder="Tipo de mantenimiento" required><input name="km" type="number" placeholder="Kilometraje"><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar mantenimiento</button></form></div>';
   html+='<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Responsable</th><th>Tipo</th><th>KM</th><th>Observaciones</th>'+(canEditMantenimiento()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(formatFechaHora(r.fecha_hora||Date.now()))+'</td><td>Móvil '+h(r.movil)+'</td><td>'+h(r.responsable)+'</td><td>'+h(r.tipo)+'</td><td>'+h(r.km||'')+'</td><td>'+h(r.observaciones||'')+'</td>'+(canEditMantenimiento()?'<td><button class="secondary edit-man" data-id="'+r.id+'">Editar</button> <button class="danger del-man" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin mantenimientos.</td></tr>')+'</tbody></table></div>';
   els.content.innerHTML=html; if(!canEditMantenimiento()) return; const form=document.getElementById('fMan');
   form.addEventListener('submit',async e=>{e.preventDefault();if(!requireGuardia())return;const fd=new FormData(form);const row={movil:fd.get('movil'),responsable:fd.get('responsable'),tipo:fd.get('tipo'),km:Number(fd.get('km')||0),observaciones:fd.get('observaciones'),fecha_hora:new Date().toISOString()};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('mantenimientos',row);await audit(fd.get('id')?'editar':'crear','bitacora',row);showFlash('Mantenimiento guardado','ok');mantenimiento()});
@@ -1147,8 +1059,8 @@ async function roperia(){
   els.title.textContent='Ropería';
   if(!(await tableExists('roperia_items'))){els.content.innerHTML='<div class="card"><strong>Ropería</strong><div class="small" style="margin-top:8px;">No existe la tabla roperia_items en Supabase.</div></div>';return;}
   const rows=await safeSelect('roperia_items','tipo_prenda',true);
-  const bomberos=(await tableExists('bomberos'))? await safeSelect('bomberos','apellido',true):[];
-  const nombresBomberos=bomberos.map(b=>((b.jerarquia||'')+' '+(b.apellido||'')+' '+(b.nombre||'')).trim()).filter(Boolean);
+  const bomberos=(await tableExists('bomberos'))? ordenarBomberosPorJ(await safeSelect('bomberos')):[];
+  const nombresBomberos=bomberos.map(b=>nombreBomberoJ(b)).filter(Boolean);
   let html='';
   if(canEditRoperia()) html+='<div class="card" style="margin-bottom:12px;"><strong>Alta / edición de prenda</strong><form id="fRoperia" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><input name="codigo_interno" placeholder="Código interno"><input name="tipo_prenda" placeholder="Tipo de prenda" required><input name="descripcion" placeholder="Descripción"><input name="talle" placeholder="Talle"><input name="sexo" placeholder="Sexo / corte"><input name="cantidad_total" type="number" min="0" placeholder="Cantidad total" required><input name="cantidad_disponible" type="number" min="0" placeholder="Cantidad disponible" required><input name="stock_minimo" type="number" min="0" placeholder="Stock mínimo"><select name="sin_stock_minimo"><option value="false">Con stock mínimo</option><option value="true">Sin stock mínimo</option></select><select name="asignado_a"><option value="">Sin asignar</option>'+nombresBomberos.map(n=>'<option value="'+h(n)+'">'+h(n)+'</option>').join('')+'</select><input name="estado" placeholder="Estado" value="ACTIVO"><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar prenda</button></form></div>';
   html+='<div class="card"><table><thead><tr><th>Código</th><th>Prenda</th><th>Talle</th><th>Disponible</th><th>Total</th><th>Asignado a</th><th>Estado</th>'+(canEditRoperia()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(r.codigo_interno||'')+'</td><td><strong>'+h(r.tipo_prenda||'')+'</strong><div class="small">'+h(r.descripcion||'')+'</div></td><td>'+h(r.talle||'')+'</td><td>'+h(r.cantidad_disponible||0)+'</td><td>'+h(r.cantidad_total||0)+'</td><td>'+h(r.asignado_a||'Sin asignar')+'</td><td>'+statusPill(r.estado||'')+'</td>'+(canEditRoperia()?'<td><button class="secondary edit-roperia" data-id="'+r.id+'">Editar</button> <button class="danger baja-roperia" data-id="'+r.id+'">Dar de baja</button></td>':'')+'</tr>').join('')||'<tr><td colspan="8">Sin prendas cargadas.</td></tr>')+'</tbody></table></div>';
@@ -1171,9 +1083,9 @@ async function roperia_inventario_general(){
 async function roperia_informe_bombero(){
   els.title.textContent='Informe por bombero';
   if(!(await tableExists('roperia_items'))){els.content.innerHTML='<div class="card"><strong>Informe por bombero</strong><div class="small" style="margin-top:8px;">No existe la tabla roperia_items en Supabase.</div></div>';return;}
-  const bomberos=(await tableExists('bomberos'))? await safeSelect('bomberos','apellido',true):[];
+  const bomberos=(await tableExists('bomberos'))? ordenarBomberosPorJ(await safeSelect('bomberos')):[];
   const rows=await safeSelect('roperia_items','asignado_a',true);
-  const nombresBomberos=bomberos.map(b=>((b.jerarquia||'')+' '+(b.apellido||'')+' '+(b.nombre||'')).trim()).filter(Boolean);
+  const nombresBomberos=bomberos.map(b=>nombreBomberoJ(b)).filter(Boolean);
   els.content.innerHTML='<div class="card"><div class="grid" style="grid-template-columns:280px 220px; align-items:end;"><div><label class="small">Bombero</label><select id="repBombero" style="margin-top:8px;"><option value="">Todos</option>'+nombresBomberos.map(n=>'<option value="'+h(n)+'">'+h(n)+'</option>').join('')+'</select></div><div><button id="expBomberoCsv" class="primary" type="button">Exportar informe por bombero</button></div></div><div id="repBomberoWrap" style="margin-top:14px;"></div></div>';
   const sel=document.getElementById('repBombero');
   const wrap=document.getElementById('repBomberoWrap');
@@ -1459,40 +1371,7 @@ async function guardia(){
   }
 }
 
-async function nav(sec){
-  if(bloquearSiNoPuede(sec)) return;
-  activateNav(sec);
-
-  if(sec==='dashboard') return dashboard();
-  if(sec==='guardia_activa') return guardia_activa();
-  if(sec==='moviles') return moviles();
-  if(sec==='bomberos') return bomberos();
-  if(sec==='inventario_general') return inventario_general();
-  if(sec==='asignaciones') return asignaciones();
-  if(sec==='inventario') return inventario();
-  if(sec==='plano') return plano();
-  if(sec==='fallas') return fallas();
-  if(sec==='checklist_diario') return checklist_diario();
-  if(sec==='checklist_materiales') return checklist_materiales();
-  if(sec==='mantenimiento_stock') return mantenimiento_stock();
-  if(sec==='archivo_bajas') return archivo_bajas();
-  if(sec==='repuestos') return repuestos();
-  if(sec==='proveedores') return proveedores();
-  if(sec==='mantenimiento') return mantenimiento();
-  if(sec==='roperia') return roperia();
-  if(sec==='roperia_inventario_general') return roperia_inventario_general();
-  if(sec==='roperia_informe_bombero') return roperia_informe_bombero();
-  if(sec==='respaldo') return respaldo();
-  if(sec==='estadisticas') return estadisticas();
-  if(sec==='novedades') return novedades();
-  if(sec==='auditoria') return auditoria();
-  if(sec==='reportes_operativos') return reportes_operativos();
-  if(sec==='reportes_stock') return reportes_stock();
-  if(sec==='diagnostico') return diagnostico();
-
-  els.title.textContent='Módulo no disponible';
-  els.content.innerHTML='<div class="err">La sección solicitada no está implementada o fue removida.</div>';
-}
+async function nav(sec){ if(bloquearSiNoPuede(sec)) return; activateNav(sec); if(sec==='dashboard')return dashboard(); if(sec==='guardia_activa')return guardia_activa(); if(sec==='moviles')return moviles(); if(sec==='bomberos')return bomberos(); if(sec==='inventario_general')return inventario_general(); if(sec==='asignaciones')return asignaciones(); if(sec==='inventario')return inventario(); if(sec==='plano')return plano(); if(sec==='fallas')return fallas(); if(sec==='checklist_diario')return checklist_diario(); if(sec==='checklist_materiales')return checklist_materiales(); if(sec==='mantenimiento_stock')return mantenimiento_stock(); if(sec==='archivo_bajas')return archivo_bajas(); if(sec==='repuestos')return repuestos(); if(sec==='proveedores')return proveedores(); if(sec==='mantenimiento')return mantenimiento(); if(sec==='roperia')return roperia(); if(sec==='roperia_inventario_general')return roperia_inventario_general(); if(sec==='roperia_informe_bombero')return roperia_informe_bombero(); if(sec==='respaldo')return respaldo(); if(sec==='estadisticas')return estadisticas(); if(sec==='novedades')return novedades(); if(sec==='auditoria')return auditoria(); if(sec==='reportes_operativos')return reportes_operativos(); if(sec==='reportes_stock')return reportes_stock(); if(sec==='diagnostico')return diagnostico(); }
 
 async function init(){
   try{ if(!window.supabase||typeof window.supabase.createClient!=='function') throw new Error('No cargó la librería de Supabase.'); sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY); els.bootMsg.textContent='Sistema listo.'; authInputs(); els.perfil.addEventListener('change',authInputs); els.logout.addEventListener('click',logout); els.logoutTop.addEventListener('click',logout); document.querySelectorAll('.nav').forEach(btn=>btn.addEventListener('click',()=>nav(btn.dataset.sec))); els.loginForm.addEventListener('submit',async e=>{e.preventDefault(); perfilActual=els.perfil.value; try{ if(perfilActual==='bomberos') await loginBomberos(); else await loginAdmin(els.email.value,els.password.value,perfilActual); els.login.classList.add('hidden'); els.app.classList.remove('hidden'); els.userInfo.textContent=(userActual?.email||perfilActual)+' · rol '+perfilActual; await loadGuardiaActiva(); updateNavVisibility(); nav('dashboard'); }catch(err){alert(err&&err.message?err.message:'No se pudo iniciar sesión.')}}) }catch(err){ els.bootMsg.textContent='Error de inicialización.'; showBootError(err&&err.message?err.message:String(err)); }
