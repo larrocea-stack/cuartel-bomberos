@@ -112,6 +112,13 @@ const els={login:document.getElementById('login'),app:document.getElementById('a
 let sb=null,perfilActual=null,userActual=null,guardiaActual=null;
 
 function h(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+function formatFechaHora(fecha){
+  if(!fecha) return '';
+  const d=new Date(fecha);
+  if(isNaN(d.getTime())) return '';
+  const pad=n=>String(n).padStart(2,'0');
+  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 function canView(s){return (VIEW_RULES[perfilActual]||[]).includes(s)}
 function level(role){return ROLE_LEVEL[role]||0}
 function canAdmin(){return perfilActual==='administrador'}
@@ -282,7 +289,7 @@ async function dashboard(){
         <td>${h(p.numero_j||'')}</td>
         <td>${h(p.jerarquia||'')}</td>
         <td><strong>${h((p.apellido||'')+', '+(p.nombre||''))}</strong></td>
-        <td>${h(new Date(p.fecha_ingreso||Date.now()).toLocaleString('es-AR'))}</td>
+        <td>${h(formatFechaHora(p.fecha_ingreso||Date.now()))}</td>
         <td><span class="pill pill-ok">Activo</span></td>
       </tr>
     `).join('')
@@ -318,7 +325,7 @@ async function dashboard(){
     <div class="card" style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
       <div>
         <strong style="font-size:20px;">Resumen operativo del cuartel</strong>
-        <div class="small">Actualizado: ${h(new Date().toLocaleString('es-AR'))}</div>
+        <div class="small">Actualizado: ${h(formatFechaHora(new Date()))}</div>
       </div>
       <div>${estadoSistema}</div>
     </div>
@@ -430,7 +437,7 @@ async function guardia_activa(){
       const b=bomberosOrdenados.find(x=>Number(x.id)===Number(p.bombero_id));
       return '<div class="list-row">'+
         '<strong>'+(b?h((b.numero_j||'')+' · '+(b.jerarquia||'')+' · '+(b.apellido||'')+', '+(b.nombre||'')):'Sin identificar')+'</strong>'+
-        '<div class="small">Ingreso: '+h(new Date(p.fecha_ingreso||Date.now()).toLocaleString('es-AR'))+'</div>'+
+        '<div class="small">Ingreso: '+h(formatFechaHora(p.fecha_ingreso||Date.now()))+'</div>'+
         '<button class="secondary cerrar-presencia" data-id="'+p.id+'" style="margin-top:8px;">Cerrar mi presencia</button>'+
       '</div>';
     }).join('') || 'Sin personal presente.')+
@@ -441,9 +448,9 @@ async function guardia_activa(){
       const b=bomberosOrdenados.find(x=>Number(x.id)===Number(m.bombero_id));
       return '<div class="list-row">'+
         '<strong>'+(b?h((b.numero_j||'')+' · '+(b.apellido||'')+', '+(b.nombre||'')):'Sin identificar')+'</strong>'+
-        '<div class="small">Ingreso: '+h(new Date(m.fecha_ingreso||Date.now()).toLocaleString('es-AR'))+'</div>'+
+        '<div class="small">Ingreso: '+h(formatFechaHora(m.fecha_ingreso||Date.now()))+'</div>'+
         (m.fecha_salida
-          ? '<div class="small">Salida: '+h(new Date(m.fecha_salida).toLocaleString('es-AR'))+'</div>'
+          ? '<div class="small">Salida: '+h(formatFechaHora(m.fecha_salida))+'</div>'
           : '<div class="small">Aún en guardia</div>')+
       '</div>';
     }).join('') || 'Sin movimientos registrados.')+
@@ -647,7 +654,7 @@ async function asignaciones(){
   const stock=all[0],assigns=all[1].filter(a=>!['DEVUELTA','DADA_DE_BAJA','BAJA','DEVUELTO'].includes(String(a.estado_asignacion||'').toUpperCase())),movs=all[2],comps=all[3];
   let html='';
   if(canEditStockGeneral()) html+='<div class="card" style="margin-bottom:12px;"><strong>Asignar stock</strong><form id="fAssign" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="stock_item_id">'+stock.map(s=>'<option value="'+s.id+'">'+h(s.nombre)+' · disponible '+h(s.disponible_real)+'</option>').join('')+'</select><select name="movil" id="assignMovil">'+movs.map(m=>'<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>').join('')+'</select><select name="compartimiento" id="assignComp"></select><input name="nuevoCompartimiento" placeholder="Nuevo compartimiento (opcional)"><input name="cantidad" type="number" min="1" placeholder="Cantidad" required><button class="primary" type="submit">Asignar</button></form></div>';
-  html+='<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Compartimiento</th><th>Ítem</th><th>Cantidad</th><th>Estado</th>'+(canEditStockGeneral()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(assigns.map(a=>'<tr><td>'+h(new Date(a.fecha_hora||Date.now()).toLocaleString('es-AR'))+'</td><td>Móvil '+h(a.movil)+'</td><td>'+h(a.compartimiento||'')+'</td><td><strong>'+h(a.nombre)+'</strong><div class="small">'+h(a.codigo_interno||'')+'</div></td><td>'+h(a.cantidad)+'</td><td>'+h(a.estado_asignacion)+'</td>'+(canEditStockGeneral()?'<td><button class="secondary devolver-assign" data-id="'+a.id+'">Devolver</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin asignaciones.</td></tr>')+'</tbody></table></div>';
+  html+='<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Compartimiento</th><th>Ítem</th><th>Cantidad</th><th>Estado</th>'+(canEditStockGeneral()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(assigns.map(a=>'<tr><td>'+h(formatFechaHora(a.fecha_hora||Date.now()))+'</td><td>Móvil '+h(a.movil)+'</td><td>'+h(a.compartimiento||'')+'</td><td><strong>'+h(a.nombre)+'</strong><div class="small">'+h(a.codigo_interno||'')+'</div></td><td>'+h(a.cantidad)+'</td><td>'+h(a.estado_asignacion)+'</td>'+(canEditStockGeneral()?'<td><button class="secondary devolver-assign" data-id="'+a.id+'">Devolver</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin asignaciones.</td></tr>')+'</tbody></table></div>';
   els.content.innerHTML=html;
   if(!canEditStockGeneral()) return;
   const form=document.getElementById('fAssign'), assignMovil=document.getElementById('assignMovil'), assignComp=document.getElementById('assignComp');
@@ -680,7 +687,7 @@ async function fallas(){
   els.title.textContent='Reporte de fallas';
   const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('fallas')]); const movs=all[0],rows=all[1]; let html='';
   if(canEditFallas()) html+='<div class="card" style="margin-bottom:12px;"><strong>Registrar falla</strong><form id="fFalla" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><select name="movil">'+movs.map(m=>'<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>').join('')+'</select><select name="tipo_falla"><option>Leve</option><option>Moderada</option><option>Critica (FS)</option></select><input name="componente" placeholder="Componente (ej: frenos)" required><textarea name="descripcion" placeholder="Descripción detallada" required></textarea><button class="primary" type="submit">Guardar falla</button></form></div>';
-  html+='<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Gravedad</th><th>Componente</th><th>Descripción</th>'+(canEditFallas()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+'</td><td>Móvil '+h(r.movil)+'</td><td>'+severityPill(r.tipo_falla)+'</td><td>'+h(r.componente)+'</td><td>'+h(r.descripcion)+'</td>'+(canEditFallas()?'<td><button class="secondary edit-falla" data-id="'+r.id+'">Editar</button> <button class="danger del-falla" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="6">Sin fallas cargadas.</td></tr>')+'</tbody></table></div>';
+  html+='<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Gravedad</th><th>Componente</th><th>Descripción</th>'+(canEditFallas()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(formatFechaHora(r.fecha_hora||Date.now()))+'</td><td>Móvil '+h(r.movil)+'</td><td>'+severityPill(r.tipo_falla)+'</td><td>'+h(r.componente)+'</td><td>'+h(r.descripcion)+'</td>'+(canEditFallas()?'<td><button class="secondary edit-falla" data-id="'+r.id+'">Editar</button> <button class="danger del-falla" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="6">Sin fallas cargadas.</td></tr>')+'</tbody></table></div>';
   els.content.innerHTML=html;
   if(!canEditFallas()) return;
   const form=document.getElementById('fFalla');
@@ -733,7 +740,7 @@ async function checklist_diario(){
   }
 
   html+='</div><div class="card" style="margin-top:12px;"><strong>Últimos checklist diarios</strong><div style="margin-top:8px;">'+
-    (rows.map(r=>'<div class="list-row"><strong>Móvil '+h(r.movil||'')+'</strong> · '+h(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+' · '+h(r.responsable||r.bombero||'')+'</div>').join('')||'Sin checklist diarios.')+
+    (rows.map(r=>'<div class="list-row"><strong>Móvil '+h(r.movil||'')+'</strong> · '+h(formatFechaHora(r.fecha_hora||Date.now()))+' · '+h(r.responsable||r.bombero||'')+'</div>').join('')||'Sin checklist diarios.')+
   '</div></div>';
 
   els.content.innerHTML=html;
@@ -978,7 +985,7 @@ async function mantenimiento_stock(){
   const all=await Promise.all([safeSelect('v_maintenance_control_detail','fecha_ingreso',false),safeSelect('stock_items','nombre',true)]); const rows=all[0],items=all[1];
   let html='';
   if(canEditStockGeneral()) html+='<div class="card" style="margin-bottom:12px;"><strong>Ingreso manual a mantenimiento</strong><form id="fMaintStock" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><select name="stock_item_id">'+items.map(i=>'<option value="'+i.id+'">'+h(i.nombre)+'</option>').join('')+'</select><input name="cantidad" type="number" min="1" placeholder="Cantidad" required><input name="motivo" placeholder="Motivo" required><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Enviar a mantenimiento</button></form></div>';
-  html+='<div class="card"><table><thead><tr><th>Fecha ingreso</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Estado</th><th>Observaciones</th><th>Acciones</th></tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(new Date(r.fecha_ingreso||Date.now()).toLocaleString('es-AR'))+'</td><td><strong>'+h(r.nombre)+'</strong><div class="small">'+h(r.codigo_interno||'')+'</div></td><td>'+h(r.cantidad)+'</td><td>'+h(r.motivo||'')+'</td><td>'+(String(r.estado||'').toUpperCase()==='DISPONIBLE'?'<span class="pill pill-ok">Disponible</span>':'<span class="pill pill-warn">'+h(r.estado||'REPARACION')+'</span>')+'</td><td>'+h(r.observaciones||'')+'</td><td>'+(canEditStockGeneral()&&String(r.estado||'').toUpperCase()!=='DISPONIBLE'?'<button class="secondary return-maint" data-id="'+r.id+'">Retornar a stock</button>':'')+'</td></tr>').join('')||'<tr><td colspan="7">Sin registros de mantenimiento.</td></tr>')+'</tbody></table></div>';
+  html+='<div class="card"><table><thead><tr><th>Fecha ingreso</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Estado</th><th>Observaciones</th><th>Acciones</th></tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(formatFechaHora(r.fecha_ingreso||Date.now()))+'</td><td><strong>'+h(r.nombre)+'</strong><div class="small">'+h(r.codigo_interno||'')+'</div></td><td>'+h(r.cantidad)+'</td><td>'+h(r.motivo||'')+'</td><td>'+(String(r.estado||'').toUpperCase()==='DISPONIBLE'?'<span class="pill pill-ok">Disponible</span>':'<span class="pill pill-warn">'+h(r.estado||'REPARACION')+'</span>')+'</td><td>'+h(r.observaciones||'')+'</td><td>'+(canEditStockGeneral()&&String(r.estado||'').toUpperCase()!=='DISPONIBLE'?'<button class="secondary return-maint" data-id="'+r.id+'">Retornar a stock</button>':'')+'</td></tr>').join('')||'<tr><td colspan="7">Sin registros de mantenimiento.</td></tr>')+'</tbody></table></div>';
   els.content.innerHTML=html;
   if(!canEditStockGeneral()) return;
   const form=document.getElementById('fMaintStock');
@@ -990,7 +997,7 @@ async function archivo_bajas(){
   els.title.textContent='Archivo / bajas';
   if(!(await tableExists('v_stock_decommissions_detail'))){els.content.innerHTML='<div class="err">No existe la vista v_stock_decommissions_detail.</div>';return;}
   const rows=await safeSelect('v_stock_decommissions_detail','fecha_baja',false);
-  els.content.innerHTML='<div class="card"><table><thead><tr><th>Fecha</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Usuario</th><th>Observaciones</th><th>Revertible</th><th>Acciones</th></tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(new Date(r.fecha_baja||Date.now()).toLocaleString('es-AR'))+'</td><td><strong>'+h(r.nombre)+'</strong><div class="small">'+h(r.codigo_interno||'')+'</div></td><td>'+h(r.cantidad)+'</td><td>'+h(r.motivo||'')+'</td><td>'+h(r.usuario||'')+'</td><td>'+h(r.observaciones||'')+'</td><td>'+(r.revertible?'<span class="pill pill-ok">Sí</span>':'<span class="pill pill-bad">No</span>')+'</td><td>'+(canEditStockGeneral()&&r.revertible?'<button class="secondary revert-baja" data-id="'+r.id+'">Revertir</button>':'')+'</td></tr>').join('')||'<tr><td colspan="8">Sin bajas registradas.</td></tr>')+'</tbody></table></div>';
+  els.content.innerHTML='<div class="card"><table><thead><tr><th>Fecha</th><th>Ítem</th><th>Cantidad</th><th>Motivo</th><th>Usuario</th><th>Observaciones</th><th>Revertible</th><th>Acciones</th></tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(formatFechaHora(r.fecha_baja||Date.now()))+'</td><td><strong>'+h(r.nombre)+'</strong><div class="small">'+h(r.codigo_interno||'')+'</div></td><td>'+h(r.cantidad)+'</td><td>'+h(r.motivo||'')+'</td><td>'+h(r.usuario||'')+'</td><td>'+h(r.observaciones||'')+'</td><td>'+(r.revertible?'<span class="pill pill-ok">Sí</span>':'<span class="pill pill-bad">No</span>')+'</td><td>'+(canEditStockGeneral()&&r.revertible?'<button class="secondary revert-baja" data-id="'+r.id+'">Revertir</button>':'')+'</td></tr>').join('')||'<tr><td colspan="8">Sin bajas registradas.</td></tr>')+'</tbody></table></div>';
   if(!canEditStockGeneral()) return;
   document.querySelectorAll('.revert-baja').forEach(btn=>btn.addEventListener('click',async()=>{const id=Number(btn.dataset.id);const item=rows.find(x=>x.id===id);if(!item)return;await sb.from('stock_decommissions').delete().eq('id',id);if(await tableExists('stock_movements')) await insertRow('stock_movements',{stock_item_id:item.stock_item_id,tipo_movimiento:'reversa_baja',cantidad:item.cantidad,origen:'ARCHIVO_BAJAS',destino:'STOCK_CENTRAL',motivo:'Reversión de baja',usuario:perfilActual});await audit('revertir','baja_stock',{id});showFlash('Baja revertida','ok');archivo_bajas()}));
 }
@@ -1019,7 +1026,7 @@ async function mantenimiento(){
   els.title.textContent='Bitácora';
   const all=await Promise.all([safeSelect('moviles','numero',true),safeSelect('bomberos','apellido',true),safeSelect('mantenimientos')]); const movs=all[0],boms=all[1],rows=all[2]; let html='';
   if(canEditMantenimiento()) html+='<div class="card" style="margin-bottom:12px;"><strong>Registrar mantenimiento</strong><form id="fMan" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); margin-top:12px;"><input name="id" type="hidden"><select name="movil">'+movs.map(m=>'<option value="'+h(m.numero)+'">Móvil '+h(m.numero)+'</option>').join('')+'</select><select name="responsable">'+boms.map(b=>{const nombre=((b.jerarquia||'')+' '+(b.apellido||'')+' '+(b.nombre||'')).trim();return '<option value="'+h(nombre)+'">'+h(nombre)+'</option>'}).join('')+'</select><input name="tipo" placeholder="Tipo de mantenimiento" required><input name="km" type="number" placeholder="Kilometraje"><input name="observaciones" placeholder="Observaciones"><button class="primary" type="submit">Guardar mantenimiento</button></form></div>';
-  html+='<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Responsable</th><th>Tipo</th><th>KM</th><th>Observaciones</th>'+(canEditMantenimiento()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+'</td><td>Móvil '+h(r.movil)+'</td><td>'+h(r.responsable)+'</td><td>'+h(r.tipo)+'</td><td>'+h(r.km||'')+'</td><td>'+h(r.observaciones||'')+'</td>'+(canEditMantenimiento()?'<td><button class="secondary edit-man" data-id="'+r.id+'">Editar</button> <button class="danger del-man" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin mantenimientos.</td></tr>')+'</tbody></table></div>';
+  html+='<div class="card"><table><thead><tr><th>Fecha</th><th>Móvil</th><th>Responsable</th><th>Tipo</th><th>KM</th><th>Observaciones</th>'+(canEditMantenimiento()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(formatFechaHora(r.fecha_hora||Date.now()))+'</td><td>Móvil '+h(r.movil)+'</td><td>'+h(r.responsable)+'</td><td>'+h(r.tipo)+'</td><td>'+h(r.km||'')+'</td><td>'+h(r.observaciones||'')+'</td>'+(canEditMantenimiento()?'<td><button class="secondary edit-man" data-id="'+r.id+'">Editar</button> <button class="danger del-man" data-id="'+r.id+'">Borrar</button></td>':'')+'</tr>').join('')||'<tr><td colspan="7">Sin mantenimientos.</td></tr>')+'</tbody></table></div>';
   els.content.innerHTML=html; if(!canEditMantenimiento()) return; const form=document.getElementById('fMan');
   form.addEventListener('submit',async e=>{e.preventDefault();if(!requireGuardia())return;const fd=new FormData(form);const row={movil:fd.get('movil'),responsable:fd.get('responsable'),tipo:fd.get('tipo'),km:Number(fd.get('km')||0),observaciones:fd.get('observaciones'),fecha_hora:new Date().toISOString()};if(fd.get('id'))row.id=Number(fd.get('id'));await upsertRow('mantenimientos',row);await audit(fd.get('id')?'editar':'crear','bitacora',row);showFlash('Mantenimiento guardado','ok');mantenimiento()});
   document.querySelectorAll('.edit-man').forEach(btn=>btn.addEventListener('click',()=>{const item=rows.find(x=>String(x.id)===btn.dataset.id);form.elements.id.value=item.id;form.elements.movil.value=item.movil;form.elements.responsable.value=item.responsable;form.elements.tipo.value=item.tipo||'';form.elements.km.value=item.km||0;form.elements.observaciones.value=item.observaciones||''}));
@@ -1083,7 +1090,7 @@ async function estadisticas(){
 
 async function novedades(){
   els.title.textContent='Novedades'; const rows=await safeSelect('novedades_materiales'); const abiertas=rows.filter(r=>String(r.estado||'').toLowerCase()==='pendiente'); const cerradas=rows.filter(r=>String(r.estado||'').toLowerCase()==='cerrada');
-  els.content.innerHTML='<div class="stat-grid">'+card('Pendientes',abiertas.length)+card('Cerradas',cerradas.length)+card('Faltantes',rows.filter(r=>String(r.tipo_novedad||'').toLowerCase()==='faltante').length)+card('Dañados',rows.filter(r=>String(r.tipo_novedad||'').toLowerCase()==='dañado').length)+'</div><div class="card" style="margin-top:12px;"><strong>Gestión de novedades</strong><table style="margin-top:12px;"><thead><tr><th>Fecha</th><th>Móvil</th><th>Compartimiento</th><th>Material</th><th>Tipo</th><th>Detalle</th><th>Estado</th>'+(canManageNovedades()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+'</td><td>Móvil '+h(r.movil)+'</td><td>'+h(r.compartimiento)+'</td><td>'+h(r.material)+'</td><td>'+h(r.tipo_novedad)+'</td><td>'+h(r.detalle||'')+'</td><td>'+(String(r.estado||'').toLowerCase()==='cerrada'?'<span class="pill pill-ok">Cerrada</span>':'<span class="pill pill-bad">Pendiente</span>')+'</td>'+(canManageNovedades()?'<td>'+(String(r.estado||'').toLowerCase()==='pendiente'?'<button class="secondary cerrar-nov-tabla" data-id="'+r.id+'">Cerrar</button>':'<button class="secondary reabrir-nov-tabla" data-id="'+r.id+'">Reabrir</button>')+(canAdmin()?' <button class="danger del-nov-tabla" data-id="'+r.id+'">Borrar</button>':'')+'</td>':'')+'</tr>').join('')||'<tr><td colspan="8">Sin novedades registradas.</td></tr>')+'</tbody></table></div>';
+  els.content.innerHTML='<div class="stat-grid">'+card('Pendientes',abiertas.length)+card('Cerradas',cerradas.length)+card('Faltantes',rows.filter(r=>String(r.tipo_novedad||'').toLowerCase()==='faltante').length)+card('Dañados',rows.filter(r=>String(r.tipo_novedad||'').toLowerCase()==='dañado').length)+'</div><div class="card" style="margin-top:12px;"><strong>Gestión de novedades</strong><table style="margin-top:12px;"><thead><tr><th>Fecha</th><th>Móvil</th><th>Compartimiento</th><th>Material</th><th>Tipo</th><th>Detalle</th><th>Estado</th>'+(canManageNovedades()?'<th>Acciones</th>':'')+'</tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(formatFechaHora(r.fecha_hora||Date.now()))+'</td><td>Móvil '+h(r.movil)+'</td><td>'+h(r.compartimiento)+'</td><td>'+h(r.material)+'</td><td>'+h(r.tipo_novedad)+'</td><td>'+h(r.detalle||'')+'</td><td>'+(String(r.estado||'').toLowerCase()==='cerrada'?'<span class="pill pill-ok">Cerrada</span>':'<span class="pill pill-bad">Pendiente</span>')+'</td>'+(canManageNovedades()?'<td>'+(String(r.estado||'').toLowerCase()==='pendiente'?'<button class="secondary cerrar-nov-tabla" data-id="'+r.id+'">Cerrar</button>':'<button class="secondary reabrir-nov-tabla" data-id="'+r.id+'">Reabrir</button>')+(canAdmin()?' <button class="danger del-nov-tabla" data-id="'+r.id+'">Borrar</button>':'')+'</td>':'')+'</tr>').join('')||'<tr><td colspan="8">Sin novedades registradas.</td></tr>')+'</tbody></table></div>';
   if(!canManageNovedades()) return;
   document.querySelectorAll('.cerrar-nov-tabla').forEach(btn=>btn.addEventListener('click',async()=>{await updateRows('novedades_materiales',{estado:'cerrada',estado_revision:'REVISADA'},Number(btn.dataset.id));await audit('cerrar','novedad_material',{id:Number(btn.dataset.id)});showFlash('Novedad cerrada','ok');novedades()}));
   document.querySelectorAll('.reabrir-nov-tabla').forEach(btn=>btn.addEventListener('click',async()=>{await updateRows('novedades_materiales',{estado:'pendiente',estado_revision:'PENDIENTE'},Number(btn.dataset.id));await audit('reabrir','novedad_material',{id:Number(btn.dataset.id)});showFlash('Novedad reabierta','ok');novedades()}));
@@ -1094,7 +1101,7 @@ async function auditoria(){
   els.title.textContent='Auditoría';
   if(!(await tableExists('audit_logs'))){els.content.innerHTML='<div class="card"><strong>Auditoría</strong><div class="small" style="margin-top:8px;">No existe la tabla audit_logs. El sistema puede seguir usándose, pero no va a registrar historial hasta que la crees en Supabase.</div></div>';return;}
   const rows=await safeSelect('audit_logs','fecha_hora',false,200);
-  els.content.innerHTML='<div class="card"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Perfil</th><th>Acción</th><th>Entidad</th><th>Detalle</th></tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(new Date(r.fecha_hora||Date.now()).toLocaleString('es-AR'))+'</td><td>'+h(r.usuario||'')+'</td><td>'+h(r.perfil||'')+'</td><td>'+h(r.accion||'')+'</td><td>'+h(r.entidad||'')+'</td><td>'+h(r.detalle||'')+'</td></tr>').join('')||'<tr><td colspan="6">Sin auditoría.</td></tr>')+'</tbody></table></div>';
+  els.content.innerHTML='<div class="card"><table><thead><tr><th>Fecha</th><th>Usuario</th><th>Perfil</th><th>Acción</th><th>Entidad</th><th>Detalle</th></tr></thead><tbody>'+(rows.map(r=>'<tr><td>'+h(formatFechaHora(r.fecha_hora||Date.now()))+'</td><td>'+h(r.usuario||'')+'</td><td>'+h(r.perfil||'')+'</td><td>'+h(r.accion||'')+'</td><td>'+h(r.entidad||'')+'</td><td>'+h(r.detalle||'')+'</td></tr>').join('')||'<tr><td colspan="6">Sin auditoría.</td></tr>')+'</tbody></table></div>';
 }
 
 async function reportes_stock(){
@@ -1146,7 +1153,7 @@ async function guardia(){
   const pendientes = novedades.filter(n=>String(n.estado||'').toLowerCase()==='pendiente');
   const repuestosCriticos = repuestos.filter(r=>Number(r.stock_actual||0)<=Number(r.stock_minimo||0));
   const stockCritico = stockGeneral.filter(s=>s.alerta_minimo===true);
-  const ultimaRevision = revisiones.length ? new Date(revisiones[0].fecha_hora).toLocaleString('es-AR') : 'Sin registros';
+  const ultimaRevision = revisiones.length ? formatFechaHora(revisiones[0].fecha_hora) : 'Sin registros';
 
   let alertasHtml = '';
   alertasHtml += criticas.slice(0,5).map(f=>'<div class="list-row"><strong>Móvil '+h(f.movil||'')+'</strong> · '+h(f.componente||'')+' <span class="pill pill-bad">Crítica</span></div>').join('');
@@ -1158,7 +1165,7 @@ async function guardia(){
     ? personalActivo.map(p =>
         '<div class="list-row"><strong>'+
           h((p.numero_j||'')+' · '+(p.jerarquia||'')+' · '+(p.apellido||'')+', '+(p.nombre||''))+
-        '</strong><div class="small">Ingreso: '+h(new Date(p.fecha_ingreso||Date.now()).toLocaleString('es-AR'))+'</div></div>'
+        '</strong><div class="small">Ingreso: '+h(formatFechaHora(p.fecha_ingreso||Date.now()))+'</div></div>'
       ).join('')
     : '<div class="list-row">Sin personal activo de guardia.</div>';
 
