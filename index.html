@@ -176,22 +176,80 @@ function requireGuardia(){
 }
 function enforceHierarchy(targetRole){if(level(perfilActual)<=level(targetRole)){showFlash('Bloqueado por jerarquía de roles.','err'); return false;} return true;}
 
+
+async function getPersonalActivoGuardia(){
+  if(!(await tableExists('guardia_personal')) || !(await tableExists('bomberos'))) return [];
+
+  const [movimientos, bomberos] = await Promise.all([
+    safeSelect('guardia_personal','fecha_ingreso',false,500),
+    safeSelect('bomberos')
+  ]);
+
+  const presentes = movimientos.filter(x => String(x.estado || '').toLowerCase() === 'activo');
+
+  const personal = presentes.map(p => {
+    const b = bomberos.find(x => Number(x.id) === Number(p.bombero_id));
+    return {
+      id: p.id,
+      bombero_id: p.bombero_id,
+      numero_j: b?.numero_j ?? p.numero_j ?? null,
+      jerarquia: b?.jerarquia || '',
+      apellido: b?.apellido || '',
+      nombre: b?.nombre || '',
+      fecha_ingreso: p.fecha_ingreso
+    };
+  });
+
+  return personal.sort((a,b)=>{
+    const na=(a.numero_j===null || a.numero_j===undefined || a.numero_j==='') ? 999999 : Number(a.numero_j);
+    const nb=(b.numero_j===null || b.numero_j===undefined || b.numero_j==='') ? 999999 : Number(b.numero_j);
+    if(na!==nb) return na-nb;
+    return String(a.apellido||'').localeCompare(String(b.apellido||''),'es');
+  });
+}
+
 async function dashboard(){
   els.title.textContent='Dashboard';
 
+  if(perfilActual==='roperia'){
+    const rows=(await tableExists('roperia_items'))? await safeSelect('roperia_items','tipo_prenda',true):[];
+    const activas=rows.filter(r=>String(r.estado||'').toUpperCase()==='ACTIVO');
+    const bajas=rows.filter(r=>String(r.estado||'').toUpperCase()==='BAJA');
+    const asignadas=rows.filter(r=>String(r.asignado_a||'').trim()!=='');
+    const alertas=rows.filter(r=>!r.sin_stock_minimo && Number(r.cantidad_disponible||0)<=Number(r.stock_minimo||0) && String(r.estado||'').toUpperCase()!=='BAJA');
+
+    els.content.innerHTML=`
+      <div class="hero-grid">
+        <div class="hero service"><div class="hero-label">Prendas activas</div><div class="hero-number">${activas.length}</div></div>
+        <div class="hero maint"><div class="hero-label">Prendas asignadas</div><div class="hero-number">${asignadas.length}</div></div>
+        <div class="hero out"><div class="hero-label">Prendas dadas de baja</div><div class="hero-number">${bajas.length}</div></div>
+      </div>
+      <div class="stat-grid" style="margin-top:14px;">
+        ${card('Total prendas',rows.length)}
+        ${card('Disponibles bajas stock',alertas.length)}
+        ${card('Asignadas a bomberos',asignadas.length)}
+        ${card('En estado BAJA',bajas.length)}
+      </div>
+      <div class="card" style="margin-top:14px;"><strong>Centro de alertas de ropería</strong><div style="margin-top:8px;">
+        ${alertas.map(r=>'<div class="list-row"><strong>'+h(r.tipo_prenda||'')+'</strong> · talle '+h(r.talle||'')+' · disponible '+h(r.cantidad_disponible||0)+' / mínimo '+h(r.stock_minimo||0)+'</div>').join('')||'Sin alertas de ropería.'}
+      </div></div>`;
+    return;
+  }
+
   const all=await Promise.all([
-    safeSelect('moviles'),
-    tableExists('v_stock_assignments_detail').then(x=>x?safeSelect('v_stock_assignments_detail'):[]),
-    safeSelect('fallas'),
-    safeSelect('repuestos'),
-    safeSelect('novedades_materiales'),
-    safeSelect('revisiones'),
-    tableExists('controles_materiales').then(x=>x?safeSelect('controles_materiales'):[]),
-    tableExists('v_stock_general').then(x=>x?safeSelect('v_stock_general'):[]),
-    getPersonalActivoGuardia()
+    safeSelect('moviles').catch(()=>[]),
+    tableExists('v_stock_assignments_detail').then(x=>x?safeSelect('v_stock_assignments_detail'):[]).catch(()=>[]),
+    safeSelect('fallas').catch(()=>[]),
+    safeSelect('repuestos').catch(()=>[]),
+    safeSelect('novedades_materiales').catch(()=>[]),
+    safeSelect('revisiones').catch(()=>[]),
+    tableExists('controles_materiales').then(x=>x?safeSelect('controles_materiales'):[]).catch(()=>[]),
+    tableExists('v_stock_general').then(x=>x?safeSelect('v_stock_general'):[]).catch(()=>[]),
+    getPersonalActivoGuardia().catch(()=>[])
   ]);
 
   const mov=all[0]||[];
+  const inv=all[1]||[];
   const fallas=all[2]||[];
   const repuestos=all[3]||[];
   const novedades=all[4]||[];
@@ -216,6 +274,7 @@ async function dashboard(){
   const stockCritico=stockGeneral.filter(s=>s.alerta_minimo===true);
   const controlesHoy=controles.filter(r=>r.fecha_hora&&new Date(r.fecha_hora).toDateString()===hoy).length;
   const checklistHoy=revisiones.filter(r=>r.fecha_hora&&new Date(r.fecha_hora).toDateString()===hoy).length;
+  const repuestosCriticos=repuestos.filter(r=>Number(r.stock_actual||0)<=Number(r.stock_minimo||0));
 
   const personalHtml=personalActivo.length
     ? personalActivo.map(p=>`
@@ -261,9 +320,7 @@ async function dashboard(){
         <strong style="font-size:20px;">Resumen operativo del cuartel</strong>
         <div class="small">Actualizado: ${h(new Date().toLocaleString('es-AR'))}</div>
       </div>
-      <div>
-        ${estadoSistema}
-      </div>
+      <div>${estadoSistema}</div>
     </div>
 
     <div class="hero-grid">
@@ -272,13 +329,11 @@ async function dashboard(){
         <div class="hero-number">${enServicio}</div>
         <div class="small" style="margin-top:8px;">${servicioList}</div>
       </div>
-
       <div class="hero maint">
         <div class="hero-label">En mantenimiento</div>
         <div class="hero-number">${enMantenimiento}</div>
         <div class="small" style="margin-top:8px;">${mantenimientoList}</div>
       </div>
-
       <div class="hero out">
         <div class="hero-label">Fuera de servicio</div>
         <div class="hero-number">${fueraServicio}</div>
@@ -300,47 +355,29 @@ async function dashboard(){
       <div class="card">
         <strong>Personal activo de guardia</strong>
         <table style="margin-top:10px;">
-          <thead>
-            <tr>
-              <th>N° J</th>
-              <th>Jerarquía</th>
-              <th>Apellido y nombre</th>
-              <th>Ingreso</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${personalHtml}
-          </tbody>
+          <thead><tr><th>N° J</th><th>Jerarquía</th><th>Apellido y nombre</th><th>Ingreso</th><th>Estado</th></tr></thead>
+          <tbody>${personalHtml}</tbody>
         </table>
       </div>
-
       <div class="card">
         <strong>Personal por jerarquía</strong>
-        <div style="margin-top:10px;">
-          ${jerarquiaHtml}
-        </div>
+        <div style="margin-top:10px;">${jerarquiaHtml}</div>
       </div>
     </div>
 
     <div class="grid" style="grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
-      <div class="card">
-        <strong>Últimas novedades pendientes</strong>
-        <div style="margin-top:10px;">
-          ${novedadesHtml}
-        </div>
-      </div>
-
+      <div class="card"><strong>Últimas novedades pendientes</strong><div style="margin-top:10px;">${novedadesHtml}</div></div>
       <div class="card">
         <strong>Resumen rápido</strong>
         <div class="list-row">Total de móviles: <strong>${mov.length}</strong></div>
-        <div class="list-row">Inventario asignado por móvil: <strong>${all[1]?.length||0}</strong></div>
-        <div class="list-row">Repuestos bajo mínimo: <strong>${repuestos.filter(r=>Number(r.stock_actual||0)<=Number(r.stock_minimo||0)).length}</strong></div>
+        <div class="list-row">Inventario asignado por móvil: <strong>${inv.length}</strong></div>
+        <div class="list-row">Repuestos bajo mínimo: <strong>${repuestosCriticos.length}</strong></div>
         <div class="list-row">Estado general: ${estadoSistema}</div>
       </div>
     </div>
   `;
 }
+
 async function guardia_activa(){
   els.title.textContent='Guardia activa';
 
@@ -484,6 +521,7 @@ async function moviles(){
   document.querySelectorAll('.del-movil').forEach(btn=>btn.addEventListener('click',async()=>{if(!requireGuardia())return;if(!confirm('¿Eliminar móvil?'))return;await deleteRow('moviles',Number(btn.dataset.id));await audit('eliminar','movil',{id:Number(btn.dataset.id)});showFlash('Móvil eliminado','ok');moviles()}));
 }
 
+
 async function bomberos(){
   els.title.textContent='Bomberos';
 
@@ -531,34 +569,34 @@ async function bomberos(){
 
   const form=document.getElementById('fBombero');
 
-form.addEventListener('submit',async e=>{
-  e.preventDefault();
+  form.addEventListener('submit',async e=>{
+    e.preventDefault();
 
-  const fd=new FormData(form);
+    const fd=new FormData(form);
 
-  const row={
-    numero_j: fd.get('numero_j') ? Number(fd.get('numero_j')) : null,
-    jerarquia:fd.get('jerarquia'),
-    nombre:fd.get('nombre'),
-    apellido:fd.get('apellido'),
-    legajo:fd.get('legajo')
-  };
+    const row={
+      numero_j: fd.get('numero_j') ? Number(fd.get('numero_j')) : null,
+      jerarquia:fd.get('jerarquia'),
+      nombre:fd.get('nombre'),
+      apellido:fd.get('apellido'),
+      legajo:fd.get('legajo')
+    };
 
- try{
-  if(fd.get('id')){
-    await updateRows('bomberos',row,Number(fd.get('id')));
-  } else {
-    await insertRow('bomberos',row);
-  }
+    try{
+      if(fd.get('id')){
+        await updateRows('bomberos',row,Number(fd.get('id')));
+      } else {
+        await insertRow('bomberos',row);
+      }
 
-  await audit(fd.get('id')?'editar':'crear','bombero',row);
-  showFlash('Bombero guardado','ok');
-  bomberos();
-
-}catch(err){
-  console.error('Error guardando bombero:', err);
-  showFlash('No se pudo guardar el bombero: '+(err.message || 'Error desconocido'),'err');
-}
+      await audit(fd.get('id')?'editar':'crear','bombero',row);
+      showFlash('Bombero guardado','ok');
+      bomberos();
+    }catch(err){
+      console.error('Error guardando bombero:', err);
+      showFlash('No se pudo guardar el bombero: '+(err.message || 'Error desconocido'),'err');
+    }
+  });
 
   document.querySelectorAll('.edit-bombero').forEach(btn=>btn.addEventListener('click',()=>{
     const item=ordenados.find(x=>String(x.id)===btn.dataset.id);
@@ -574,10 +612,15 @@ form.addEventListener('submit',async e=>{
 
   document.querySelectorAll('.del-bombero').forEach(btn=>btn.addEventListener('click',async()=>{
     if(!confirm('¿Eliminar bombero?')) return;
-    await deleteRow('bomberos',Number(btn.dataset.id));
-    await audit('eliminar','bombero',{id:Number(btn.dataset.id)});
-    showFlash('Bombero eliminado','ok');
-    bomberos();
+    try{
+      await deleteRow('bomberos',Number(btn.dataset.id));
+      await audit('eliminar','bombero',{id:Number(btn.dataset.id)});
+      showFlash('Bombero eliminado','ok');
+      bomberos();
+    }catch(err){
+      console.error('Error eliminando bombero:', err);
+      showFlash('No se pudo eliminar el bombero: '+(err.message || 'Error desconocido'),'err');
+    }
   }));
 }
 
