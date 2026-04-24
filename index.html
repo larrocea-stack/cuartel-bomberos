@@ -185,23 +185,32 @@ async function dashboard(){
     const bajas=rows.filter(r=>String(r.estado||'').toUpperCase()==='BAJA');
     const asignadas=rows.filter(r=>String(r.asignado_a||'').trim()!=='');
     const alertas=rows.filter(r=>!r.sin_stock_minimo && Number(r.cantidad_disponible||0)<=Number(r.stock_minimo||0) && String(r.estado||'').toUpperCase()!=='BAJA');
+    const servicioList = mov.filter(x=>x.estado==="En servicio").map(x=>h(x.numero)).join(' · ') || 'Sin móviles';
+    const mantenimientoList = mov.filter(x=>x.estado==="En mantenimiento").map(x=>h(x.numero)).join(' · ') || 'Sin móviles';
+    const fueraList = mov.filter(x=>x.estado==="Fuera de servicio").map(x=>h(x.numero)).join(' · ') || 'Sin móviles';
 
-    els.content.innerHTML=
-      '<div class="hero-grid">'+
-        '<div class="hero service"><div class="hero-label">Prendas activas</div><div class="hero-number">'+activas.length+'</div></div>'+
-        '<div class="hero maint"><div class="hero-label">Prendas asignadas</div><div class="hero-number">'+asignadas.length+'</div></div>'+
-        '<div class="hero out"><div class="hero-label">Prendas dadas de baja</div><div class="hero-number">'+bajas.length+'</div></div>'+
-      '</div>'+
-      '<div class="stat-grid" style="margin-top:14px;">'+
-        card('Total prendas',rows.length)+
-        card('Disponibles bajas stock',alertas.length)+
-        card('Asignadas a bomberos',asignadas.length)+
-        card('En estado BAJA',bajas.length)+
-      '</div>'+
-      '<div class="card" style="margin-top:14px;"><strong>Centro de alertas de ropería</strong><div style="margin-top:8px;">'+
-        (alertas.map(r=>'<div class="list-row"><strong>'+h(r.tipo_prenda||'')+'</strong> · talle '+h(r.talle||'')+' · disponible '+h(r.cantidad_disponible||0)+' / mínimo '+h(r.stock_minimo||0)+'</div>').join('')||'Sin alertas de ropería.')+
-      '</div></div>';
-    return;
+els.content.innerHTML=
+  '<div class="hero-grid">'+
+
+    `<div class="hero service">
+      <div class="hero-label">Móviles en servicio</div>
+      <div class="hero-number">${enServicio}</div>
+      <div class="small" style="margin-top:8px;">${servicioList}</div>
+    </div>`+
+
+    `<div class="hero maint">
+      <div class="hero-label">En mantenimiento</div>
+      <div class="hero-number">${enMantenimiento}</div>
+      <div class="small" style="margin-top:8px;">${mantenimientoList}</div>
+    </div>`+
+
+    `<div class="hero out">
+      <div class="hero-label">Fuera de servicio</div>
+      <div class="hero-number">${fueraServicio}</div>
+      <div class="small" style="margin-top:8px;">${fueraList}</div>
+    </div>`+
+
+  '</div>'+
   }
 
   const all=await Promise.all([
