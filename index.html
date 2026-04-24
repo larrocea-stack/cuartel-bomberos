@@ -487,7 +487,7 @@ form.addEventListener('submit',async e=>{
   const fd=new FormData(form);
 
   const row={
-    numero_j:Number(fd.get('numero_j')||0),
+    numero_j: fd.get('numero_j') ? Number(fd.get('numero_j')) : null,
     jerarquia:fd.get('jerarquia'),
     nombre:fd.get('nombre'),
     apellido:fd.get('apellido'),
