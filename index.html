@@ -481,26 +481,29 @@ async function bomberos(){
 
   const form=document.getElementById('fBombero');
 
-  form.addEventListener('submit',async e=>{
-    e.preventDefault();
+form.addEventListener('submit',async e=>{
+  e.preventDefault();
 
-    const fd=new FormData(form);
+  const fd=new FormData(form);
 
-    const row={
-      numero_j:Number(fd.get('numero_j')||0),
-      jerarquia:fd.get('jerarquia'),
-      nombre:fd.get('nombre'),
-      apellido:fd.get('apellido'),
-      legajo:fd.get('legajo')
-    };
+  const row={
+    numero_j:Number(fd.get('numero_j')||0),
+    jerarquia:fd.get('jerarquia'),
+    nombre:fd.get('nombre'),
+    apellido:fd.get('apellido'),
+    legajo:fd.get('legajo')
+  };
 
-    if(fd.get('id')) row.id=Number(fd.get('id'));
+  if(fd.get('id')){
+    await updateRows('bomberos',row,Number(fd.get('id')));
+  } else {
+    await insertRow('bomberos',row);
+  }
 
-    await upsertRow('bomberos',row);
-    await audit(fd.get('id')?'editar':'crear','bombero',row);
-    showFlash('Bombero guardado','ok');
-    bomberos();
-  });
+  await audit(fd.get('id')?'editar':'crear','bombero',row);
+  showFlash('Bombero guardado','ok');
+  bomberos();
+});
 
   document.querySelectorAll('.edit-bombero').forEach(btn=>btn.addEventListener('click',()=>{
     const item=ordenados.find(x=>String(x.id)===btn.dataset.id);
