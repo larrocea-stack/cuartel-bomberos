@@ -191,14 +191,14 @@ async function dashboard(){
     getPersonalActivoGuardia()
   ]);
 
-  const mov=all[0];
-  const fallas=all[2];
-  const repuestos=all[3];
-  const novedades=all[4];
-  const revisiones=all[5];
-  const controles=all[6];
-  const stockGeneral=all[7];
-  const personalActivo=all[8];
+  const mov=all[0]||[];
+  const fallas=all[2]||[];
+  const repuestos=all[3]||[];
+  const novedades=all[4]||[];
+  const revisiones=all[5]||[];
+  const controles=all[6]||[];
+  const stockGeneral=all[7]||[];
+  const personalActivo=all[8]||[];
 
   const hoy=(new Date()).toDateString();
 
@@ -206,81 +206,140 @@ async function dashboard(){
   const enMantenimiento=mov.filter(x=>x.estado==='En mantenimiento').length;
   const fueraServicio=mov.filter(x=>x.estado==='Fuera de servicio').length;
 
-  // 🔥 LISTAS DE MÓVILES
-  const servicioList = mov.filter(x=>x.estado==='En servicio').map(x=>h(x.numero)).join(' · ') || 'Sin móviles';
-  const mantenimientoList = mov.filter(x=>x.estado==='En mantenimiento').map(x=>h(x.numero)).join(' · ') || 'Sin móviles';
-  const fueraList = mov.filter(x=>x.estado==='Fuera de servicio').map(x=>h(x.numero)).join(' · ') || 'Sin móviles';
+  const servicioList=mov.filter(x=>x.estado==='En servicio').map(x=>h(x.numero)).join(' · ') || 'Sin móviles';
+  const mantenimientoList=mov.filter(x=>x.estado==='En mantenimiento').map(x=>h(x.numero)).join(' · ') || 'Sin móviles';
+  const fueraList=mov.filter(x=>x.estado==='Fuera de servicio').map(x=>h(x.numero)).join(' · ') || 'Sin móviles';
 
-  // 🔥 PERSONAL ACTIVO
-  const personalHtml = personalActivo.length
-    ? personalActivo.map(p =>
-        '<div class="list-row"><strong>'+
-          h((p.numero_j||'')+' · '+(p.jerarquia||'')+' · '+(p.apellido||'')+', '+(p.nombre||''))+
-        '</strong><div class="small">Ingreso: '+h(new Date(p.fecha_ingreso||Date.now()).toLocaleString('es-AR'))+'</div></div>'
-      ).join('')
-    : 'Sin personal activo de guardia.';
+  const fallasCriticas=fallas.filter(f=>String(f.tipo_falla||'').toLowerCase().includes('crit'));
+  const fallasAbiertas=fallas.length;
+  const novedadesPendientes=novedades.filter(n=>String(n.estado||'').toLowerCase()==='pendiente');
+  const stockCritico=stockGeneral.filter(s=>s.alerta_minimo===true);
+  const controlesHoy=controles.filter(r=>r.fecha_hora&&new Date(r.fecha_hora).toDateString()===hoy).length;
+  const checklistHoy=revisiones.filter(r=>r.fecha_hora&&new Date(r.fecha_hora).toDateString()===hoy).length;
 
-  // 🔥 RENDER FINAL LIMPIO
-  els.content.innerHTML = `
-  <div class="hero-grid">
+  const personalHtml=personalActivo.length
+    ? personalActivo.map(p=>`
+      <tr>
+        <td>${h(p.numero_j||'')}</td>
+        <td>${h(p.jerarquia||'')}</td>
+        <td><strong>${h((p.apellido||'')+', '+(p.nombre||''))}</strong></td>
+        <td>${h(new Date(p.fecha_ingreso||Date.now()).toLocaleString('es-AR'))}</td>
+        <td><span class="pill pill-ok">Activo</span></td>
+      </tr>
+    `).join('')
+    : '<tr><td colspan="5">Sin personal activo de guardia.</td></tr>';
 
-    <div class="hero service">
-      <div class="hero-label">Móviles en servicio</div>
-      <div class="hero-number">${enServicio}</div>
-      <div class="small">${servicioList}</div>
+  const jerarquias={};
+  personalActivo.forEach(p=>{
+    const j=p.jerarquia||'Sin jerarquía';
+    jerarquias[j]=(jerarquias[j]||0)+1;
+  });
+
+  const jerarquiaHtml=Object.keys(jerarquias).length
+    ? Object.entries(jerarquias).map(([j,c])=>`
+      <div class="list-row" style="display:flex;justify-content:space-between;gap:12px;">
+        <span>${h(j)}</span>
+        <strong>${c}</strong>
+      </div>
+    `).join('')
+    : '<div class="list-row">Sin personal activo.</div>';
+
+  const novedadesHtml=novedadesPendientes.slice(0,6).map(n=>`
+    <div class="list-row">
+      <strong>Móvil ${h(n.movil||'')}</strong> · ${h(n.material||'')} · ${h(n.tipo_novedad||'Pendiente')}
+      <span class="pill pill-bad" style="float:right;">Pendiente</span>
+    </div>
+  `).join('') || '<div class="list-row"><span class="pill pill-ok">Sin novedades pendientes</span></div>';
+
+  const estadoSistema=(fueraServicio>0 || fallasCriticas.length>0 || novedadesPendientes.length>0)
+    ? '<span class="pill pill-warn">Con alertas</span>'
+    : '<span class="pill pill-ok">Operativo</span>';
+
+  els.content.innerHTML=`
+    <div class="card" style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div>
+        <strong style="font-size:20px;">Resumen operativo del cuartel</strong>
+        <div class="small">Actualizado: ${h(new Date().toLocaleString('es-AR'))}</div>
+      </div>
+      <div>
+        ${estadoSistema}
+      </div>
     </div>
 
-    <div class="hero maint">
-      <div class="hero-label">En mantenimiento</div>
-      <div class="hero-number">${enMantenimiento}</div>
-      <div class="small">${mantenimientoList}</div>
+    <div class="hero-grid">
+      <div class="hero service">
+        <div class="hero-label">Móviles en servicio</div>
+        <div class="hero-number">${enServicio}</div>
+        <div class="small" style="margin-top:8px;">${servicioList}</div>
+      </div>
+
+      <div class="hero maint">
+        <div class="hero-label">En mantenimiento</div>
+        <div class="hero-number">${enMantenimiento}</div>
+        <div class="small" style="margin-top:8px;">${mantenimientoList}</div>
+      </div>
+
+      <div class="hero out">
+        <div class="hero-label">Fuera de servicio</div>
+        <div class="hero-number">${fueraServicio}</div>
+        <div class="small" style="margin-top:8px;">${fueraList}</div>
+      </div>
     </div>
 
-    <div class="hero out">
-      <div class="hero-label">Fuera de servicio</div>
-      <div class="hero-number">${fueraServicio}</div>
-      <div class="small">${fueraList}</div>
+    <div class="stat-grid" style="margin-top:14px;">
+      ${card('Personal activo',personalActivo.length)}
+      ${card('Fallas abiertas',fallasAbiertas)}
+      ${card('Fallas críticas',fallasCriticas.length)}
+      ${card('Novedades pendientes',novedadesPendientes.length)}
+      ${card('Stock crítico',stockCritico.length)}
+      ${card('Controles materiales hoy',controlesHoy)}
+      ${card('Checklist móviles hoy',checklistHoy)}
     </div>
 
-  </div>
+    <div class="grid" style="grid-template-columns:1.4fr .8fr;gap:14px;margin-top:14px;">
+      <div class="card">
+        <strong>Personal activo de guardia</strong>
+        <table style="margin-top:10px;">
+          <thead>
+            <tr>
+              <th>N° J</th>
+              <th>Jerarquía</th>
+              <th>Apellido y nombre</th>
+              <th>Ingreso</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${personalHtml}
+          </tbody>
+        </table>
+      </div>
 
-  <div class="card" style="margin-top:14px;">
-    <strong>Personal activo de guardia</strong>
-    <div style="margin-top:8px;">
-      ${personalHtml}
+      <div class="card">
+        <strong>Personal por jerarquía</strong>
+        <div style="margin-top:10px;">
+          ${jerarquiaHtml}
+        </div>
+      </div>
     </div>
-  </div>
+
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
+      <div class="card">
+        <strong>Últimas novedades pendientes</strong>
+        <div style="margin-top:10px;">
+          ${novedadesHtml}
+        </div>
+      </div>
+
+      <div class="card">
+        <strong>Resumen rápido</strong>
+        <div class="list-row">Total de móviles: <strong>${mov.length}</strong></div>
+        <div class="list-row">Inventario asignado por móvil: <strong>${all[1]?.length||0}</strong></div>
+        <div class="list-row">Repuestos bajo mínimo: <strong>${repuestos.filter(r=>Number(r.stock_actual||0)<=Number(r.stock_minimo||0)).length}</strong></div>
+        <div class="list-row">Estado general: ${estadoSistema}</div>
+      </div>
+    </div>
   `;
-}
-async function getPersonalActivoGuardia(){
-  if(!(await tableExists('guardia_personal')) || !(await tableExists('bomberos'))) return [];
-
-  const [movimientos, bomberos] = await Promise.all([
-    safeSelect('guardia_personal','fecha_ingreso',false,500),
-    safeSelect('bomberos')
-  ]);
-
-  const presentes = movimientos.filter(x => String(x.estado || '').toLowerCase() === 'activo');
-
-  const personal = presentes.map(p => {
-    const b = bomberos.find(x => Number(x.id) === Number(p.bombero_id));
-    return {
-      id: p.id,
-      bombero_id: p.bombero_id,
-      numero_j: b?.numero_j ?? p.numero_j ?? null,
-      jerarquia: b?.jerarquia || '',
-      apellido: b?.apellido || '',
-      nombre: b?.nombre || '',
-      fecha_ingreso: p.fecha_ingreso
-    };
-  });
-
-  return personal.sort((a,b)=>{
-    const na=(a.numero_j===null || a.numero_j===undefined || a.numero_j==='') ? 999999 : Number(a.numero_j);
-    const nb=(b.numero_j===null || b.numero_j===undefined || b.numero_j==='') ? 999999 : Number(b.numero_j);
-    if(na!==nb) return na-nb;
-    return String(a.apellido||'').localeCompare(String(b.apellido||''),'es');
-  });
 }
 async function guardia_activa(){
   els.title.textContent='Guardia activa';
