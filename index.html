@@ -263,22 +263,30 @@ async function dashboard(){
 
   els.content.innerHTML=
     '<div class="hero-grid">'+
-      '<div class="hero service"><div class="hero-label">Móviles en servicio</div><div class="hero-number">'+enServicio+'</div></div>'+
-      '<div class="hero maint"><div class="hero-label">En mantenimiento</div><div class="hero-number">'+enMantenimiento+'</div></div>'+
-      '<div class="hero out"><div class="hero-label">Fuera de servicio</div><div class="hero-number">'+fueraServicio+'</div></div>'+
+  '<div class="hero service">'+
+    '<div class="hero-label">Móviles en servicio</div>'+
+    '<div class="hero-number">'+enServicio+'</div>'+
+    '<div class="small" style="margin-top:8px;">'+
+      (mov.filter(x=>x.estado==='En servicio').map(x=>h(x.numero)).join(' · ') || 'Sin móviles')+
     '</div>'+
-    '<div class="stat-grid" style="margin-top:14px;">'+
-      card('Inventario por móvil',inv.length)+
-      card('Fallas críticas',fallasCriticas.length)+
-      card('Repuestos críticos',repuestosCriticos.length)+
-      card('Alertas materiales',alertasMateriales.length)+
-      card('Alertas stock general',alertasStock.length)+
-      card('Checklist hoy',checklistHoy)+
-      card('Controles materiales hoy',controlesHoy)+
-      card('Personal activo',personalActivo.length)+
+  '</div>'+
+
+  '<div class="hero maint">'+
+    '<div class="hero-label">En mantenimiento</div>'+
+    '<div class="hero-number">'+enMantenimiento+'</div>'+
+    '<div class="small" style="margin-top:8px;">'+
+      (mov.filter(x=>x.estado==='En mantenimiento').map(x=>h(x.numero)).join(' · ') || 'Sin móviles')+
     '</div>'+
-    (canSeeAlerts()?('<div class="card" style="margin-top:14px;"><strong>Centro de alertas</strong><div style="margin-top:10px;">'+alertHtml+'</div></div>'):'')+
-    extra;
+  '</div>'+
+
+  '<div class="hero out">'+
+    '<div class="hero-label">Fuera de servicio</div>'+
+    '<div class="hero-number">'+fueraServicio+'</div>'+
+    '<div class="small" style="margin-top:8px;">'+
+      (mov.filter(x=>x.estado==='Fuera de servicio').map(x=>h(x.numero)).join(' · ') || 'Sin móviles')+
+    '</div>'+
+  '</div>'+
+'</div>'+
 }
 async function getPersonalActivoGuardia(){
   if(!(await tableExists('guardia_personal')) || !(await tableExists('bomberos'))) return [];
